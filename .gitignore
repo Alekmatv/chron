@@ -16,3 +16,9 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Docs (спецификация и прототипы)
+docs/
+node_modules/
+dist/
+.vercel/

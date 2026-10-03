@@ -1,0 +1,170 @@
+/*
+ * Global app styles: base reset, accessible focus outlines
+ * and animations referenced from component inline styles.
+ */
+
+/* Base page styles */
+html,
+body {
+  margin: 0;
+  background: #0b0a0d;
+  height: 100%;
+}
+body {
+  overscroll-behavior: none;
+  -webkit-font-smoothing: antialiased;
+}
+a {
+  color: #ff6b78;
+}
+a:hover {
+  color: #ff9aa4;
+}
+button {
+  font-family: inherit;
+}
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+  outline: 2px solid #ff2d3d;
+  outline-offset: 2px;
+}
+input::placeholder {
+  color: #7d7580;
+}
+*::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+/* Animations: map dot pulses, alarm blinking, element fade-in */
+@keyframes schronPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(90, 170, 255, 0.6);
+  }
+  100% {
+    box-shadow: 0 0 0 18px rgba(90, 170, 255, 0);
+  }
+}
+@keyframes schronLive {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+@keyframes schronFlicker {
+  0% {
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  12% {
+    opacity: 0.2;
+  }
+  18% {
+    opacity: 1;
+  }
+  24% {
+    opacity: 0.4;
+  }
+  30%,
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes schronGlow {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 6px rgba(255, 45, 61, 0.9)) drop-shadow(0 0 22px rgba(255, 45, 61, 0.55));
+  }
+  50% {
+    filter: drop-shadow(0 0 3px rgba(255, 45, 61, 0.7)) drop-shadow(0 0 10px rgba(255, 45, 61, 0.3));
+  }
+}
+@keyframes schronFade {
+  0%,
+  40% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes schronBlink {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes chronRing {
+  0% {
+    transform: scale(0.7);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+@keyframes chronFlash {
+  0% {
+    opacity: 0.85;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+@keyframes chronBars {
+  0%,
+  100% {
+    transform: scaleY(0.3);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+@keyframes chronShake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-3px);
+  }
+  75% {
+    transform: translateX(3px);
+  }
+}
+@keyframes chronIn {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes chronSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes chronAttention {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(227, 32, 58, 0);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(227, 32, 58, 0.25);
+  }
+}
