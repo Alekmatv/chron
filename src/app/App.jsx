@@ -18,6 +18,7 @@ import ThreatsScreen from '@/screens/ThreatsScreen.jsx';
 import chronApi from '@/api/chronApi.js';
 import useChronController from '@/app/useChronController.js';
 import { LocationContext } from '@/app/LocationContext.js';
+import ErrorBoundary from '@/components/ErrorBoundary.jsx';
 
 const LEVEL_UI = {
   green: { label: 'GREEN', color: '#86CDB2', dot: '#4FD1A5' },
@@ -105,6 +106,8 @@ function buildViewModel(controller) {
   }
 
   return {
+    screenKey: screen,
+    placeLabel: api.getPlace(s).label,
     showOnboarding: !s.onboarded,
     showApp: s.onboarded,
     store: s,
@@ -117,7 +120,11 @@ function buildViewModel(controller) {
     showNav: !top && !emergencyBase,
     showRedStrip: s.level === 'red' && s.emergencyMinimized && !top,
     openEmergency: a.openEmergency,
-    systemInfo: api.getSystemInfo(s.system, s.syncProgress),
+    systemInfo: api.getSystemInfo(
+      s.system,
+      s.syncProgress,
+      (s.liveThreats ? s.liveThreats.sources : []).filter((x) => !x.ok).map((x) => x.name),
+    ),
     bannerVisible: s.system !== 'online' || s.justSynced,
     page: { padding: mobile ? '0' : '24px' },
     frame: mobile
@@ -250,6 +257,8 @@ function buildViewModel(controller) {
 export default function App() {
   const controller = useChronController();
   const {
+    screenKey,
+    placeLabel,
     actions,
     al,
     alarmDetails,
@@ -396,76 +405,78 @@ export default function App() {
                   </>
                 )}
                 <div style={{ flex: '1', minHeight: '0', position: 'relative' }}>
-                  {scr.home && (
-                    <>
-                      <div style={{ height: '100%' }}>
-                        <HomeScreen store={store} actions={actions} />
-                      </div>
-                    </>
-                  )}
-                  {scr.threats && (
-                    <>
-                      <div style={{ height: '100%' }}>
-                        <ThreatsScreen store={store} actions={actions} />
-                      </div>
-                    </>
-                  )}
-                  {scr.shelters && (
-                    <>
-                      <div style={{ height: '100%' }}>
-                        <SheltersScreen store={store} actions={actions} />
-                      </div>
-                    </>
-                  )}
-                  {scr.profile && (
-                    <>
-                      <div style={{ height: '100%' }}>
-                        <ProfileScreen store={store} actions={actions} />
-                      </div>
-                    </>
-                  )}
-                  {scr.emergency && (
-                    <>
-                      <div style={{ height: '100%' }}>
-                        <EmergencyScreen store={store} actions={actions} />
-                      </div>
-                    </>
-                  )}
-                  {scr.threat && (
-                    <>
-                      <div style={{ height: '100%' }}>
-                        <ThreatCard store={store} actions={actions} params={params} />
-                      </div>
-                    </>
-                  )}
-                  {scr.shelter && (
-                    <>
-                      <div style={{ height: '100%' }}>
-                        <ShelterDetail store={store} actions={actions} params={params} />
-                      </div>
-                    </>
-                  )}
-                  {scr.route && (
-                    <>
-                      <div style={{ height: '100%' }}>
-                        <RouteScreen store={store} actions={actions} params={params} />
-                      </div>
-                    </>
-                  )}
-                  {scr.late && (
-                    <>
-                      <div style={{ height: '100%' }}>
-                        <ShelterInPlace store={store} actions={actions} params={params} />
-                      </div>
-                    </>
-                  )}
-                  {scr.guide && (
-                    <>
-                      <div style={{ height: '100%' }}>
-                        <GuideScreen actions={actions} params={params} />
-                      </div>
-                    </>
-                  )}
+                  <ErrorBoundary resetKey={screenKey}>
+                    {scr.home && (
+                      <>
+                        <div style={{ height: '100%' }}>
+                          <HomeScreen store={store} actions={actions} />
+                        </div>
+                      </>
+                    )}
+                    {scr.threats && (
+                      <>
+                        <div style={{ height: '100%' }}>
+                          <ThreatsScreen store={store} actions={actions} />
+                        </div>
+                      </>
+                    )}
+                    {scr.shelters && (
+                      <>
+                        <div style={{ height: '100%' }}>
+                          <SheltersScreen store={store} actions={actions} />
+                        </div>
+                      </>
+                    )}
+                    {scr.profile && (
+                      <>
+                        <div style={{ height: '100%' }}>
+                          <ProfileScreen store={store} actions={actions} />
+                        </div>
+                      </>
+                    )}
+                    {scr.emergency && (
+                      <>
+                        <div style={{ height: '100%' }}>
+                          <EmergencyScreen store={store} actions={actions} />
+                        </div>
+                      </>
+                    )}
+                    {scr.threat && (
+                      <>
+                        <div style={{ height: '100%' }}>
+                          <ThreatCard store={store} actions={actions} params={params} />
+                        </div>
+                      </>
+                    )}
+                    {scr.shelter && (
+                      <>
+                        <div style={{ height: '100%' }}>
+                          <ShelterDetail store={store} actions={actions} params={params} />
+                        </div>
+                      </>
+                    )}
+                    {scr.route && (
+                      <>
+                        <div style={{ height: '100%' }}>
+                          <RouteScreen store={store} actions={actions} params={params} />
+                        </div>
+                      </>
+                    )}
+                    {scr.late && (
+                      <>
+                        <div style={{ height: '100%' }}>
+                          <ShelterInPlace store={store} actions={actions} params={params} />
+                        </div>
+                      </>
+                    )}
+                    {scr.guide && (
+                      <>
+                        <div style={{ height: '100%' }}>
+                          <GuideScreen actions={actions} params={params} />
+                        </div>
+                      </>
+                    )}
+                  </ErrorBoundary>
                 </div>
                 {showNav && (
                   <>
@@ -729,7 +740,7 @@ export default function App() {
                           Zagrożenie: {al.kind}
                         </span>
                         <span style={{ fontSize: '14px', color: '#A49DA6' }}>
-                          Pomorskie · Gdańsk · {al.source} {al.time}
+                          {placeLabel} · {al.source} {al.time}
                         </span>
                         <p style={{ margin: '0', fontSize: '15px', lineHeight: '1.45', color: '#F4F1F2' }}>
                           {al.text2}

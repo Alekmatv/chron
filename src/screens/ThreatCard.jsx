@@ -23,6 +23,7 @@ function buildViewModel(props) {
   const rec = api.getRecommendation(ctx);
   const r = rec.primary || {};
   return {
+    place: chronApi.getPlace(s),
     t,
     lvl: LVL[t.level] || LVL.yellow,
     todo: t.todo.map((x, i) => {
@@ -60,7 +61,7 @@ function buildViewModel(props) {
  */
 export default function ThreatCard(inputProps) {
   const props = inputProps;
-  const { back, cta, goLate, goRoute, hasRec, lvl, reach, rec, regions, t, todo } = buildViewModel(props);
+  const { place, back, cta, goLate, goRoute, hasRec, lvl, reach, rec, regions, t, todo } = buildViewModel(props);
   return (
     <div
       style={{
@@ -234,7 +235,7 @@ export default function ThreatCard(inputProps) {
             }}
           >
             <span style={{ fontSize: '14px', color: '#9C95A0' }}>Twoja lokalizacja</span>
-            <span style={{ fontSize: '14px', fontWeight: '700' }}>Gdańsk-Wrzeszcz · Pomorskie</span>
+            <span style={{ fontSize: '14px', fontWeight: '700' }}>{place.label}</span>
           </div>
           <div
             style={{

@@ -4,6 +4,7 @@
 import { Fragment } from 'react';
 import StatusBadge from '@/components/StatusBadge.jsx';
 import chronApi from '@/api/chronApi.js';
+import LiveSourcesPanel from '@/components/LiveSourcesPanel.jsx';
 
 const TINT = { yellow: ['rgba(201,164,58,.14)', '#4A3E1A'], red: ['rgba(200,50,63,.16)', '#5A1A22'] };
 const DOT = { air: '#C8323F', chem: '#C9A43A', flood: '#7CC4FF' };
@@ -37,10 +38,13 @@ function buildViewModel(props) {
     };
   });
   return {
+    place: chronApi.getPlace(s),
     status: api.getStatus(s),
     isEmpty: !threats.length,
     threats,
     types,
+    liveFeed: s.liveThreats || null,
+    liveStale: s.system === 'offline',
     goGuide: function () {
       a.openGuide();
     },
@@ -56,7 +60,7 @@ function buildViewModel(props) {
  */
 export default function ThreatsScreen(inputProps) {
   const props = inputProps;
-  const { goGuide, isEmpty, status, threats, types } = buildViewModel(props);
+  const { place, goGuide, liveFeed, liveStale, isEmpty, status, threats, types } = buildViewModel(props);
   return (
     <div
       style={{
@@ -73,7 +77,7 @@ export default function ThreatsScreen(inputProps) {
         <span style={{ fontFamily: "'Unbounded', 'Arial Black', sans-serif", fontWeight: '500', fontSize: '18px' }}>
           Zagrożenia
         </span>
-        <span style={{ fontSize: '12px', color: '#A49DA6' }}>Gdańsk-Wrzeszcz · źródła: RCB, RSO, IMGW</span>
+        <span style={{ fontSize: '12px', color: '#A49DA6' }}>{place.city} · źródła: RSO / RCB, NEPTUN, PAŻP</span>
       </header>
       <div
         style={{
@@ -203,6 +207,7 @@ export default function ThreatsScreen(inputProps) {
             </button>
           </Fragment>
         ))}
+        <LiveSourcesPanel feed={liveFeed} stale={liveStale} />
         <span
           style={{
             fontSize: '12px',

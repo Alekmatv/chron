@@ -64,7 +64,7 @@ function buildViewModel(props, state, setState) {
       return Object.assign({}, x, { isRec: x.id === recId });
     });
   return {
-    sub: 'Gdańsk-Wrzeszcz · w promieniu 1,5 km',
+    sub: chronApi.getPlace(s).city + ' · najbliższe schronienia',
     filters: FILTERS.map((f) => {
       const on = f[0] === state.filter;
       return {

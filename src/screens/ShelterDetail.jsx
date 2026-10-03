@@ -207,7 +207,7 @@ export default function ShelterDetail(inputProps) {
               {sh.name}
             </span>
             <span style={{ fontSize: '13px', fontWeight: '700', color: '#DCD5DD' }}>{sh.typeLabel}</span>
-            <span style={{ fontSize: '13px', color: '#A49DA6' }}>{sh.address}, Gdańsk</span>
+            <span style={{ fontSize: '13px', color: '#A49DA6' }}>{sh.fullAddress}</span>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             <StatusBadge kind={sh.status} size="lg" />

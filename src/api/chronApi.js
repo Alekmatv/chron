@@ -177,6 +177,8 @@ function decorate(s, ctx) {
     statusNote: isStale(ctx) ? 'status z ' + D.TIMES.offlineSince : 'aktualizacja ' + s.updated,
     typeLabel: s.category === 'schron' ? s.kind : 'Miejsce przystosowane · ' + s.kind,
     hoursLabel: hoursLabel(s),
+    // Real addresses already include the city; demo addresses do not.
+    fullAddress: s.address.indexOf(',') >= 0 ? s.address : s.address + ', ' + D.USER.city,
     hoursColor: s.hours === '24/7' ? '#7FE0BE' : '#F2CC3D',
     suitable: suit.ok,
     suitNote: suit.note,
@@ -313,15 +315,21 @@ function getRoute(shelterId, ctx) {
   };
 }
 
-/** Connectivity banner texts: ONLINE, DEGRADED, OFFLINE or RECOVERING. */
-function getSystemInfo(system, progress) {
+/**
+ * Connectivity banner texts: ONLINE, DEGRADED, OFFLINE or RECOVERING.
+ * failedSources lists the names of unavailable live sources for the DEGRADED text.
+ */
+function getSystemInfo(system, progress, failedSources) {
   switch (system) {
     case 'degraded':
       return {
         key: 'degraded',
         label: 'DEGRADED',
         title: 'Ograniczona łączność',
-        text: 'Część źródeł niedostępna (IMGW). Dane mogą być opóźnione.',
+        text:
+          'Część źródeł niedostępna (' +
+          (failedSources && failedSources.length ? failedSources.join(', ') : 'IMGW') +
+          '). Dane mogą być opóźnione.',
       };
     case 'offline':
       return {
@@ -336,7 +344,9 @@ function getSystemInfo(system, progress) {
         label: 'RECOVERING',
         title: 'Synchronizacja…',
         text:
-          progress < 50 ? 'Pobieramy zagrożenia z RCB, RSO, IMGW' : 'Sprawdzamy statusy schronów i przeliczamy trasę',
+          progress < 50
+            ? 'Pobieramy zagrożenia z RSO / RCB, NEPTUN, PAŻP'
+            : 'Sprawdzamy statusy schronów i przeliczamy trasę',
         progress,
       };
     default:
@@ -374,9 +384,22 @@ function getUser(ctx) {
   });
 }
 
+/**
+ * Place name for headers and messages: the municipality and voivodeship of the nearest
+ * real shelter, or the profile's home city when real shelters are not loaded.
+ * @returns {{ city: string, region: string, label: string }}
+ */
+function getPlace(ctx) {
+  const nearest = ctx && ctx.shelters && ctx.shelters[0];
+  const city = nearest ? nearest.gmina : D.USER.city;
+  const region = nearest ? nearest.voivodeship.charAt(0).toUpperCase() + nearest.voivodeship.slice(1) : D.USER.region;
+  return { city, region, label: city + ' · ' + region };
+}
+
 /** Public interface of the data layer used by screens. */
 const chronApi = {
   getUser: getUser,
+  getPlace: getPlace,
   getZones: function () {
     return D.ZONES;
   },

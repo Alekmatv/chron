@@ -1,7 +1,8 @@
 /**
  * Map of Poland by voivodeship with threat levels and shelter points. Opens full screen with zoom and filters.
  */
-import { Fragment } from 'react';
+import { Fragment, useContext } from 'react';
+import { LocationContext } from '@/app/LocationContext.js';
 import useMergedState from '@/hooks/useMergedState.js';
 import chronApi from '@/api/chronApi.js';
 
@@ -41,6 +42,20 @@ function pct(v, total) {
 const DEFAULT_PROPS = { threatTitle: 'Alarm powietrzny', offline: false, offlineLabel: 'Mapa offline · pobrana 14:32' };
 
 /** Builds view data (texts, colors, handlers) from props and local state. */
+/** Geographic bounds of Poland used for the linear projection onto the map image. */
+const POLAND_BOUNDS = { west: 14.12, east: 24.15, south: 49.0, north: 54.92 };
+
+/**
+ * Position of a point on the map image, in percent of its width and height.
+ * A linear projection is accurate enough for a country-scale overview.
+ */
+function projectToMap({ lat, lng }) {
+  const clamp = (value) => Math.min(100, Math.max(0, value));
+  const x = ((lng - POLAND_BOUNDS.west) / (POLAND_BOUNDS.east - POLAND_BOUNDS.west)) * 100;
+  const y = ((POLAND_BOUNDS.north - lat) / (POLAND_BOUNDS.north - POLAND_BOUNDS.south)) * 100;
+  return { left: clamp(x).toFixed(2) + '%', top: clamp(y).toFixed(2) + '%' };
+}
+
 function buildViewModel(props, state, setState) {
   const st = state,
     p = props;
@@ -281,6 +296,8 @@ export default function PolandMap(inputProps) {
     zoomIn,
     zoomOut,
   } = buildViewModel(props, state, setState);
+  const location = useContext(LocationContext);
+  const { left: userLeft, top: userTop } = projectToMap(location);
   return (
     <div
       style={{
@@ -649,8 +666,8 @@ export default function PolandMap(inputProps) {
             aria-hidden="true"
             style={{
               position: 'absolute',
-              left: '45.25%',
-              top: '9.7%',
+              left: userLeft,
+              top: userTop,
               width: '14px',
               height: '14px',
               margin: '-7px 0 0 -7px',

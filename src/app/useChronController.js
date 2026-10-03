@@ -4,9 +4,13 @@ import useMergedState from '@/hooks/useMergedState.js';
 import { playAlertBeeps, playSiren, vibrateDevice } from '@/app/alarmSignals.js';
 import { DEFAULT_LOCATION, distanceMeters, watchLocation } from '@/services/geolocation.js';
 import { fetchNearbyShelters } from '@/services/sheltersService.js';
+import { fetchLiveThreats } from '@/services/threatsService.js';
 
 /** Shelters are reloaded when the user moves farther than this from the last search point, in meters. */
 const SHELTER_RELOAD_DISTANCE_M = 250;
+
+/** How often the live threat feed is refreshed, in milliseconds. */
+const THREATS_REFRESH_MS = 60000;
 
 /** Default alarm signal and notification settings. */
 const DEFAULT_SETTINGS = {
@@ -71,6 +75,8 @@ function createInitialState() {
     location: DEFAULT_LOCATION,
     shelters: null,
     sheltersBuild: null,
+    // Live threat feed from official and observational sources (null until loaded)
+    liveThreats: null,
     // Profile
     settings: DEFAULT_SETTINGS,
     zoneNotify: { dom: true, praca: true, uczelnia: false },
@@ -253,7 +259,7 @@ export default function useChronController() {
           showPush({
             level: 'yellow',
             tag: 'OSTRZEŻENIE',
-            title: threat.headline + ' · Pomorskie',
+            title: threat.headline + ' · ' + chronApi.getPlace(s).region,
             text: `${threat.source} · ${times.yellow.source} · do zagrożenia ${threat.ttr}. Sprawdź najbliższy schron.`,
             action: 'threat',
           });
@@ -410,6 +416,31 @@ export default function useChronController() {
         console.warn('Shelters are unavailable, using the built-in set', error);
       });
   }, [state.location, setState]);
+
+  // Refresh the live threat feed every minute. Skipped while offline: the last known feed stays visible.
+  const voivodeship = state.shelters?.[0]?.voivodeship || '';
+  const latKey = state.location.lat.toFixed(2);
+  const lngKey = state.location.lng.toFixed(2);
+  useEffect(() => {
+    const load = () => {
+      if (stateRef.current.system === 'offline') return;
+      fetchLiveThreats(stateRef.current.location, voivodeship)
+        .then((liveThreats) => setState({ liveThreats }))
+        .catch((error) => console.warn('Live threat feed is unavailable', error));
+    };
+    load();
+    const timer = setInterval(load, THREATS_REFRESH_MS);
+    return () => clearInterval(timer);
+  }, [latKey, lngKey, voivodeship, setState]);
+
+  // Outside the demo scenario, the connectivity state follows the real sources:
+  // DEGRADED when at least one source is unavailable, ONLINE when all respond.
+  const failedSources = (state.liveThreats?.sources || []).filter((source) => !source.ok).length;
+  useEffect(() => {
+    if (state.demoStep !== 0 || !state.liveThreats) return;
+    if (failedSources > 0 && state.system === 'online') controller.setSystem('degraded');
+    if (failedSources === 0 && state.system === 'degraded') controller.setSystem('online');
+  }, [failedSources, state.liveThreats, state.demoStep, state.system, controller]);
 
   // Window resize and arrow key listeners (arrow keys step through the demo).
   useEffect(() => {

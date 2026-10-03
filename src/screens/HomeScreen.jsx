@@ -56,6 +56,7 @@ function buildViewModel(props, state, setState) {
   const route = rec.primary ? api.getRoute(rec.primary.id, s) : null;
   const packs = s.packs || api.getSafetyPacks();
   return {
+    place: chronApi.getPlace(s),
     user: api.getUser(s),
     status,
     isGreen: green,
@@ -126,6 +127,7 @@ export default function HomeScreen(inputProps) {
   const props = inputProps;
   const [state, setState] = useMergedState({ tab: 'regions' });
   const {
+    place,
     goProfile,
     goRoute,
     goShelters,
@@ -215,7 +217,7 @@ export default function HomeScreen(inputProps) {
               CHROŃ
             </span>
             <span style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#A49DA6' }}>
-              Gdańsk · Pomorskie
+              {place.label}
               <span
                 style={{
                   display: 'flex',

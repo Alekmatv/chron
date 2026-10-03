@@ -77,6 +77,7 @@ function buildViewModel(props, state, setState, soundTimer) {
   const loc = s.loc || 'zawsze';
   const lang = set.lang || 'pl';
   return {
+    place: chronApi.getPlace(s),
     user: api.getUser(),
     loggedIn: !!s.loggedIn,
     guest: !s.loggedIn,
@@ -224,6 +225,7 @@ export default function ProfileScreen(inputProps) {
   useEffect(() => () => clearTimeout(soundTimer.current), []);
   const [state, setState] = useMergedState({ demoScenario: null, demoLevel: 'red', soundPlaying: false });
   const {
+    place,
     demoLevels,
     demoScenarios,
     goGuide,
@@ -322,7 +324,7 @@ export default function ProfileScreen(inputProps) {
               <div style={{ flex: '1', display: 'flex', flexDirection: 'column', gap: '3px', minWidth: '0' }}>
                 <span style={{ fontSize: '17px', fontWeight: '800' }}>{user.name}</span>
                 <span style={{ fontSize: '13px', color: '#A49DA6' }}>{user.phone}</span>
-                <span style={{ fontSize: '13px', color: '#A49DA6' }}>Gdańsk · Pomorskie</span>
+                <span style={{ fontSize: '13px', color: '#A49DA6' }}>{place.label}</span>
               </div>
               <button
                 type="button"
