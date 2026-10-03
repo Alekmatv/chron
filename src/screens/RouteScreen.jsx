@@ -277,7 +277,7 @@ export default function RouteScreen(inputProps) {
         <StreetMap
           pins={pins}
           highlightId={sel.id}
-          routeD={route.pathD}
+          showRoute
           routeDashed={false}
           zone={zone}
           zoneLevel={level}

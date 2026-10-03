@@ -180,7 +180,7 @@ export default function SheltersScreen(inputProps) {
         <StreetMap
           pins={list}
           highlightId={recId}
-          routeD=""
+          showRoute={false}
           zone={zone}
           zoneLevel={level}
           offlineLabel={offlineLabel}

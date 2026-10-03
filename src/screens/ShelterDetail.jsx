@@ -184,7 +184,7 @@ export default function ShelterDetail(inputProps) {
         <StreetMap
           pins={pins}
           highlightId={sh.id}
-          routeD={route.pathD}
+          showRoute
           routeDashed={true}
           zone={zone}
           zoneLevel={level}

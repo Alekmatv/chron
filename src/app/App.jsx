@@ -17,6 +17,7 @@ import ThreatCard from '@/screens/ThreatCard.jsx';
 import ThreatsScreen from '@/screens/ThreatsScreen.jsx';
 import chronApi from '@/api/chronApi.js';
 import useChronController from '@/app/useChronController.js';
+import { LocationContext } from '@/app/LocationContext.js';
 
 const LEVEL_UI = {
   green: { label: 'GREEN', color: '#86CDB2', dot: '#4FD1A5' },
@@ -291,890 +292,900 @@ export default function App() {
     togglePanel,
   } = buildViewModel(controller);
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        boxSizing: 'border-box',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: '32px',
-        padding: page.padding,
-        background: 'radial-gradient(circle at 50% 38%, #22090E 0%, #0B0A0D 62%)',
-        fontFamily: "'Manrope', system-ui, sans-serif",
-        color: '#F4F1F2',
-      }}
-    >
+    <LocationContext.Provider value={controller.state.location}>
       <div
         style={{
-          flex: 'none',
-          padding: frame.bezel,
-          borderRadius: frame.outerRadius,
-          background: frame.bezelBg,
-          border: frame.border,
-          boxShadow: frame.shadow,
-          animation: frame.anim,
+          minHeight: '100vh',
+          boxSizing: 'border-box',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '32px',
+          padding: page.padding,
+          background: 'radial-gradient(circle at 50% 38%, #22090E 0%, #0B0A0D 62%)',
+          fontFamily: "'Manrope', system-ui, sans-serif",
+          color: '#F4F1F2',
         }}
       >
         <div
-          data-screen-label="Aplikacja"
           style={{
-            position: 'relative',
-            width: frame.w,
-            height: frame.h,
-            borderRadius: frame.radius,
-            overflow: 'hidden',
-            background: '#0B0A0D',
-            display: 'flex',
-            flexDirection: 'column',
-            transform: 'translateZ(0)',
+            flex: 'none',
+            padding: frame.bezel,
+            borderRadius: frame.outerRadius,
+            background: frame.bezelBg,
+            border: frame.border,
+            boxShadow: frame.shadow,
+            animation: frame.anim,
           }}
         >
-          {showOnboarding && (
-            <>
-              <div style={{ flex: '1', minHeight: '0' }}>
-                <div style={{ height: '100%' }}>
-                  <Onboarding actions={actions} />
-                </div>
-              </div>
-            </>
-          )}
-          {showApp && (
-            <>
-              <SystemBanner info={systemInfo} visible={bannerVisible} />
-              {showRedStrip && (
-                <>
-                  <button
-                    type="button"
-                    onClick={openEmergency}
-                    style={{
-                      flex: 'none',
-                      margin: '8px 12px 0',
-                      padding: '10px 14px',
-                      minHeight: '44px',
-                      borderRadius: '14px',
-                      background: 'rgba(200,50,63,.18)',
-                      border: '1px solid #5A1A22',
-                      color: '#FFFFFF',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '10px',
-                      cursor: 'pointer',
-                      textAlign: 'left',
-                      fontSize: '13px',
-                      fontWeight: '800',
-                      animation: 'chronIn .3s ease both',
-                    }}
-                  >
-                    <span
-                      style={{
-                        width: '8px',
-                        height: '8px',
-                        flex: 'none',
-                        borderRadius: '4px',
-                        background: '#FF2D3D',
-                        animation: 'schronLive 1.2s infinite',
-                      }}
-                    ></span>
-                    <span style={{ flex: '1' }}>ALARM AKTYWNY · wróć do planu działania</span>
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.4"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      aria-hidden="true"
-                    >
-                      <path d="M9 5l7 7-7 7"></path>
-                    </svg>
-                  </button>
-                </>
-              )}
-              <div style={{ flex: '1', minHeight: '0', position: 'relative' }}>
-                {scr.home && (
-                  <>
-                    <div style={{ height: '100%' }}>
-                      <HomeScreen store={store} actions={actions} />
-                    </div>
-                  </>
-                )}
-                {scr.threats && (
-                  <>
-                    <div style={{ height: '100%' }}>
-                      <ThreatsScreen store={store} actions={actions} />
-                    </div>
-                  </>
-                )}
-                {scr.shelters && (
-                  <>
-                    <div style={{ height: '100%' }}>
-                      <SheltersScreen store={store} actions={actions} />
-                    </div>
-                  </>
-                )}
-                {scr.profile && (
-                  <>
-                    <div style={{ height: '100%' }}>
-                      <ProfileScreen store={store} actions={actions} />
-                    </div>
-                  </>
-                )}
-                {scr.emergency && (
-                  <>
-                    <div style={{ height: '100%' }}>
-                      <EmergencyScreen store={store} actions={actions} />
-                    </div>
-                  </>
-                )}
-                {scr.threat && (
-                  <>
-                    <div style={{ height: '100%' }}>
-                      <ThreatCard store={store} actions={actions} params={params} />
-                    </div>
-                  </>
-                )}
-                {scr.shelter && (
-                  <>
-                    <div style={{ height: '100%' }}>
-                      <ShelterDetail store={store} actions={actions} params={params} />
-                    </div>
-                  </>
-                )}
-                {scr.route && (
-                  <>
-                    <div style={{ height: '100%' }}>
-                      <RouteScreen store={store} actions={actions} params={params} />
-                    </div>
-                  </>
-                )}
-                {scr.late && (
-                  <>
-                    <div style={{ height: '100%' }}>
-                      <ShelterInPlace store={store} actions={actions} params={params} />
-                    </div>
-                  </>
-                )}
-                {scr.guide && (
-                  <>
-                    <div style={{ height: '100%' }}>
-                      <GuideScreen actions={actions} params={params} />
-                    </div>
-                  </>
-                )}
-              </div>
-              {showNav && (
-                <>
-                  <BottomNav tab={tab} alertLevel={level} onTab={setTab} />
-                </>
-              )}
-            </>
-          )}
-          <button
-            type="button"
-            onClick={tapPush}
-            aria-hidden={push.hidden}
-            tabIndex={push.tab}
+          <div
+            data-screen-label="Aplikacja"
             style={{
-              position: 'absolute',
-              left: '10px',
-              right: '10px',
-              top: '10px',
-              zIndex: '70',
-              padding: '14px',
-              borderRadius: '18px',
-              background: 'rgba(23,21,26,.97)',
-              border: `1px solid ${push.border}`,
-              boxShadow: '0 12px 40px rgba(0,0,0,.6)',
+              position: 'relative',
+              width: frame.w,
+              height: frame.h,
+              borderRadius: frame.radius,
+              overflow: 'hidden',
+              background: '#0B0A0D',
               display: 'flex',
-              gap: '12px',
-              alignItems: 'flex-start',
-              textAlign: 'left',
-              color: '#F4F1F2',
-              cursor: 'pointer',
-              transform: `translateY(${push.y})`,
-              opacity: push.opacity,
-              transition: 'transform .5s cubic-bezier(.2,.9,.3,1.1), opacity .4s',
-              backdropFilter: 'blur(8px)',
+              flexDirection: 'column',
+              transform: 'translateZ(0)',
             }}
           >
-            <span
-              style={{
-                width: '36px',
-                height: '36px',
-                flex: 'none',
-                borderRadius: '10px',
-                background: '#1A0E11',
-                border: '1px solid #5A1A22',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <svg width="22" height="20" viewBox="0 0 72 64" fill="none" aria-hidden="true">
-                <path
-                  d="M10 56V28L36 8L62 28V56"
-                  stroke="#FF2D3D"
-                  strokeWidth="6"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                ></path>
-                <path d="M24 56V42a12 12 0 0 1 24 0V56" stroke="#FF2D3D" strokeWidth="6" strokeLinecap="round"></path>
-              </svg>
-            </span>
-            <span style={{ flex: '1', minWidth: '0', display: 'flex', flexDirection: 'column', gap: '3px' }}>
-              <span
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  gap: '8px',
-                  fontSize: '12px',
-                  fontWeight: '800',
-                  letterSpacing: '0.06em',
-                  color: push.color,
-                }}
-              >
-                <span>CHROŃ · {push.tag}</span>
-                <span style={{ color: '#A49DA6', fontWeight: '700', letterSpacing: '0' }}>teraz</span>
-              </span>
-              <span style={{ fontSize: '15px', fontWeight: '800', lineHeight: '1.3' }}>{push.title}</span>
-              <span style={{ fontSize: '13px', lineHeight: '1.4', color: '#C9C1CB' }}>{push.text}</span>
-            </span>
-          </button>
-          {flashing && (
-            <>
-              <div
-                aria-hidden="true"
-                style={{
-                  position: 'absolute',
-                  left: '0',
-                  top: '0',
-                  width: '100%',
-                  height: '100%',
-                  zIndex: '80',
-                  pointerEvents: 'none',
-                  background: flashColor,
-                  animation: 'chronFlash 0.22s steps(1) 8 alternate both',
-                }}
-              ></div>
-            </>
-          )}
-          {alarmOn && (
-            <>
-              <div
-                role="alertdialog"
-                aria-label="Alarm"
-                style={{
-                  position: 'absolute',
-                  left: '0',
-                  top: '0',
-                  width: '100%',
-                  height: '100%',
-                  zIndex: '90',
-                  background: al.bg,
-                  overflow: 'hidden',
-                }}
-              >
-                {al.flash && (
+            {showOnboarding && (
+              <>
+                <div style={{ flex: '1', minHeight: '0' }}>
+                  <div style={{ height: '100%' }}>
+                    <Onboarding actions={actions} />
+                  </div>
+                </div>
+              </>
+            )}
+            {showApp && (
+              <>
+                <SystemBanner info={systemInfo} visible={bannerVisible} />
+                {showRedStrip && (
                   <>
-                    <div
-                      aria-hidden="true"
+                    <button
+                      type="button"
+                      onClick={openEmergency}
                       style={{
-                        position: 'absolute',
-                        left: '0',
-                        top: '0',
-                        width: '100%',
-                        height: '100%',
-                        background: al.color,
-                        animation: `chronFlash ${al.flashSpeed} steps(1) infinite alternate`,
-                        pointerEvents: 'none',
-                      }}
-                    ></div>
-                  </>
-                )}
-                <div
-                  style={{
-                    position: 'relative',
-                    height: '100%',
-                    boxSizing: 'border-box',
-                    padding: '32px 20px 20px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '14px',
-                    overflowY: 'auto',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
-                    <span
-                      style={{
-                        padding: '5px 10px',
-                        borderRadius: '999px',
-                        background: 'rgba(0,0,0,.55)',
-                        border: '1px solid rgba(255,255,255,.25)',
+                        flex: 'none',
+                        margin: '8px 12px 0',
+                        padding: '10px 14px',
+                        minHeight: '44px',
+                        borderRadius: '14px',
+                        background: 'rgba(200,50,63,.18)',
+                        border: '1px solid #5A1A22',
                         color: '#FFFFFF',
-                        fontSize: '12px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                        fontSize: '13px',
                         fontWeight: '800',
-                        letterSpacing: '0.08em',
+                        animation: 'chronIn .3s ease both',
                       }}
                     >
-                      {al.tag}
-                    </span>
-                    {al.led && (
-                      <>
+                      <span
+                        style={{
+                          width: '8px',
+                          height: '8px',
+                          flex: 'none',
+                          borderRadius: '4px',
+                          background: '#FF2D3D',
+                          animation: 'schronLive 1.2s infinite',
+                        }}
+                      ></span>
+                      <span style={{ flex: '1' }}>ALARM AKTYWNY · wróć do planu działania</span>
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.4"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden="true"
+                      >
+                        <path d="M9 5l7 7-7 7"></path>
+                      </svg>
+                    </button>
+                  </>
+                )}
+                <div style={{ flex: '1', minHeight: '0', position: 'relative' }}>
+                  {scr.home && (
+                    <>
+                      <div style={{ height: '100%' }}>
+                        <HomeScreen store={store} actions={actions} />
+                      </div>
+                    </>
+                  )}
+                  {scr.threats && (
+                    <>
+                      <div style={{ height: '100%' }}>
+                        <ThreatsScreen store={store} actions={actions} />
+                      </div>
+                    </>
+                  )}
+                  {scr.shelters && (
+                    <>
+                      <div style={{ height: '100%' }}>
+                        <SheltersScreen store={store} actions={actions} />
+                      </div>
+                    </>
+                  )}
+                  {scr.profile && (
+                    <>
+                      <div style={{ height: '100%' }}>
+                        <ProfileScreen store={store} actions={actions} />
+                      </div>
+                    </>
+                  )}
+                  {scr.emergency && (
+                    <>
+                      <div style={{ height: '100%' }}>
+                        <EmergencyScreen store={store} actions={actions} />
+                      </div>
+                    </>
+                  )}
+                  {scr.threat && (
+                    <>
+                      <div style={{ height: '100%' }}>
+                        <ThreatCard store={store} actions={actions} params={params} />
+                      </div>
+                    </>
+                  )}
+                  {scr.shelter && (
+                    <>
+                      <div style={{ height: '100%' }}>
+                        <ShelterDetail store={store} actions={actions} params={params} />
+                      </div>
+                    </>
+                  )}
+                  {scr.route && (
+                    <>
+                      <div style={{ height: '100%' }}>
+                        <RouteScreen store={store} actions={actions} params={params} />
+                      </div>
+                    </>
+                  )}
+                  {scr.late && (
+                    <>
+                      <div style={{ height: '100%' }}>
+                        <ShelterInPlace store={store} actions={actions} params={params} />
+                      </div>
+                    </>
+                  )}
+                  {scr.guide && (
+                    <>
+                      <div style={{ height: '100%' }}>
+                        <GuideScreen actions={actions} params={params} />
+                      </div>
+                    </>
+                  )}
+                </div>
+                {showNav && (
+                  <>
+                    <BottomNav tab={tab} alertLevel={level} onTab={setTab} />
+                  </>
+                )}
+              </>
+            )}
+            <button
+              type="button"
+              onClick={tapPush}
+              aria-hidden={push.hidden}
+              tabIndex={push.tab}
+              style={{
+                position: 'absolute',
+                left: '10px',
+                right: '10px',
+                top: '10px',
+                zIndex: '70',
+                padding: '14px',
+                borderRadius: '18px',
+                background: 'rgba(23,21,26,.97)',
+                border: `1px solid ${push.border}`,
+                boxShadow: '0 12px 40px rgba(0,0,0,.6)',
+                display: 'flex',
+                gap: '12px',
+                alignItems: 'flex-start',
+                textAlign: 'left',
+                color: '#F4F1F2',
+                cursor: 'pointer',
+                transform: `translateY(${push.y})`,
+                opacity: push.opacity,
+                transition: 'transform .5s cubic-bezier(.2,.9,.3,1.1), opacity .4s',
+                backdropFilter: 'blur(8px)',
+              }}
+            >
+              <span
+                style={{
+                  width: '36px',
+                  height: '36px',
+                  flex: 'none',
+                  borderRadius: '10px',
+                  background: '#1A0E11',
+                  border: '1px solid #5A1A22',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <svg width="22" height="20" viewBox="0 0 72 64" fill="none" aria-hidden="true">
+                  <path
+                    d="M10 56V28L36 8L62 28V56"
+                    stroke="#FF2D3D"
+                    strokeWidth="6"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  ></path>
+                  <path d="M24 56V42a12 12 0 0 1 24 0V56" stroke="#FF2D3D" strokeWidth="6" strokeLinecap="round"></path>
+                </svg>
+              </span>
+              <span style={{ flex: '1', minWidth: '0', display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                <span
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    gap: '8px',
+                    fontSize: '12px',
+                    fontWeight: '800',
+                    letterSpacing: '0.06em',
+                    color: push.color,
+                  }}
+                >
+                  <span>CHROŃ · {push.tag}</span>
+                  <span style={{ color: '#A49DA6', fontWeight: '700', letterSpacing: '0' }}>teraz</span>
+                </span>
+                <span style={{ fontSize: '15px', fontWeight: '800', lineHeight: '1.3' }}>{push.title}</span>
+                <span style={{ fontSize: '13px', lineHeight: '1.4', color: '#C9C1CB' }}>{push.text}</span>
+              </span>
+            </button>
+            {flashing && (
+              <>
+                <div
+                  aria-hidden="true"
+                  style={{
+                    position: 'absolute',
+                    left: '0',
+                    top: '0',
+                    width: '100%',
+                    height: '100%',
+                    zIndex: '80',
+                    pointerEvents: 'none',
+                    background: flashColor,
+                    animation: 'chronFlash 0.22s steps(1) 8 alternate both',
+                  }}
+                ></div>
+              </>
+            )}
+            {alarmOn && (
+              <>
+                <div
+                  role="alertdialog"
+                  aria-label="Alarm"
+                  style={{
+                    position: 'absolute',
+                    left: '0',
+                    top: '0',
+                    width: '100%',
+                    height: '100%',
+                    zIndex: '90',
+                    background: al.bg,
+                    overflow: 'hidden',
+                  }}
+                >
+                  {al.flash && (
+                    <>
+                      <div
+                        aria-hidden="true"
+                        style={{
+                          position: 'absolute',
+                          left: '0',
+                          top: '0',
+                          width: '100%',
+                          height: '100%',
+                          background: al.color,
+                          animation: `chronFlash ${al.flashSpeed} steps(1) infinite alternate`,
+                          pointerEvents: 'none',
+                        }}
+                      ></div>
+                    </>
+                  )}
+                  <div
+                    style={{
+                      position: 'relative',
+                      height: '100%',
+                      boxSizing: 'border-box',
+                      padding: '32px 20px 20px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '14px',
+                      overflowY: 'auto',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                      <span
+                        style={{
+                          padding: '5px 10px',
+                          borderRadius: '999px',
+                          background: 'rgba(0,0,0,.55)',
+                          border: '1px solid rgba(255,255,255,.25)',
+                          color: '#FFFFFF',
+                          fontSize: '12px',
+                          fontWeight: '800',
+                          letterSpacing: '0.08em',
+                        }}
+                      >
+                        {al.tag}
+                      </span>
+                      {al.led && (
+                        <>
+                          <span
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '8px',
+                              padding: '5px 10px',
+                              borderRadius: '999px',
+                              background: 'rgba(0,0,0,.55)',
+                              color: '#FFFFFF',
+                              fontSize: '12px',
+                              fontWeight: '700',
+                            }}
+                          >
+                            <span
+                              style={{
+                                width: '12px',
+                                height: '12px',
+                                borderRadius: '6px',
+                                background: '#FFFFFF',
+                                boxShadow: '0 0 12px #FFFFFF',
+                                animation: 'chronFlash 0.35s steps(1) infinite alternate',
+                              }}
+                            ></span>
+                            Latarka miga
+                          </span>
+                        </>
+                      )}
+                    </div>
+                    <div style={{ flex: '1', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                      <section
+                        style={{
+                          borderRadius: '24px',
+                          padding: '24px 22px',
+                          background: 'rgba(14,12,17,.94)',
+                          border: `2px solid ${al.color}`,
+                          boxShadow: `0 0 40px ${al.glow}`,
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '14px',
+                          animation: 'chronShake .12s 8',
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <svg width="26" height="23" viewBox="0 0 72 64" fill="none" aria-hidden="true">
+                            <path
+                              d="M10 56V28L36 8L62 28V56"
+                              stroke={al.color}
+                              strokeWidth="5"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            ></path>
+                            <path
+                              d="M24 56V42a12 12 0 0 1 24 0V56"
+                              stroke={al.color}
+                              strokeWidth="5"
+                              strokeLinecap="round"
+                            ></path>
+                            <circle cx="36" cy="27" r="3.4" fill={al.color}></circle>
+                          </svg>
+                          <span
+                            style={{ fontSize: '13px', fontWeight: '800', letterSpacing: '0.1em', color: '#DCD5DD' }}
+                          >
+                            CHROŃ · TERAZ
+                          </span>
+                        </div>
                         <span
                           style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            padding: '5px 10px',
-                            borderRadius: '999px',
-                            background: 'rgba(0,0,0,.55)',
-                            color: '#FFFFFF',
-                            fontSize: '12px',
+                            alignSelf: 'flex-start',
+                            padding: '5px 12px',
+                            borderRadius: '10px',
+                            background: al.color,
+                            color: al.fg,
+                            fontSize: '13px',
+                            fontWeight: '800',
+                            letterSpacing: '0.06em',
+                            textTransform: 'uppercase',
+                          }}
+                        >
+                          {al.levelLabel}
+                        </span>
+                        <span
+                          style={{
+                            fontFamily: "'Unbounded', 'Arial Black', sans-serif",
                             fontWeight: '700',
+                            fontSize: '24px',
+                            lineHeight: '1.15',
+                            color: '#FFFFFF',
+                            textTransform: 'uppercase',
+                          }}
+                        >
+                          {al.title}
+                        </span>
+                        <span
+                          style={{
+                            fontSize: '17px',
+                            fontWeight: '800',
+                            color: al.text,
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.03em',
+                          }}
+                        >
+                          Zagrożenie: {al.kind}
+                        </span>
+                        <span style={{ fontSize: '14px', color: '#A49DA6' }}>
+                          Pomorskie · Gdańsk · {al.source} {al.time}
+                        </span>
+                        <p style={{ margin: '0', fontSize: '15px', lineHeight: '1.45', color: '#F4F1F2' }}>
+                          {al.text2}
+                        </p>
+                        <div
+                          style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '8px',
+                            padding: '14px',
+                            borderRadius: '14px',
+                            background: 'rgba(255,255,255,.06)',
                           }}
                         >
                           <span
                             style={{
-                              width: '12px',
-                              height: '12px',
-                              borderRadius: '6px',
-                              background: '#FFFFFF',
-                              boxShadow: '0 0 12px #FFFFFF',
-                              animation: 'chronFlash 0.35s steps(1) infinite alternate',
+                              fontSize: '12px',
+                              fontWeight: '800',
+                              letterSpacing: '0.08em',
+                              textTransform: 'uppercase',
+                              color: '#C9C1CB',
                             }}
-                          ></span>
-                          Latarka miga
-                        </span>
-                      </>
-                    )}
-                  </div>
-                  <div style={{ flex: '1', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                    <section
-                      style={{
-                        borderRadius: '24px',
-                        padding: '24px 22px',
-                        background: 'rgba(14,12,17,.94)',
-                        border: `2px solid ${al.color}`,
-                        boxShadow: `0 0 40px ${al.glow}`,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '14px',
-                        animation: 'chronShake .12s 8',
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <svg width="26" height="23" viewBox="0 0 72 64" fill="none" aria-hidden="true">
-                          <path
-                            d="M10 56V28L36 8L62 28V56"
-                            stroke={al.color}
-                            strokeWidth="5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          ></path>
-                          <path
-                            d="M24 56V42a12 12 0 0 1 24 0V56"
-                            stroke={al.color}
-                            strokeWidth="5"
-                            strokeLinecap="round"
-                          ></path>
-                          <circle cx="36" cy="27" r="3.4" fill={al.color}></circle>
-                        </svg>
-                        <span style={{ fontSize: '13px', fontWeight: '800', letterSpacing: '0.1em', color: '#DCD5DD' }}>
-                          CHROŃ · TERAZ
-                        </span>
-                      </div>
-                      <span
-                        style={{
-                          alignSelf: 'flex-start',
-                          padding: '5px 12px',
-                          borderRadius: '10px',
-                          background: al.color,
-                          color: al.fg,
-                          fontSize: '13px',
-                          fontWeight: '800',
-                          letterSpacing: '0.06em',
-                          textTransform: 'uppercase',
-                        }}
-                      >
-                        {al.levelLabel}
-                      </span>
-                      <span
-                        style={{
-                          fontFamily: "'Unbounded', 'Arial Black', sans-serif",
-                          fontWeight: '700',
-                          fontSize: '24px',
-                          lineHeight: '1.15',
-                          color: '#FFFFFF',
-                          textTransform: 'uppercase',
-                        }}
-                      >
-                        {al.title}
-                      </span>
-                      <span
-                        style={{
-                          fontSize: '17px',
-                          fontWeight: '800',
-                          color: al.text,
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.03em',
-                        }}
-                      >
-                        Zagrożenie: {al.kind}
-                      </span>
-                      <span style={{ fontSize: '14px', color: '#A49DA6' }}>
-                        Pomorskie · Gdańsk · {al.source} {al.time}
-                      </span>
-                      <p style={{ margin: '0', fontSize: '15px', lineHeight: '1.45', color: '#F4F1F2' }}>{al.text2}</p>
-                      <div
-                        style={{
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: '8px',
-                          padding: '14px',
-                          borderRadius: '14px',
-                          background: 'rgba(255,255,255,.06)',
-                        }}
-                      >
-                        <span
-                          style={{
-                            fontSize: '12px',
-                            fontWeight: '800',
-                            letterSpacing: '0.08em',
-                            textTransform: 'uppercase',
-                            color: '#C9C1CB',
-                          }}
-                        >
-                          Co robić teraz
-                        </span>
-                        {(al.todo || []).map((dt, dtIndex) => (
-                          <Fragment key={dtIndex}>
-                            <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
-                              <span
-                                style={{
-                                  minWidth: '22px',
-                                  height: '22px',
-                                  borderRadius: '11px',
-                                  background: al.color,
-                                  color: al.fg,
-                                  fontSize: '12px',
-                                  fontWeight: '800',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                }}
-                              >
-                                {dt.n}
-                              </span>
-                              <span
-                                style={{ fontSize: '15px', fontWeight: '700', lineHeight: '1.4', color: '#FFFFFF' }}
-                              >
-                                {dt.text}
-                              </span>
-                            </div>
-                          </Fragment>
-                        ))}
-                      </div>
-                    </section>
-                  </div>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                    {(al.chips || []).map((dc, dcIndex) => (
-                      <Fragment key={dcIndex}>
-                        <span
-                          style={{
-                            padding: '6px 10px',
-                            borderRadius: '10px',
-                            background: 'rgba(0,0,0,.6)',
-                            border: '1px solid rgba(255,255,255,.18)',
-                            color: dc.color,
-                            fontSize: '12px',
-                            fontWeight: '700',
-                          }}
-                        >
-                          {dc.label}
-                        </span>
-                      </Fragment>
-                    ))}
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
-                    <button
-                      type="button"
-                      onClick={alarmPlan}
-                      style={{
-                        minHeight: '54px',
-                        border: '0',
-                        borderRadius: '16px',
-                        background: al.color,
-                        color: al.fg,
-                        fontSize: '15px',
-                        fontWeight: '800',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      Plan działania
-                    </button>
-                    <button
-                      type="button"
-                      onClick={alarmDetails}
-                      style={{
-                        minHeight: '54px',
-                        borderRadius: '16px',
-                        border: '1px solid rgba(255,255,255,.4)',
-                        background: 'rgba(0,0,0,.55)',
-                        color: '#FFFFFF',
-                        fontSize: '15px',
-                        fontWeight: '800',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      Szczegóły
-                    </button>
-                  </div>
-                  {al.isDemo && (
-                    <>
+                          >
+                            Co robić teraz
+                          </span>
+                          {(al.todo || []).map((dt, dtIndex) => (
+                            <Fragment key={dtIndex}>
+                              <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+                                <span
+                                  style={{
+                                    minWidth: '22px',
+                                    height: '22px',
+                                    borderRadius: '11px',
+                                    background: al.color,
+                                    color: al.fg,
+                                    fontSize: '12px',
+                                    fontWeight: '800',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                  }}
+                                >
+                                  {dt.n}
+                                </span>
+                                <span
+                                  style={{ fontSize: '15px', fontWeight: '700', lineHeight: '1.4', color: '#FFFFFF' }}
+                                >
+                                  {dt.text}
+                                </span>
+                              </div>
+                            </Fragment>
+                          ))}
+                        </div>
+                      </section>
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                      {(al.chips || []).map((dc, dcIndex) => (
+                        <Fragment key={dcIndex}>
+                          <span
+                            style={{
+                              padding: '6px 10px',
+                              borderRadius: '10px',
+                              background: 'rgba(0,0,0,.6)',
+                              border: '1px solid rgba(255,255,255,.18)',
+                              color: dc.color,
+                              fontSize: '12px',
+                              fontWeight: '700',
+                            }}
+                          >
+                            {dc.label}
+                          </span>
+                        </Fragment>
+                      ))}
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
                       <button
                         type="button"
-                        onClick={stopAlarm}
+                        onClick={alarmPlan}
                         style={{
-                          minHeight: '48px',
-                          borderRadius: '14px',
+                          minHeight: '54px',
                           border: '0',
-                          background: 'transparent',
-                          color: '#DCD5DD',
+                          borderRadius: '16px',
+                          background: al.color,
+                          color: al.fg,
                           fontSize: '15px',
-                          fontWeight: '700',
-                          textDecoration: 'underline',
-                          textUnderlineOffset: '3px',
+                          fontWeight: '800',
                           cursor: 'pointer',
                         }}
                       >
-                        Zakończ demo
+                        Plan działania
                       </button>
-                    </>
-                  )}
+                      <button
+                        type="button"
+                        onClick={alarmDetails}
+                        style={{
+                          minHeight: '54px',
+                          borderRadius: '16px',
+                          border: '1px solid rgba(255,255,255,.4)',
+                          background: 'rgba(0,0,0,.55)',
+                          color: '#FFFFFF',
+                          fontSize: '15px',
+                          fontWeight: '800',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        Szczegóły
+                      </button>
+                    </div>
+                    {al.isDemo && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={stopAlarm}
+                          style={{
+                            minHeight: '48px',
+                            borderRadius: '14px',
+                            border: '0',
+                            background: 'transparent',
+                            color: '#DCD5DD',
+                            fontSize: '15px',
+                            fontWeight: '700',
+                            textDecoration: 'underline',
+                            textUnderlineOffset: '3px',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          Zakończ demo
+                        </button>
+                      </>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </>
-          )}
+              </>
+            )}
+          </div>
         </div>
-      </div>
-      {panelOpen && (
-        <>
-          <aside
-            data-screen-label="Panel demo"
-            aria-label="Panel sterowania demo"
-            style={{
-              position: panel.position,
-              left: panel.left,
-              right: panel.right,
-              bottom: panel.bottom,
-              zIndex: '100',
-              width: panel.width,
-              maxHeight: panel.maxHeight,
-              boxSizing: 'border-box',
-              overflowY: 'auto',
-              overflowX: 'hidden',
-              scrollbarWidth: 'none',
-              padding: '18px',
-              borderRadius: panel.radius,
-              background: '#121015',
-              border: '1px solid #222026',
-              boxShadow: '0 20px 60px rgba(0,0,0,.5)',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '14px',
-              animation: 'chronIn .3s ease both',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
-              <span style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                <span
-                  style={{ fontFamily: "'Unbounded', 'Arial Black', sans-serif", fontWeight: '500', fontSize: '15px' }}
-                >
-                  Scenariusz demo
-                </span>
-                <span style={{ fontSize: '12px', color: '#A49DA6' }}>Od zagrożenia do działania · ← → klawisze</span>
-              </span>
-              <button
-                type="button"
-                onClick={togglePanel}
-                aria-label="Ukryj panel"
-                style={{
-                  width: '40px',
-                  height: '40px',
-                  flex: 'none',
-                  borderRadius: '12px',
-                  background: '#17151A',
-                  border: '1px solid #222026',
-                  color: '#F4F1F2',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                }}
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.4"
-                  strokeLinecap="round"
-                  aria-hidden="true"
-                >
-                  <path d="M6 6l12 12M18 6L6 18"></path>
-                </svg>
-              </button>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <span style={{ fontSize: '12px', fontWeight: '700', color: '#9C95A0' }}>Typ zagrożenia</span>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '6px' }}>
-                {(threatOpts || []).map((t, tIndex) => (
-                  <Fragment key={tIndex}>
-                    <button
-                      type="button"
-                      onClick={t.pick}
-                      aria-pressed={t.pressed}
-                      style={{
-                        minHeight: '40px',
-                        borderRadius: '10px',
-                        border: `1px solid ${t.border}`,
-                        background: t.bg,
-                        color: '#F4F1F2',
-                        fontSize: '12px',
-                        fontWeight: '700',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      {t.label}
-                    </button>
-                  </Fragment>
-                ))}
-              </div>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              {(steps || []).map((st, stIndex) => (
-                <Fragment key={stIndex}>
-                  <button
-                    type="button"
-                    onClick={st.go}
-                    aria-current={st.current}
-                    style={{
-                      width: '100%',
-                      display: 'flex',
-                      gap: '12px',
-                      alignItems: 'flex-start',
-                      padding: '10px 12px',
-                      borderRadius: '14px',
-                      border: `1px solid ${st.border}`,
-                      background: st.bg,
-                      color: '#F4F1F2',
-                      textAlign: 'left',
-                      cursor: 'pointer',
-                      transition: 'background .25s, border-color .25s',
-                    }}
-                  >
-                    <span
-                      style={{
-                        minWidth: '26px',
-                        height: '26px',
-                        flex: 'none',
-                        borderRadius: '13px',
-                        background: st.numBg,
-                        color: st.numFg,
-                        fontSize: '12px',
-                        fontWeight: '800',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      {st.n}
-                    </span>
-                    <span style={{ flex: '1', minWidth: '0', display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                      <span style={{ fontSize: '13px', fontWeight: '800' }}>
-                        <span style={{ color: st.color, letterSpacing: '0.04em' }}>{st.title}</span> · {st.label}
-                      </span>
-                      <span style={{ fontSize: '12px', lineHeight: '1.4', color: '#A49DA6' }}>{st.desc}</span>
-                    </span>
-                  </button>
-                </Fragment>
-              ))}
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.6fr', gap: '8px' }}>
-              <button
-                type="button"
-                onClick={prevStep}
-                style={{
-                  minHeight: '48px',
-                  borderRadius: '14px',
-                  border: '1px solid #3A3540',
-                  background: '#17151A',
-                  color: '#F2EFF3',
-                  fontSize: '14px',
-                  fontWeight: '800',
-                  cursor: 'pointer',
-                }}
-              >
-                ← Wstecz
-              </button>
-              <button
-                type="button"
-                onClick={nextStep}
-                style={{
-                  minHeight: '48px',
-                  border: '0',
-                  borderRadius: '14px',
-                  background: '#E3203A',
-                  color: '#FFFFFF',
-                  fontSize: '14px',
-                  fontWeight: '800',
-                  cursor: 'pointer',
-                }}
-              >
-                {nextText}
-              </button>
-            </div>
-            <div style={{ height: '1px', background: '#222026' }}></div>
-            <span
+        {panelOpen && (
+          <>
+            <aside
+              data-screen-label="Panel demo"
+              aria-label="Panel sterowania demo"
               style={{
-                fontSize: '12px',
-                fontWeight: '800',
-                letterSpacing: '0.08em',
-                textTransform: 'uppercase',
-                color: '#9C95A0',
+                position: panel.position,
+                left: panel.left,
+                right: panel.right,
+                bottom: panel.bottom,
+                zIndex: '100',
+                width: panel.width,
+                maxHeight: panel.maxHeight,
+                boxSizing: 'border-box',
+                overflowY: 'auto',
+                overflowX: 'hidden',
+                scrollbarWidth: 'none',
+                padding: '18px',
+                borderRadius: panel.radius,
+                background: '#121015',
+                border: '1px solid #222026',
+                boxShadow: '0 20px 60px rgba(0,0,0,.5)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '14px',
+                animation: 'chronIn .3s ease both',
               }}
             >
-              Sterowanie ręczne
-            </span>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <span style={{ fontSize: '12px', fontWeight: '700', color: '#9C95A0' }}>Status zagrożenia</span>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '6px' }}>
-                {(levelOpts || []).map((l, lIndex) => (
-                  <Fragment key={lIndex}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
+                <span style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                  <span
+                    style={{
+                      fontFamily: "'Unbounded', 'Arial Black', sans-serif",
+                      fontWeight: '500',
+                      fontSize: '15px',
+                    }}
+                  >
+                    Scenariusz demo
+                  </span>
+                  <span style={{ fontSize: '12px', color: '#A49DA6' }}>Od zagrożenia do działania · ← → klawisze</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={togglePanel}
+                  aria-label="Ukryj panel"
+                  style={{
+                    width: '40px',
+                    height: '40px',
+                    flex: 'none',
+                    borderRadius: '12px',
+                    background: '#17151A',
+                    border: '1px solid #222026',
+                    color: '#F4F1F2',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.4"
+                    strokeLinecap="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M6 6l12 12M18 6L6 18"></path>
+                  </svg>
+                </button>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <span style={{ fontSize: '12px', fontWeight: '700', color: '#9C95A0' }}>Typ zagrożenia</span>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '6px' }}>
+                  {(threatOpts || []).map((t, tIndex) => (
+                    <Fragment key={tIndex}>
+                      <button
+                        type="button"
+                        onClick={t.pick}
+                        aria-pressed={t.pressed}
+                        style={{
+                          minHeight: '40px',
+                          borderRadius: '10px',
+                          border: `1px solid ${t.border}`,
+                          background: t.bg,
+                          color: '#F4F1F2',
+                          fontSize: '12px',
+                          fontWeight: '700',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        {t.label}
+                      </button>
+                    </Fragment>
+                  ))}
+                </div>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {(steps || []).map((st, stIndex) => (
+                  <Fragment key={stIndex}>
                     <button
                       type="button"
-                      onClick={l.pick}
-                      aria-pressed={l.pressed}
+                      onClick={st.go}
+                      aria-current={st.current}
                       style={{
-                        minHeight: '40px',
-                        borderRadius: '10px',
-                        border: `1px solid ${l.border}`,
-                        background: l.bg,
-                        color: '#F4F1F2',
-                        fontSize: '12px',
-                        fontWeight: '800',
+                        width: '100%',
                         display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '6px',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      <span style={{ width: '8px', height: '8px', borderRadius: '4px', background: l.dot }}></span>
-                      {l.label}
-                    </button>
-                  </Fragment>
-                ))}
-              </div>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <span style={{ fontSize: '12px', fontWeight: '700', color: '#9C95A0' }}>Stan systemu</span>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '6px' }}>
-                {(systemOpts || []).map((o, oIndex) => (
-                  <Fragment key={oIndex}>
-                    <button
-                      type="button"
-                      onClick={o.pick}
-                      aria-pressed={o.pressed}
-                      style={{
-                        minHeight: '40px',
-                        borderRadius: '10px',
-                        border: `1px solid ${o.border}`,
-                        background: o.bg,
+                        gap: '12px',
+                        alignItems: 'flex-start',
+                        padding: '10px 12px',
+                        borderRadius: '14px',
+                        border: `1px solid ${st.border}`,
+                        background: st.bg,
                         color: '#F4F1F2',
-                        fontSize: '12px',
-                        fontWeight: '800',
-                        letterSpacing: '0.04em',
+                        textAlign: 'left',
                         cursor: 'pointer',
+                        transition: 'background .25s, border-color .25s',
                       }}
                     >
-                      {o.label}
+                      <span
+                        style={{
+                          minWidth: '26px',
+                          height: '26px',
+                          flex: 'none',
+                          borderRadius: '13px',
+                          background: st.numBg,
+                          color: st.numFg,
+                          fontSize: '12px',
+                          fontWeight: '800',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        {st.n}
+                      </span>
+                      <span style={{ flex: '1', minWidth: '0', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                        <span style={{ fontSize: '13px', fontWeight: '800' }}>
+                          <span style={{ color: st.color, letterSpacing: '0.04em' }}>{st.title}</span> · {st.label}
+                        </span>
+                        <span style={{ fontSize: '12px', lineHeight: '1.4', color: '#A49DA6' }}>{st.desc}</span>
+                      </span>
                     </button>
                   </Fragment>
                 ))}
               </div>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '8px' }}>
-              <button
-                type="button"
-                onClick={restartOnboarding}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.6fr', gap: '8px' }}>
+                <button
+                  type="button"
+                  onClick={prevStep}
+                  style={{
+                    minHeight: '48px',
+                    borderRadius: '14px',
+                    border: '1px solid #3A3540',
+                    background: '#17151A',
+                    color: '#F2EFF3',
+                    fontSize: '14px',
+                    fontWeight: '800',
+                    cursor: 'pointer',
+                  }}
+                >
+                  ← Wstecz
+                </button>
+                <button
+                  type="button"
+                  onClick={nextStep}
+                  style={{
+                    minHeight: '48px',
+                    border: '0',
+                    borderRadius: '14px',
+                    background: '#E3203A',
+                    color: '#FFFFFF',
+                    fontSize: '14px',
+                    fontWeight: '800',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {nextText}
+                </button>
+              </div>
+              <div style={{ height: '1px', background: '#222026' }}></div>
+              <span
                 style={{
-                  minHeight: '44px',
-                  borderRadius: '12px',
-                  border: '1px solid #3A3540',
-                  background: '#17151A',
-                  color: '#F2EFF3',
-                  fontSize: '13px',
-                  fontWeight: '700',
-                  cursor: 'pointer',
+                  fontSize: '12px',
+                  fontWeight: '800',
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                  color: '#9C95A0',
                 }}
               >
-                Onboarding
-              </button>
-              <button
-                type="button"
-                onClick={resetAll}
-                style={{
-                  minHeight: '44px',
-                  borderRadius: '12px',
-                  border: '1px solid #3A3540',
-                  background: '#17151A',
-                  color: '#F2EFF3',
-                  fontSize: '13px',
-                  fontWeight: '700',
-                  cursor: 'pointer',
-                }}
-              >
-                Reset
-              </button>
-            </div>
-          </aside>
-        </>
-      )}
-      {panelClosed && (
-        <>
-          <button
-            type="button"
-            onClick={togglePanel}
-            style={{
-              position: 'fixed',
-              right: panelPill.right,
-              bottom: panelPill.bottom,
-              zIndex: '100',
-              minHeight: '44px',
-              padding: '0 16px',
-              borderRadius: '999px',
-              background: '#17151A',
-              border: '1px solid #3A3540',
-              color: '#F4F1F2',
-              fontSize: '13px',
-              fontWeight: '800',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              cursor: 'pointer',
-              boxShadow: '0 8px 30px rgba(0,0,0,.5)',
-            }}
-          >
-            <span style={{ width: '8px', height: '8px', borderRadius: '4px', background: '#FF2D3D' }}></span>Panel demo
-            · krok {demoStepLabel}
-          </button>
-        </>
-      )}
-    </div>
+                Sterowanie ręczne
+              </span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <span style={{ fontSize: '12px', fontWeight: '700', color: '#9C95A0' }}>Status zagrożenia</span>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '6px' }}>
+                  {(levelOpts || []).map((l, lIndex) => (
+                    <Fragment key={lIndex}>
+                      <button
+                        type="button"
+                        onClick={l.pick}
+                        aria-pressed={l.pressed}
+                        style={{
+                          minHeight: '40px',
+                          borderRadius: '10px',
+                          border: `1px solid ${l.border}`,
+                          background: l.bg,
+                          color: '#F4F1F2',
+                          fontSize: '12px',
+                          fontWeight: '800',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '6px',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <span style={{ width: '8px', height: '8px', borderRadius: '4px', background: l.dot }}></span>
+                        {l.label}
+                      </button>
+                    </Fragment>
+                  ))}
+                </div>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <span style={{ fontSize: '12px', fontWeight: '700', color: '#9C95A0' }}>Stan systemu</span>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '6px' }}>
+                  {(systemOpts || []).map((o, oIndex) => (
+                    <Fragment key={oIndex}>
+                      <button
+                        type="button"
+                        onClick={o.pick}
+                        aria-pressed={o.pressed}
+                        style={{
+                          minHeight: '40px',
+                          borderRadius: '10px',
+                          border: `1px solid ${o.border}`,
+                          background: o.bg,
+                          color: '#F4F1F2',
+                          fontSize: '12px',
+                          fontWeight: '800',
+                          letterSpacing: '0.04em',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        {o.label}
+                      </button>
+                    </Fragment>
+                  ))}
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '8px' }}>
+                <button
+                  type="button"
+                  onClick={restartOnboarding}
+                  style={{
+                    minHeight: '44px',
+                    borderRadius: '12px',
+                    border: '1px solid #3A3540',
+                    background: '#17151A',
+                    color: '#F2EFF3',
+                    fontSize: '13px',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Onboarding
+                </button>
+                <button
+                  type="button"
+                  onClick={resetAll}
+                  style={{
+                    minHeight: '44px',
+                    borderRadius: '12px',
+                    border: '1px solid #3A3540',
+                    background: '#17151A',
+                    color: '#F2EFF3',
+                    fontSize: '13px',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Reset
+                </button>
+              </div>
+            </aside>
+          </>
+        )}
+        {panelClosed && (
+          <>
+            <button
+              type="button"
+              onClick={togglePanel}
+              style={{
+                position: 'fixed',
+                right: panelPill.right,
+                bottom: panelPill.bottom,
+                zIndex: '100',
+                minHeight: '44px',
+                padding: '0 16px',
+                borderRadius: '999px',
+                background: '#17151A',
+                border: '1px solid #3A3540',
+                color: '#F4F1F2',
+                fontSize: '13px',
+                fontWeight: '800',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                cursor: 'pointer',
+                boxShadow: '0 8px 30px rgba(0,0,0,.5)',
+              }}
+            >
+              <span style={{ width: '8px', height: '8px', borderRadius: '4px', background: '#FF2D3D' }}></span>Panel
+              demo · krok {demoStepLabel}
+            </button>
+          </>
+        )}
+      </div>
+    </LocationContext.Provider>
   );
 }

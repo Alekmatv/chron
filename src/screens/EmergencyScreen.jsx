@@ -466,7 +466,7 @@ export default function EmergencyScreen(inputProps) {
               <StreetMap
                 pins={options}
                 highlightId={sel.id}
-                routeD={route.pathD}
+                showRoute
                 routeDashed={false}
                 zone={threat.zone}
                 zoneLevel="red"

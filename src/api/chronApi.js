@@ -142,6 +142,9 @@ function shelterStatus(s, ctx) {
     };
   if (s.forcedClosed) return { status: 'closed', label: 'ZAMKNIĘTE', reason: s.forcedClosed };
   if (s.hours === '24/7') return { status: 'open', label: 'OTWARTE', reason: s.openedBy };
+  if (s.hours === 'hours' && isWithinOpeningHours(s.openingHours)) {
+    return { status: 'open', label: 'OTWARTE', reason: 'Otwarte w godzinach ' + s.openingHours };
+  }
   if (ctx.level !== 'red')
     return { status: 'closed', label: 'ZAMKNIĘTE', reason: 'Otwierany dopiero po ogłoszeniu alarmu' };
   if (!s.alarmConfirmed)
@@ -151,6 +154,13 @@ function shelterStatus(s, ctx) {
       reason: 'Nikt nie potwierdził otwarcia po ogłoszeniu alarmu',
     };
   return { status: 'open', label: 'OTWARTE', reason: s.openedBy };
+}
+
+/** Opening mode label shown on shelter cards. */
+function hoursLabel(s) {
+  if (s.hours === '24/7') return 'Otwarte 24/7';
+  if (s.hours === 'hours') return 'Godziny ' + s.openingHours;
+  return 'Otwierany przy alarmie';
 }
 
 /** Adds computed fields to a shelter: status, suitability and whether the user can reach it in time. */
@@ -166,7 +176,7 @@ function decorate(s, ctx) {
     statusReason: st.reason,
     statusNote: isStale(ctx) ? 'status z ' + D.TIMES.offlineSince : 'aktualizacja ' + s.updated,
     typeLabel: s.category === 'schron' ? s.kind : 'Miejsce przystosowane · ' + s.kind,
-    hoursLabel: s.hours === '24/7' ? 'Otwarte 24/7' : 'Otwierany przy alarmie',
+    hoursLabel: hoursLabel(s),
     hoursColor: s.hours === '24/7' ? '#7FE0BE' : '#F2CC3D',
     suitable: suit.ok,
     suitNote: suit.note,
@@ -176,17 +186,37 @@ function decorate(s, ctx) {
   });
 }
 
+/**
+ * Source list of shelters: real shelters near the user when they are loaded,
+ * otherwise the built-in demo set (so the app keeps working without the backend).
+ */
+function shelterList(ctx) {
+  return ctx.shelters && ctx.shelters.length ? ctx.shelters : D.SHELTERS;
+}
+
+/** Whether the current local time falls within an opening hours range like '08:00–20:00'. */
+function isWithinOpeningHours(range, now = new Date()) {
+  const [start, end] = range.split('–').map((time) => {
+    const [h, m] = time.split(':').map(Number);
+    return h * 60 + m;
+  });
+  const minutes = now.getHours() * 60 + now.getMinutes();
+  return minutes >= start && minutes < end;
+}
+
 /** All shelters with computed fields, sorted by walking time. */
 function getShelters(ctx) {
-  return D.SHELTERS.map((s) => {
-    return decorate(s, ctx);
-  }).sort((a, b) => {
-    return a.walk - b.walk;
-  });
+  return shelterList(ctx)
+    .map((s) => {
+      return decorate(s, ctx);
+    })
+    .sort((a, b) => {
+      return a.walk - b.walk;
+    });
 }
 /** A single shelter by id with computed fields, or null. */
 function getShelter(id, ctx) {
-  const s = D.SHELTERS.find((x) => {
+  const s = shelterList(ctx).find((x) => {
     return x.id === id;
   });
   return s ? decorate(s, ctx) : null;
@@ -268,11 +298,14 @@ function getRoute(shelterId, ctx) {
     dist: s.dist,
     walk: s.walk,
     nav: s.nav,
+    // Demo shelters carry a schematic path; real shelters are routed on the map itself.
     pathD: s.path
-      .map((p, i) => {
-        return (i ? 'L' : 'M') + p[0] + ' ' + p[1];
-      })
-      .join(' '),
+      ? s.path
+          .map((p, i) => {
+            return (i ? 'L' : 'M') + p[0] + ' ' + p[1];
+          })
+          .join(' ')
+      : '',
     canReach: s.canReach,
     ttr: s.ttr,
     offline: isStale(ctx),
@@ -321,11 +354,29 @@ function getRegionLevels(ctx) {
   return out;
 }
 
+/**
+ * User profile with the current location. With a GPS fix the location is described
+ * by the municipality of the nearest shelter and the coordinates; otherwise the
+ * profile's home location is used.
+ */
+function getUser(ctx) {
+  const location = ctx && ctx.location;
+  if (!location || location.source !== 'gps') return D.USER;
+  const nearest = ctx.shelters && ctx.shelters[0];
+  return Object.assign({}, D.USER, {
+    location: Object.assign({}, D.USER.location, {
+      label: nearest ? nearest.gmina : 'Twoja lokalizacja',
+      address: location.lat.toFixed(4) + ', ' + location.lng.toFixed(4),
+      accuracy: '±' + location.accuracy + ' m',
+      lat: location.lat,
+      lng: location.lng,
+    }),
+  });
+}
+
 /** Public interface of the data layer used by screens. */
 const chronApi = {
-  getUser: function () {
-    return D.USER;
-  },
+  getUser: getUser,
   getZones: function () {
     return D.ZONES;
   },

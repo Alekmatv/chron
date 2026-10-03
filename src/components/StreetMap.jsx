@@ -1,7 +1,19 @@
 /**
- * Schematic neighborhood map: user position, shelters, alarm zone and walking route.
+ * Neighborhood map: user position, nearby shelters, threat zone and walking route.
+ *
+ * Built on Leaflet with standard OpenStreetMap tiles, darkened with a CSS filter
+ * (see .chron-map in global.css) to match the app theme. The walking
+ * route to the highlighted shelter is requested from OSRM; if the routing service
+ * is unavailable, a straight line is drawn instead.
  */
-import { Fragment } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import { LocationContext } from '@/app/LocationContext.js';
+import { fetchWalkingRoute } from '@/services/routing.js';
+
+const TILE_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+const TILE_ATTRIBUTION = '© OpenStreetMap';
 
 const PIN = { open: ['#4FD1A5', '#04170F'], unconfirmed: ['#F2A33A', '#1A0E05'], closed: ['#4A4550', '#E6E0E8'] };
 const ZONE = {
@@ -10,9 +22,15 @@ const ZONE = {
 };
 const ZONE_LABEL = { area: 'Strefa alarmu', plume: 'Chmura chloru', river: 'Strefa zalewowa' };
 
+/** Radius of the threat zone drawn around the user, in meters, per zone type. */
+const ZONE_RADIUS_M = { area: 1500, plume: 1100, river: 900 };
+
+/** Number of nearest pins kept in view when the map fits its bounds. */
+const PINS_IN_VIEW = 5;
+
 const DEFAULT_PROPS = {
   highlightId: '',
-  routeD: '',
+  showRoute: false,
   routeDashed: false,
   zone: 'area',
   zoneLevel: 'green',
@@ -24,59 +42,172 @@ const DEFAULT_PROPS = {
 function buildViewModel(props) {
   const p = props;
   const stale = !!p.stale;
-  const onPin = p.onPin;
   const zone = p.zoneLevel && p.zoneLevel !== 'green' ? p.zone : null;
-  const pins = (p.pins || []).map((s) => {
-    const c = stale ? ['#C9C1CB', '#0B0A0D'] : PIN[s.status] || PIN.closed;
-    const hl = s.id === p.highlightId;
-    return {
-      num: s.num,
-      color: c[0],
-      fg: c[1],
-      left: ((s.x / 358) * 100).toFixed(2),
-      top: ((s.y / 300) * 100).toFixed(2),
-      opacity: s.status === 'closed' || s.suitable === false ? 0.45 : 1,
-      strike: s.status === 'closed' ? 'line-through' : 'none',
-      ring: hl ? '0 0 0 2px #0B0A0D, 0 0 0 4px #F2EFF3' : '0 0 0 2px #0B0A0D',
-      aria: s.name + ', ' + s.statusLabel + ', ' + s.walk + ' min',
-      tap: function () {
-        if (onPin) onPin(s.id);
-      },
-    };
-  });
+  const pins = (p.pins || [])
+    .filter((s) => Number.isFinite(s.lat) && Number.isFinite(s.lng))
+    .map((s) => {
+      const c = stale ? ['#C9C1CB', '#0B0A0D'] : PIN[s.status] || PIN.closed;
+      return {
+        id: s.id,
+        num: s.num,
+        lat: s.lat,
+        lng: s.lng,
+        color: c[0],
+        fg: c[1],
+        opacity: s.status === 'closed' || s.suitable === false ? 0.45 : 1,
+        strike: s.status === 'closed' ? 'line-through' : 'none',
+        highlighted: s.id === p.highlightId,
+        aria: s.name + ', ' + s.statusLabel + ', ' + s.walk + ' min',
+      };
+    });
   return {
     pins,
-    routeD: p.routeD || '',
-    dash: p.routeDashed ? '2 9' : 'none',
-    zoneArea: zone === 'area',
-    zonePlume: zone === 'plume',
-    zoneRiver: zone === 'river',
+    zone,
     zc: ZONE[p.zoneLevel] || ZONE.yellow,
-    hasZoneLabel: !!zone,
     zoneLabel: ZONE_LABEL[zone] || '',
-    hasOffline: !!p.offlineLabel,
     offlineLabel: p.offlineLabel || '',
   };
 }
 
+/** Leaflet marker icon for a shelter: a numbered tile in the shelter status color. */
+function shelterIcon(pin) {
+  const ring = pin.highlighted ? '0 0 0 2px #0B0A0D, 0 0 0 4px #F2EFF3' : '0 0 0 2px #0B0A0D';
+  return L.divIcon({
+    className: '',
+    iconSize: [44, 44],
+    iconAnchor: [22, 22],
+    html: `<span aria-label="${pin.aria}" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;opacity:${pin.opacity}"><span style="min-width:30px;height:30px;padding:0 4px;box-sizing:border-box;border-radius:10px;background:${pin.color};color:${pin.fg};font:800 12px 'Manrope',system-ui,sans-serif;display:flex;align-items:center;justify-content:center;box-shadow:${ring};text-decoration:${pin.strike}">${pin.num}</span></span>`,
+  });
+}
+
+/** Leaflet marker icon for the user: a pulsing blue dot. */
+const userIcon = L.divIcon({
+  className: '',
+  iconSize: [20, 20],
+  iconAnchor: [10, 10],
+  html: '<span style="display:block;width:20px;height:20px;border-radius:10px;background:#5AAAFF;border:3px solid #0B0A0D;box-sizing:border-box;animation:schronPulse 1.8s infinite"></span>',
+});
+
+/** Small label in a map corner (threat zone name, offline data notice). */
+function MapLabel({ side, color, border, children }) {
+  return (
+    <span
+      style={{
+        position: 'absolute',
+        [side]: '10px',
+        top: '10px',
+        zIndex: 1000,
+        padding: '4px 8px',
+        borderRadius: '8px',
+        background: 'rgba(22,20,26,.9)',
+        border: `1px solid ${border}`,
+        fontSize: '11px',
+        fontWeight: '700',
+        color,
+      }}
+    >
+      {children}
+    </span>
+  );
+}
+
 /**
- * Schematic neighborhood map.
+ * Neighborhood map.
  *
  * @param {object} props
- * @param {Shelter[]} props.pins
- * @param {string} props.highlightId
- * @param {string} props.routeD
- * @param {boolean} props.routeDashed
- * @param {string} props.zone
- * @param {string} props.zoneLevel
- * @param {string} props.offlineLabel
- * @param {boolean} props.stale
- * @param {Function} props.onPin
+ * @param {Shelter[]} props.pins shelters to show (need lat/lng)
+ * @param {string} props.highlightId shelter that is selected and routed to
+ * @param {boolean} props.showRoute draw the walking route to the highlighted shelter
+ * @param {boolean} props.routeDashed draw the route as a dotted line (preview)
+ * @param {string} props.zone threat zone type: 'area' | 'plume' | 'river'
+ * @param {string} props.zoneLevel threat level; no zone is drawn at 'green'
+ * @param {string} props.offlineLabel notice shown while offline
+ * @param {boolean} props.stale data is outdated: pins are shown in gray
+ * @param {Function} props.onPin called with the shelter id when a pin is tapped
  */
 export default function StreetMap(inputProps) {
   const props = { ...DEFAULT_PROPS, ...inputProps };
-  const { dash, hasOffline, hasZoneLabel, offlineLabel, pins, routeD, zc, zoneArea, zoneLabel, zonePlume, zoneRiver } =
-    buildViewModel(props);
+  const { pins, zone, zc, zoneLabel, offlineLabel } = buildViewModel(props);
+  const location = useContext(LocationContext);
+  const containerRef = useRef(null);
+  const mapRef = useRef(null);
+  const layersRef = useRef(null);
+  const onPinRef = useRef(props.onPin);
+  onPinRef.current = props.onPin;
+  const [route, setRoute] = useState(null);
+
+  const target = pins.find((pin) => pin.highlighted);
+  const routeTarget = props.showRoute && target ? target : null;
+
+  // Create the Leaflet map once and remove it when the component unmounts.
+  useEffect(() => {
+    const map = L.map(containerRef.current, { zoomControl: false, attributionControl: true });
+    L.tileLayer(TILE_URL, { attribution: TILE_ATTRIBUTION, maxZoom: 19 }).addTo(map);
+    map.attributionControl.setPrefix(false);
+    mapRef.current = map;
+    layersRef.current = L.layerGroup().addTo(map);
+    return () => map.remove();
+  }, []);
+
+  // Request the walking route whenever the destination or the user position changes.
+  useEffect(() => {
+    if (!routeTarget) {
+      setRoute(null);
+      return undefined;
+    }
+    let cancelled = false;
+    fetchWalkingRoute(location, routeTarget).then((result) => {
+      if (!cancelled) setRoute(result);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [routeTarget?.id, routeTarget?.lat, routeTarget?.lng, location.lat, location.lng]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Redraw all overlays when data changes.
+  const pinsKey = pins.map((pin) => `${pin.id}:${pin.color}:${pin.opacity}:${pin.highlighted}`).join('|');
+  useEffect(() => {
+    const map = mapRef.current;
+    const layers = layersRef.current;
+    layers.clearLayers();
+    const user = [location.lat, location.lng];
+
+    if (zone) {
+      L.circle(user, {
+        radius: ZONE_RADIUS_M[zone] || ZONE_RADIUS_M.area,
+        color: zc.stroke,
+        weight: 2,
+        dashArray: '6 6',
+        fillColor: zc.fill,
+        fillOpacity: 1,
+      }).addTo(layers);
+    }
+    if (route) {
+      L.polyline(route.coords, {
+        color: '#FF2D3D',
+        weight: 5,
+        lineCap: 'round',
+        lineJoin: 'round',
+        dashArray: props.routeDashed ? '2 9' : null,
+      }).addTo(layers);
+    }
+    pins.forEach((pin) => {
+      L.marker([pin.lat, pin.lng], { icon: shelterIcon(pin), keyboard: true, zIndexOffset: pin.highlighted ? 500 : 0 })
+        .on('click', () => onPinRef.current && onPinRef.current(pin.id))
+        .addTo(layers);
+    });
+    L.marker(user, { icon: userIcon, interactive: false, zIndexOffset: 1000 }).addTo(layers);
+  }, [pinsKey, route, zone, zc.stroke, location.lat, location.lng, props.routeDashed]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Fit the view to the user, the nearest shelters and the route.
+  useEffect(() => {
+    const points = [[location.lat, location.lng]];
+    const inView = target ? [target] : pins.slice(0, PINS_IN_VIEW);
+    inView.forEach((pin) => points.push([pin.lat, pin.lng]));
+    if (route) points.push(...route.coords);
+    mapRef.current.fitBounds(points, { padding: [36, 36], maxZoom: 17 });
+  }, [target?.id, route, pins.length, location.lat, location.lng]); // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <div
       style={{
@@ -91,185 +222,17 @@ export default function StreetMap(inputProps) {
         fontFamily: "'Manrope', system-ui, sans-serif",
       }}
     >
-      <svg
-        width="100%"
-        height="100%"
-        viewBox="0 0 358 300"
-        preserveAspectRatio="none"
-        aria-hidden="true"
-        style={{ position: 'absolute', left: '0', top: '0' }}
-      >
-        <rect x="196" y="186" width="70" height="46" rx="8" fill="#14211A"></rect>
-        <path d="M0 284 C80 266 130 298 200 280 S320 262 358 272" stroke="#132131" strokeWidth="20" fill="none"></path>
-        <path d="M0 30H358M0 130H358M30 0V300M230 0V300M330 0V300" stroke="#1C1920" strokeWidth="6" fill="none"></path>
-        <path
-          d="M0 80H358M0 170H358M0 250H358M90 0V300M170 0V300M280 0V300"
-          stroke="#2A2630"
-          strokeWidth="11"
-          fill="none"
-        ></path>
-        {zoneArea && (
-          <>
-            <rect
-              x="4"
-              y="4"
-              width="350"
-              height="292"
-              rx="12"
-              fill={zc.fill}
-              stroke={zc.stroke}
-              strokeWidth="2"
-              strokeDasharray="6 6"
-            ></rect>
-          </>
-        )}
-        {zonePlume && (
-          <>
-            <ellipse
-              cx="320"
-              cy="30"
-              rx="190"
-              ry="95"
-              transform="rotate(-24 320 30)"
-              fill={zc.fill}
-              stroke={zc.stroke}
-              strokeWidth="2"
-              strokeDasharray="6 6"
-            ></ellipse>
-          </>
-        )}
-        {zoneRiver && (
-          <>
-            <path
-              d="M0 284 C80 266 130 298 200 280 S320 262 358 272"
-              stroke={zc.fill}
-              strokeWidth="70"
-              fill="none"
-            ></path>
-            <path
-              d="M0 246 C80 228 130 260 200 242 S320 224 358 234"
-              stroke={zc.stroke}
-              strokeWidth="2"
-              strokeDasharray="6 6"
-              fill="none"
-            ></path>
-          </>
-        )}
-        <path
-          d={routeD}
-          stroke="#FF2D3D"
-          strokeWidth="5"
-          fill="none"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeDasharray={dash}
-          style={{ filter: 'drop-shadow(0 0 2px rgba(255,45,61,.6))', transition: 'd .5s' }}
-        ></path>
-      </svg>
-      <span
-        aria-hidden="true"
-        style={{
-          position: 'absolute',
-          left: '47.49%',
-          top: '56.67%',
-          width: '20px',
-          height: '20px',
-          margin: '-10px 0 0 -10px',
-          borderRadius: '10px',
-          background: '#5AAAFF',
-          border: '3px solid #0B0A0D',
-          boxSizing: 'border-box',
-          animation: 'schronPulse 1.8s infinite',
-        }}
-      ></span>
-      {hasZoneLabel && (
-        <>
-          <span
-            style={{
-              position: 'absolute',
-              right: '10px',
-              top: '10px',
-              padding: '4px 8px',
-              borderRadius: '8px',
-              background: 'rgba(22,20,26,.9)',
-              border: `1px solid ${zc.stroke}`,
-              fontSize: '11px',
-              fontWeight: '700',
-              color: zc.text,
-            }}
-          >
-            {zoneLabel}
-          </span>
-        </>
+      <div ref={containerRef} className="chron-map" style={{ position: 'absolute', inset: 0, background: '#121015' }} />
+      {zone && (
+        <MapLabel side="right" color={zc.text} border={zc.stroke}>
+          {zoneLabel}
+        </MapLabel>
       )}
-      {hasOffline && (
-        <>
-          <span
-            style={{
-              position: 'absolute',
-              left: '10px',
-              top: '10px',
-              padding: '4px 8px',
-              borderRadius: '8px',
-              background: 'rgba(22,20,26,.9)',
-              border: '1px solid #2C2830',
-              fontSize: '11px',
-              fontWeight: '700',
-              color: '#C9C1CB',
-            }}
-          >
-            {offlineLabel}
-          </span>
-        </>
+      {offlineLabel && (
+        <MapLabel side="left" color="#C9C1CB" border="#2C2830">
+          {offlineLabel}
+        </MapLabel>
       )}
-      {(pins || []).map((p, pIndex) => (
-        <Fragment key={pIndex}>
-          <button
-            type="button"
-            onClick={p.tap}
-            aria-label={p.aria}
-            style={{
-              opacity: p.opacity,
-              position: 'absolute',
-              left: `${p.left}%`,
-              top: `${p.top}%`,
-              width: '44px',
-              height: '44px',
-              margin: '-22px 0 0 -22px',
-              border: '0',
-              padding: '0',
-              background: 'transparent',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              transition: 'opacity .4s',
-            }}
-          >
-            <span
-              style={{
-                minWidth: '30px',
-                height: '30px',
-                padding: '0 4px',
-                boxSizing: 'border-box',
-                borderRadius: '10px',
-                background: p.color,
-                color: p.fg,
-                fontWeight: '800',
-                fontSize: '12px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: p.ring,
-                textDecoration: p.strike,
-                transition: 'background .4s, box-shadow .3s',
-              }}
-            >
-              {p.num}
-            </span>
-          </button>
-        </Fragment>
-      ))}
     </div>
   );
 }

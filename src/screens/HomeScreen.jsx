@@ -56,7 +56,7 @@ function buildViewModel(props, state, setState) {
   const route = rec.primary ? api.getRoute(rec.primary.id, s) : null;
   const packs = s.packs || api.getSafetyPacks();
   return {
-    user: api.getUser(),
+    user: api.getUser(s),
     status,
     isGreen: green,
     hasThreat: !green,
@@ -85,7 +85,7 @@ function buildViewModel(props, state, setState) {
     mapTitle: threat ? threat.title : 'Sytuacja w kraju',
     shelters,
     recId: r.id || '',
-    routeD: route ? route.pathD : '',
+    showRoute: !!route,
     zone: threat ? threat.zone : '',
     level: s.level,
     offlineMapLabel: stale ? 'Mapa offline · pobrana 14:32' : '',
@@ -148,7 +148,7 @@ export default function HomeScreen(inputProps) {
     rec,
     recId,
     regionLevels,
-    routeD,
+    showRoute,
     shelters,
     showNearby,
     showReach,
@@ -767,7 +767,7 @@ export default function HomeScreen(inputProps) {
             <StreetMap
               pins={shelters}
               highlightId={recId}
-              routeD={routeD}
+              showRoute={showRoute}
               routeDashed={true}
               zone={zone}
               zoneLevel={level}

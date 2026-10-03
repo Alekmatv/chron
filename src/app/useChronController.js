@@ -2,6 +2,11 @@ import { useEffect, useMemo, useRef } from 'react';
 import chronApi from '@/api/chronApi.js';
 import useMergedState from '@/hooks/useMergedState.js';
 import { playAlertBeeps, playSiren, vibrateDevice } from '@/app/alarmSignals.js';
+import { DEFAULT_LOCATION, distanceMeters, watchLocation } from '@/services/geolocation.js';
+import { fetchNearbyShelters } from '@/services/sheltersService.js';
+
+/** Shelters are reloaded when the user moves farther than this from the last search point, in meters. */
+const SHELTER_RELOAD_DISTANCE_M = 250;
 
 /** Default alarm signal and notification settings. */
 const DEFAULT_SETTINGS = {
@@ -62,6 +67,10 @@ function createInitialState() {
     selectedShelterId: null,
     navigating: false,
     emergencyMinimized: false,
+    // Device location and real shelters around it (null until loaded; the demo set is used meanwhile)
+    location: DEFAULT_LOCATION,
+    shelters: null,
+    sheltersBuild: null,
     // Profile
     settings: DEFAULT_SETTINGS,
     zoneNotify: { dom: true, praca: true, uczelnia: false },
@@ -376,6 +385,31 @@ export default function useChronController() {
       restartOnboarding,
     };
   }, [setState]);
+
+  // Watch the device position once onboarding is finished; without permission the default location stays.
+  useEffect(() => {
+    if (!state.onboarded) return undefined;
+    return watchLocation(
+      (location) => setState({ location }),
+      () => setState({ location: DEFAULT_LOCATION }),
+    );
+  }, [state.onboarded, setState]);
+
+  // Load shelters around the user, and reload them after a noticeable move.
+  const lastShelterSearch = useRef(null);
+  useEffect(() => {
+    const { location } = state;
+    if (lastShelterSearch.current && distanceMeters(lastShelterSearch.current, location) < SHELTER_RELOAD_DISTANCE_M) {
+      return;
+    }
+    lastShelterSearch.current = location;
+    fetchNearbyShelters(location)
+      .then(({ build, shelters }) => setState({ shelters, sheltersBuild: build }))
+      .catch((error) => {
+        lastShelterSearch.current = null;
+        console.warn('Shelters are unavailable, using the built-in set', error);
+      });
+  }, [state.location, setState]);
 
   // Window resize and arrow key listeners (arrow keys step through the demo).
   useEffect(() => {
