@@ -3,7 +3,9 @@ import chronApi from '@/api/chronApi.js';
 import useMergedState from '@/hooks/useMergedState.js';
 import { playAlertBeeps, playSiren, vibrateDevice } from '@/app/alarmSignals.js';
 import { DEFAULT_LOCATION, distanceMeters, watchLocation } from '@/services/geolocation.js';
-import { fetchNearbyShelters } from '@/services/sheltersService.js';
+import { fetchNearbyShelters, relocateShelters } from '@/services/sheltersService.js';
+import { loadLastShelters, loadPacks, saveLastShelters } from '@/services/offlineStore.js';
+import { downloadSafetyPack } from '@/services/safetyPack.js';
 import { fetchLiveThreats } from '@/services/threatsService.js';
 
 /** Shelters are reloaded when the user moves farther than this from the last search point, in meters. */
@@ -49,9 +51,48 @@ function writeOnboarded(value) {
   }
 }
 
+/** Saved shelters are used offline only within this distance from where they were downloaded, in meters. */
+const OFFLINE_SHELTERS_MAX_DISTANCE_M = 10000;
+
+/**
+ * Safety Packs for the user's zones: downloaded packs from the device,
+ * zones without a downloaded pack are offered for download.
+ */
+function initialPacks() {
+  const saved = loadPacks();
+  return chronApi.getSafetyPacks().map((pack) => {
+    const stored = saved[pack.zoneId];
+    if (!stored) return { ...pack, status: 'none', date: '', version: '' };
+    const { shelters, ...meta } = stored; // shelters stay in storage; state keeps only metadata
+    return { ...pack, ...meta };
+  });
+}
+
+/**
+ * Shelters saved on the device for offline use: the last loaded list or the
+ * nearest downloaded Safety Pack, recalculated for the current location.
+ */
+function offlineShelters(location) {
+  const sources = [loadLastShelters(), ...Object.values(loadPacks())].filter(
+    (entry) => entry && entry.shelters && entry.shelters.length,
+  );
+  const near = sources
+    .map((entry) => ({ entry, distance: distanceMeters(entry.location || entry.center, location) }))
+    .filter(({ distance }) => distance <= OFFLINE_SHELTERS_MAX_DISTANCE_M)
+    .sort((a, b) => a.distance - b.distance)[0];
+  return near ? relocateShelters(near.entry.shelters, location) : null;
+}
+
+/** HH:MM when shelters were last saved on the device; used as the data time when starting offline. */
+function lastSavedTime() {
+  const savedAt = loadLastShelters()?.savedAt;
+  return savedAt ? new Date(savedAt).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' }) : null;
+}
+
 /** Initial app state. */
 function createInitialState() {
   const onboarded = readOnboarded();
+  const networkOnline = navigator.onLine !== false;
   return {
     // User and onboarding
     onboarded,
@@ -64,7 +105,10 @@ function createInitialState() {
     level: 'green',
     threatId: 'air',
     closedIds: [],
-    system: 'online',
+    system: networkOnline ? 'online' : 'offline',
+    networkOnline,
+    // HH:MM of the last fresh data when the device really lost the connection (null otherwise)
+    offlineSince: networkOnline ? null : lastSavedTime(),
     syncProgress: 0,
     justSynced: false,
     // Route and emergency mode
@@ -73,14 +117,14 @@ function createInitialState() {
     emergencyMinimized: false,
     // Device location and real shelters around it (null until loaded; the demo set is used meanwhile)
     location: DEFAULT_LOCATION,
-    shelters: null,
+    shelters: offlineShelters(DEFAULT_LOCATION),
     sheltersBuild: null,
     // Live threat feed from official and observational sources (null until loaded)
     liveThreats: null,
     // Profile
     settings: DEFAULT_SETTINGS,
     zoneNotify: { dom: true, praca: true, uczelnia: false },
-    packs: chronApi.getSafetyPacks().map((pack) => ({ ...pack })),
+    packs: initialPacks(),
     confirmations: {},
     // Demo scenario
     demoStep: 0,
@@ -145,25 +189,24 @@ export default function useChronController() {
       }, 110);
     }
 
-    /** Downloads the offline pack for a zone with gradual progress. */
+    /** Downloads the Safety Pack for a zone: shelters, map tiles and walking routes. */
     function downloadPack(zoneId) {
-      clearInterval(t.pack);
-      const patchPack = (makePatch) =>
+      const patchPack = (patch) =>
         setState((s) => ({
-          packs: s.packs.map((pack) => (pack.zoneId === zoneId ? { ...pack, ...makePatch(pack) } : pack)),
+          packs: s.packs.map((pack) => (pack.zoneId === zoneId ? { ...pack, ...patch } : pack)),
         }));
+      const { location } = getState();
+      const zone = chronApi.getZones().find((item) => item.id === zoneId);
+      // The home zone follows the real position; other zones use their saved addresses.
+      const center = zoneId === 'dom' && location.source === 'gps' ? location : { lat: zone.lat, lng: zone.lng };
 
-      patchPack(() => ({ status: 'downloading', progress: 0 }));
-      t.pack = setInterval(() => {
-        const current = getState().packs.find((pack) => pack.zoneId === zoneId);
-        const next = Math.min(100, (current.progress || 0) + 7);
-        if (next >= 100) {
-          clearInterval(t.pack);
-          patchPack(() => ({ status: 'ready', progress: 100, date: 'dziś, 14:33', version: 'v2026.10.03' }));
-        } else {
-          patchPack(() => ({ progress: next }));
-        }
-      }, 160);
+      patchPack({ status: 'downloading', progress: 0 });
+      downloadSafetyPack(zone, center, (progress) => patchPack({ progress }))
+        .then(({ shelters, ...meta }) => patchPack(meta))
+        .catch((error) => {
+          console.warn('Safety Pack download failed', error);
+          patchPack({ status: 'none', progress: 0 });
+        });
     }
 
     /** Shakes the phone frame and vibrates the device if enabled in settings. */
@@ -239,6 +282,8 @@ export default function useChronController() {
       const times = chronApi.getTimes();
       clearTimeout(t.push);
       stopAlarmLoop();
+      // Starting the scenario skips onboarding, also after the app is reopened.
+      writeOnboarded(true);
       const base = {
         demoStep: step,
         onboarded: true,
@@ -410,20 +455,61 @@ export default function useChronController() {
     }
     lastShelterSearch.current = location;
     fetchNearbyShelters(location)
-      .then(({ build, shelters }) => setState({ shelters, sheltersBuild: build }))
+      .then(({ build, shelters }) => {
+        setState({ shelters, sheltersBuild: build });
+        saveLastShelters(location, shelters, build);
+      })
       .catch((error) => {
+        // Without the server, use shelters saved on the device; the built-in set is the last resort.
         lastShelterSearch.current = null;
-        console.warn('Shelters are unavailable, using the built-in set', error);
+        const saved = offlineShelters(location);
+        if (saved) setState({ shelters: saved });
+        console.warn('Shelters are unavailable from the server', error);
       });
-  }, [state.location, setState]);
+  }, [state.location, state.networkOnline, setState]);
 
-  // Refresh the live threat feed every minute. Skipped while offline: the last known feed stays visible.
+  // Download the home zone Safety Pack automatically once real shelters are available.
+  const homePackRequested = useRef(false);
+  const homePackStatus = state.packs.find((pack) => pack.zoneId === 'dom')?.status;
+  useEffect(() => {
+    if (homePackRequested.current || !state.onboarded || !state.networkOnline || !state.shelters) return;
+    if (homePackStatus !== 'none') return;
+    homePackRequested.current = true;
+    controller.actions.downloadPack('dom');
+  }, [state.onboarded, state.networkOnline, state.shelters, homePackStatus, controller]);
+
+  // Real connectivity: losing the network switches to OFFLINE, regaining it starts RECOVERING.
+  useEffect(() => {
+    const goOffline = () => {
+      const lastFeed = stateRef.current.liveThreats?.fetchedAt;
+      const since = new Date(lastFeed || Date.now()).toLocaleTimeString('pl-PL', {
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+      setState({ networkOnline: false, offlineSince: since });
+      controller.setSystem('offline');
+    };
+    const goOnline = () => {
+      // Forget the last search point so shelters are reloaded from the server.
+      lastShelterSearch.current = null;
+      setState({ networkOnline: true, offlineSince: null });
+      if (stateRef.current.system === 'offline') controller.setSystem('recovering');
+    };
+    window.addEventListener('offline', goOffline);
+    window.addEventListener('online', goOnline);
+    return () => {
+      window.removeEventListener('offline', goOffline);
+      window.removeEventListener('online', goOnline);
+    };
+  }, [controller, setState]);
+
+  // Refresh the live threat feed every minute. Offline, the service worker answers with the last
+  // saved feed (its fetchedAt shows how old it is); if nothing is saved, the current feed stays.
   const voivodeship = state.shelters?.[0]?.voivodeship || '';
   const latKey = state.location.lat.toFixed(2);
   const lngKey = state.location.lng.toFixed(2);
   useEffect(() => {
     const load = () => {
-      if (stateRef.current.system === 'offline') return;
       fetchLiveThreats(stateRef.current.location, voivodeship)
         .then((liveThreats) => setState({ liveThreats }))
         .catch((error) => console.warn('Live threat feed is unavailable', error));
@@ -431,7 +517,7 @@ export default function useChronController() {
     load();
     const timer = setInterval(load, THREATS_REFRESH_MS);
     return () => clearInterval(timer);
-  }, [latKey, lngKey, voivodeship, setState]);
+  }, [latKey, lngKey, voivodeship, state.networkOnline, setState]);
 
   // Outside the demo scenario, the connectivity state follows the real sources:
   // DEGRADED when at least one source is unavailable, ONLINE when all respond.

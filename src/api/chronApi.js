@@ -32,12 +32,17 @@ function isStale(ctx) {
   return ctx.system === 'offline' || ctx.system === 'recovering';
 }
 
+/** Time of the last fresh data: the real moment the connection was lost, or the demo scenario time. */
+function offlineSince(ctx) {
+  return (ctx && ctx.offlineSince) || D.TIMES.offlineSince;
+}
+
 /** Data freshness label for the current connectivity state. */
 function freshness(ctx) {
   if (ctx.system === 'offline')
-    return { key: 'stale', label: 'NIEAKTUALNE · dane z ' + D.TIMES.offlineSince, live: false };
+    return { key: 'stale', label: 'NIEAKTUALNE · dane z ' + offlineSince(ctx), live: false };
   if (ctx.system === 'recovering')
-    return { key: 'stale', label: 'SYNCHRONIZACJA · dane z ' + D.TIMES.offlineSince, live: false };
+    return { key: 'stale', label: 'SYNCHRONIZACJA · dane z ' + offlineSince(ctx), live: false };
   if (ctx.system === 'degraded') return { key: 'delayed', label: 'OPÓŹNIONE · część źródeł niedostępna', live: false };
   return { key: 'live', label: 'AKTUALNE · na żywo', live: true };
 }
@@ -174,7 +179,7 @@ function decorate(s, ctx) {
     status: st.status,
     statusLabel: st.label,
     statusReason: st.reason,
-    statusNote: isStale(ctx) ? 'status z ' + D.TIMES.offlineSince : 'aktualizacja ' + s.updated,
+    statusNote: isStale(ctx) ? 'status z ' + offlineSince(ctx) : 'aktualizacja ' + s.updated,
     typeLabel: s.category === 'schron' ? s.kind : 'Miejsce przystosowane · ' + s.kind,
     hoursLabel: hoursLabel(s),
     // Real addresses already include the city; demo addresses do not.
@@ -317,9 +322,10 @@ function getRoute(shelterId, ctx) {
 
 /**
  * Connectivity banner texts: ONLINE, DEGRADED, OFFLINE or RECOVERING.
- * failedSources lists the names of unavailable live sources for the DEGRADED text.
+ * failedSources lists the names of unavailable live sources for the DEGRADED text;
+ * lostAt is the time the connection was really lost (HH:MM), if it was.
  */
-function getSystemInfo(system, progress, failedSources) {
+function getSystemInfo(system, progress, failedSources, lostAt) {
   switch (system) {
     case 'degraded':
       return {
@@ -336,7 +342,8 @@ function getSystemInfo(system, progress, failedSources) {
         key: 'offline',
         label: 'OFFLINE',
         title: 'Brak internetu',
-        text: 'Dane o zagrożeniu z ' + D.TIMES.offlineSince + '. Schrony, instrukcje i trasa działają offline.',
+        text:
+          'Dane o zagrożeniu z ' + (lostAt || D.TIMES.offlineSince) + '. Schrony, instrukcje i trasa działają offline.',
       };
     case 'recovering':
       return {

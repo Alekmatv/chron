@@ -88,14 +88,14 @@ const userIcon = L.divIcon({
   html: '<span style="display:block;width:20px;height:20px;border-radius:10px;background:#5AAAFF;border:3px solid #0B0A0D;box-sizing:border-box;animation:schronPulse 1.8s infinite"></span>',
 });
 
-/** Small label in a map corner (threat zone name, offline data notice). */
-function MapLabel({ side, color, border, children }) {
+/** Small label in a map corner (threat zone name, offline notice, approximate route). */
+function MapLabel({ side, edge = 'top', color, border, children }) {
   return (
     <span
       style={{
         position: 'absolute',
         [side]: '10px',
-        top: '10px',
+        [edge]: '10px',
         zIndex: 1000,
         padding: '4px 8px',
         borderRadius: '8px',
@@ -226,6 +226,11 @@ export default function StreetMap(inputProps) {
       {zone && (
         <MapLabel side="right" color={zc.text} border={zc.stroke}>
           {zoneLabel}
+        </MapLabel>
+      )}
+      {route && !route.exact && (
+        <MapLabel side="left" edge="bottom" color="#F2B866" border="#5C4520">
+          Trasa przybliżona · linia prosta
         </MapLabel>
       )}
       {offlineLabel && (

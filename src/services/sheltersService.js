@@ -2,7 +2,7 @@
  * Loads real shelters near the user from the backend and converts them
  * into the shape used by the data layer (src/api/chronApi.js).
  */
-import { bearingDegrees } from '@/services/geolocation.js';
+import { bearingDegrees, distanceMeters } from '@/services/geolocation.js';
 
 /** Search radius around the user, in kilometers. */
 const SEARCH_RADIUS_KM = 3;
@@ -91,17 +91,39 @@ export function toAppShelter(shelter, origin) {
 /**
  * Nearest shelters to a location, converted for the data layer.
  * @param {{lat: number, lng: number}} location
+ * @param {{ radiusKm?: number, limit?: number }} [options] search radius and maximum number of shelters
  * @returns {Promise<{ build: object | null, shelters: object[] }>}
  */
-export async function fetchNearbyShelters(location) {
+export async function fetchNearbyShelters(location, { radiusKm = SEARCH_RADIUS_KM, limit = SHELTER_LIMIT } = {}) {
   const params = new URLSearchParams({
     lat: location.lat.toFixed(5),
     lng: location.lng.toFixed(5),
-    radius: String(SEARCH_RADIUS_KM),
-    limit: String(SHELTER_LIMIT),
+    radius: String(radiusKm),
+    limit: String(limit),
   });
   const response = await fetch(`/api/shelters?${params}`);
   if (!response.ok) throw new Error(`Shelters request failed: ${response.status}`);
   const data = await response.json();
   return { build: data.build, shelters: data.shelters.map((shelter) => toAppShelter(shelter, location)) };
+}
+
+/**
+ * Recomputes distance, walking time and direction of saved shelters from a new location
+ * and sorts them by distance. Used when shelters come from the device instead of the server.
+ * @param {object[]} shelters shelters in the data layer shape
+ * @param {{lat: number, lng: number}} location current user location
+ */
+export function relocateShelters(shelters, location) {
+  return shelters
+    .map((shelter) => {
+      const distanceM = distanceMeters(location, shelter);
+      const direction = DIRECTIONS[Math.round(bearingDegrees(location, shelter) / 45) % 8];
+      return {
+        ...shelter,
+        dist: Math.round(distanceM / 10) * 10,
+        walk: Math.max(1, Math.ceil((distanceM * DETOUR_FACTOR) / WALK_SPEED_M_PER_MIN)),
+        nav: `Idź ${Math.round(distanceM / 10) * 10} m ${direction}`,
+      };
+    })
+    .sort((a, b) => a.dist - b.dist);
 }

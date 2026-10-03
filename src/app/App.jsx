@@ -124,6 +124,7 @@ function buildViewModel(controller) {
       s.system,
       s.syncProgress,
       (s.liveThreats ? s.liveThreats.sources : []).filter((x) => !x.ok).map((x) => x.name),
+      s.offlineSince,
     ),
     bannerVisible: s.system !== 'online' || s.justSynced,
     page: { padding: mobile ? '0' : '24px' },
