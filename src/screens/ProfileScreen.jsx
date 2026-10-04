@@ -4,6 +4,7 @@
 import { Fragment, useEffect, useRef } from 'react';
 import useMergedState from '@/hooks/useMergedState.js';
 import chronApi from '@/api/chronApi.js';
+import ProfileEditForm from '@/components/ProfileEditForm.jsx';
 import { t, tf } from '@/i18n/index.js';
 const ZONE_NAMES = {
   dom: 'Dom',
@@ -92,8 +93,15 @@ function buildViewModel(props, state, setState, soundTimer) {
   const loc = s.loc || 'zawsze';
   const lang = set.lang || 'pl';
   return {
+    editing: state.editing,
+    startEdit: () => setState({ editing: true }),
+    cancelEdit: () => setState({ editing: false }),
+    saveEdit: (profile) => {
+      a.updateProfile(profile);
+      setState({ editing: false });
+    },
     place: chronApi.getPlace(s),
-    user: api.getUser(),
+    user: api.getUser(s),
     loggedIn: !!s.loggedIn,
     guest: !s.loggedIn,
     zones,
@@ -264,8 +272,13 @@ export default function ProfileScreen(inputProps) {
     demoScenario: null,
     demoLevel: 'red',
     soundPlaying: false,
+    editing: false,
   });
   const {
+    editing,
+    startEdit,
+    cancelEdit,
+    saveEdit,
     place,
     demoLevels,
     demoScenarios,
@@ -344,88 +357,93 @@ export default function ProfileScreen(inputProps) {
       >
         {loggedIn && (
           <>
-            <section
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '14px',
-                padding: '16px',
-                borderRadius: '18px',
-                background: '#17151A',
-                border: '1px solid #222026',
-              }}
-            >
-              <span
+            {editing ? (
+              <ProfileEditForm name={user.name} contact={user.phone} onSave={saveEdit} onCancel={cancelEdit} />
+            ) : (
+              <section
                 style={{
-                  width: '56px',
-                  height: '56px',
-                  flex: 'none',
-                  borderRadius: '28px',
-                  background: '#2A0A10',
-                  border: '1px solid #5A1A22',
-                  color: '#FF6B78',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center',
-                  fontFamily: "'Unbounded', 'Arial Black', sans-serif",
-                  fontWeight: '700',
-                  fontSize: '18px',
-                }}
-              >
-                {user.initials}
-              </span>
-              <div
-                style={{
-                  flex: '1',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '3px',
-                  minWidth: '0',
+                  gap: '14px',
+                  padding: '16px',
+                  borderRadius: '18px',
+                  background: '#17151A',
+                  border: '1px solid #222026',
                 }}
               >
                 <span
                   style={{
-                    fontSize: '17px',
-                    fontWeight: '800',
+                    width: '56px',
+                    height: '56px',
+                    flex: 'none',
+                    borderRadius: '28px',
+                    background: '#2A0A10',
+                    border: '1px solid #5A1A22',
+                    color: '#FF6B78',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontFamily: "'Unbounded', 'Arial Black', sans-serif",
+                    fontWeight: '700',
+                    fontSize: '18px',
                   }}
                 >
-                  {user.name}
+                  {user.initials}
                 </span>
-                <span
+                <div
                   style={{
+                    flex: '1',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '3px',
+                    minWidth: '0',
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: '17px',
+                      fontWeight: '800',
+                    }}
+                  >
+                    {user.name}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: '13px',
+                      color: '#A49DA6',
+                    }}
+                  >
+                    {user.phone}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: '13px',
+                      color: '#A49DA6',
+                    }}
+                  >
+                    {place.label}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={startEdit}
+                  style={{
+                    minHeight: '40px',
+                    padding: '0 12px',
+                    borderRadius: '10px',
+                    background: '#24212A',
+                    border: '1px solid #3A3540',
+                    color: '#F4F1F2',
                     fontSize: '13px',
-                    color: '#A49DA6',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                    fontFamily: 'inherit',
                   }}
                 >
-                  {user.phone}
-                </span>
-                <span
-                  style={{
-                    fontSize: '13px',
-                    color: '#A49DA6',
-                  }}
-                >
-                  {place.label}
-                </span>
-              </div>
-              <button
-                type="button"
-                style={{
-                  minHeight: '40px',
-                  padding: '0 12px',
-                  borderRadius: '10px',
-                  background: '#24212A',
-                  border: '1px solid #3A3540',
-                  color: '#F4F1F2',
-                  fontSize: '13px',
-                  fontWeight: '700',
-                  cursor: 'pointer',
-                  fontFamily: 'inherit',
-                }}
-              >
-                {t('Edytuj')}
-              </button>
-            </section>
+                  {t('Edytuj')}
+                </button>
+              </section>
+            )}
           </>
         )}
         {guest && (

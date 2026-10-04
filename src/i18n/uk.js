@@ -635,6 +635,10 @@ export default {
   // Profile and settings
   'Konto i ustawienia': 'Обліковий запис і налаштування',
   'Korzystasz bez konta': 'Ви користуєтеся без облікового запису',
+  'Edytuj profil': 'Редагувати профіль',
+  'Imię i nazwisko': 'Ім’я та прізвище',
+  Zapisz: 'Зберегти',
+  Anuluj: 'Скасувати',
   'Wyloguj się': 'Вийти',
   'Moje strefy': 'Мої зони',
   'Zapisane strefy': 'Збережені зони',

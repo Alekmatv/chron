@@ -634,6 +634,10 @@ export default {
   // Profile and settings
   'Konto i ustawienia': 'Account and settings',
   'Korzystasz bez konta': 'You are using the app without an account',
+  'Edytuj profil': 'Edit profile',
+  'Imię i nazwisko': 'Full name',
+  Zapisz: 'Save',
+  Anuluj: 'Cancel',
   'Wyloguj się': 'Sign out',
   'Moje strefy': 'My zones',
   'Zapisane strefy': 'Saved zones',

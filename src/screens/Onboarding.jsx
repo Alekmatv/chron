@@ -18,8 +18,9 @@ function buildViewModel(props, state, setState) {
       step: STEPS[Math.min(STEPS.length - 1, STEPS.indexOf(state.step) + 1)],
     });
   };
-  const finish = function (loggedIn) {
+  const finish = function (loggedIn, contact) {
     a.finishOnboarding({
+      contact,
       loggedIn,
       loc: state.loc,
     });
@@ -51,12 +52,9 @@ function buildViewModel(props, state, setState) {
     allowNotifications: function () {
       requestNotificationPermission().finally(next);
     },
-    login: function () {
-      finish(true);
-    },
     loginSubmit: function (e) {
       e.preventDefault();
-      finish(true);
+      finish(true, e.target.elements['login-id']?.value.trim() || '');
     },
     skip: function () {
       finish(false);
@@ -91,7 +89,6 @@ export default function Onboarding(inputProps) {
     isSplash,
     isValue,
     loc,
-    login,
     loginSubmit,
     next,
     skip,
@@ -1080,6 +1077,7 @@ export default function Onboarding(inputProps) {
                 </p>
               </div>
               <form
+                id="login-form"
                 onSubmit={loginSubmit}
                 style={{
                   display: 'flex',
@@ -1179,8 +1177,8 @@ export default function Onboarding(inputProps) {
               }}
             >
               <button
-                type="button"
-                onClick={login}
+                type="submit"
+                form="login-form"
                 style={{
                   height: '56px',
                   border: '0',

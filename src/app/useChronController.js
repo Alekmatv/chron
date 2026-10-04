@@ -7,6 +7,7 @@ import { fetchNearbyShelters, relocateShelters } from '@/services/sheltersServic
 import { loadLastShelters, loadPacks, saveLastShelters } from '@/services/offlineStore.js';
 import { downloadSafetyPack } from '@/services/safetyPack.js';
 import { showSystemNotification } from '@/services/notifications.js';
+import { loadProfile, saveProfile } from '@/services/profileStore.js';
 import { fetchLiveThreats } from '@/services/threatsService.js';
 import { getLanguage, setLanguage, t, tf } from '@/i18n/index.js';
 
@@ -144,7 +145,8 @@ function createInitialState() {
     sheltersBuild: null,
     // Live threat feed from official and observational sources (null until loaded)
     liveThreats: null,
-    // Profile
+    // Profile: name and contact edited by the user, then settings
+    profile: loadProfile(),
     settings: DEFAULT_SETTINGS,
     zoneNotify: {
       dom: true,
@@ -622,8 +624,11 @@ export default function useChronController() {
         setState({
           loggedIn: false,
         }),
+      updateProfile,
       finishOnboarding: (result) => {
         writeOnboarded(true);
+        // The phone or email entered at sign-in becomes the profile contact.
+        if (result.contact) updateProfile({ contact: result.contact });
         setState({
           onboarded: true,
           loggedIn: !!result.loggedIn,
@@ -633,6 +638,13 @@ export default function useChronController() {
         });
       },
     };
+
+    /** Saves edited profile fields (name, contact) on the device and in the state. */
+    function updateProfile(patch) {
+      const profile = { ...getState().profile, ...patch };
+      saveProfile(profile);
+      setState({ profile });
+    }
 
     /** Resets to the start: green level, online, scenario not started. */
     function resetAll() {

@@ -15,6 +15,7 @@
  */
 import * as D from '@/data/chronData.js';
 import { POLAND_MAP } from '@/data/polandMap.js';
+import { initialsOf } from '@/services/profileStore.js';
 import { t, translateDeep } from '@/i18n/index.js';
 
 /** Numeric threat level used to compare levels. */
@@ -467,15 +468,22 @@ function getRegionLevels(ctx) {
 }
 
 /**
- * User profile with the current location. With a GPS fix the location is described
+ * User profile with the current location and the name and contact edited by the user. With a GPS fix the location is described
  * by the municipality of the nearest shelter and the coordinates; otherwise the
  * profile's home location is used.
  */
 function getUser(ctx) {
+  // Name and contact edited in the profile replace the defaults.
+  const profile = (ctx && ctx.profile) || {};
+  const user = Object.assign({}, D.USER, {
+    name: profile.name || D.USER.name,
+    initials: initialsOf(profile.name || D.USER.name),
+    phone: profile.contact || D.USER.phone,
+  });
   const location = ctx && ctx.location;
-  if (!location || location.source !== 'gps') return D.USER;
+  if (!location || location.source !== 'gps') return user;
   const nearest = ctx.shelters && ctx.shelters[0];
-  return Object.assign({}, D.USER, {
+  return Object.assign({}, user, {
     location: Object.assign({}, D.USER.location, {
       label: nearest ? nearest.gmina : t('Twoja lokalizacja'),
       address: location.lat.toFixed(4) + ', ' + location.lng.toFixed(4),
