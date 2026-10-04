@@ -6,6 +6,7 @@ import { DEFAULT_LOCATION, distanceMeters, watchLocation } from '@/services/geol
 import { fetchNearbyShelters, relocateShelters } from '@/services/sheltersService.js';
 import { loadLastShelters, loadPacks, saveLastShelters } from '@/services/offlineStore.js';
 import { downloadSafetyPack } from '@/services/safetyPack.js';
+import { showSystemNotification } from '@/services/notifications.js';
 import { fetchLiveThreats } from '@/services/threatsService.js';
 
 /** Shelters are reloaded when the user moves farther than this from the last search point, in meters. */
@@ -224,6 +225,7 @@ export default function useChronController() {
     function showPush(push) {
       clearTimeout(t.push);
       setState({ push, pushVisible: true });
+      showSystemNotification({ title: `CHROŃ · ${push.tag}`, text: push.title, tag: push.tag });
       vibrate();
       t.push = setTimeout(() => setState({ pushVisible: false }), 6500);
     }

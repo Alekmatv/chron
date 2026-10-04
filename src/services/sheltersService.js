@@ -5,10 +5,10 @@
 import { bearingDegrees, distanceMeters } from '@/services/geolocation.js';
 
 /** Search radius around the user, in kilometers. */
-const SEARCH_RADIUS_KM = 3;
+const SEARCH_RADIUS_KM = 10;
 
 /** Number of nearest shelters kept on the device. */
-const SHELTER_LIMIT = 30;
+const SHELTER_LIMIT = 60;
 
 /** Average walking speed, meters per minute. */
 const WALK_SPEED_M_PER_MIN = 80;
@@ -84,7 +84,7 @@ export function toAppShelter(shelter, origin) {
       shelter.availability === '24h'
         ? 'Obiekt dostępny całodobowo'
         : `Godziny potwierdzone przez operatora o ${updated}`,
-    community: { count: 0, time: updated, text: 'potwierdzeń od mieszkańców' },
+    community: { count: 0, time: '', text: 'potwierdziło otwarte wejście' },
   };
 }
 

@@ -2,6 +2,7 @@
  * Onboarding: splash, product value and disclaimer, location and notification permissions, sign-in.
  */
 import useMergedState from '@/hooks/useMergedState.js';
+import { requestLocationPermission, requestNotificationPermission } from '@/services/notifications.js';
 
 const STEPS = ['splash', 'value', 'location', 'notifications', 'login'];
 
@@ -28,10 +29,15 @@ function buildViewModel(props, state, setState) {
     loc: st.loc,
     next,
     allowAlways: function () {
+      requestLocationPermission();
       setState({ loc: 'zawsze', step: 'notifications' });
     },
     allowOnce: function () {
+      requestLocationPermission();
       setState({ loc: 'tylko teraz', step: 'notifications' });
+    },
+    allowNotifications: function () {
+      requestNotificationPermission().finally(next);
     },
     login: function () {
       finish(true);
@@ -57,6 +63,7 @@ export default function Onboarding(inputProps) {
   const props = { ...DEFAULT_PROPS, ...inputProps };
   const [state, setState] = useMergedState(() => ({ step: props.startStep || 'splash', loc: 'zawsze' }));
   const {
+    allowNotifications,
     allowAlways,
     allowOnce,
     isLoc,
@@ -693,7 +700,7 @@ export default function Onboarding(inputProps) {
                     </span>
                     <button
                       type="button"
-                      onClick={next}
+                      onClick={allowNotifications}
                       style={{
                         minHeight: '54px',
                         border: '0',

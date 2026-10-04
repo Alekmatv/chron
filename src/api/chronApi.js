@@ -194,11 +194,12 @@ function decorate(s, ctx) {
 }
 
 /**
- * Source list of shelters: real shelters near the user when they are loaded,
- * otherwise the built-in demo set (so the app keeps working without the backend).
+ * Source list of shelters: real shelters near the user once they are loaded (possibly
+ * an empty list in remote areas), otherwise the built-in demo set, so the app keeps
+ * working before the first response and without the backend.
  */
 function shelterList(ctx) {
-  return ctx.shelters && ctx.shelters.length ? ctx.shelters : D.SHELTERS;
+  return ctx.shelters ? ctx.shelters : D.SHELTERS;
 }
 
 /** Whether the current local time falls within an opening hours range like '08:00–20:00'. */
@@ -397,16 +398,19 @@ function getUser(ctx) {
  * @returns {{ city: string, region: string, label: string }}
  */
 function getPlace(ctx) {
-  const nearest = ctx && ctx.shelters && ctx.shelters[0];
-  const city = nearest ? nearest.gmina : D.USER.city;
-  const region = nearest ? nearest.voivodeship.charAt(0).toUpperCase() + nearest.voivodeship.slice(1) : D.USER.region;
-  return { city, region, label: city + ' · ' + region };
+  const shelters = ctx && ctx.shelters;
+  if (!shelters) return { city: D.USER.city, region: D.USER.region, label: D.USER.city + ' · ' + D.USER.region };
+  const nearest = shelters[0];
+  if (!nearest) return { city: 'Twoja okolica', region: 'Polska', label: 'Twoja okolica · Polska' };
+  const region = nearest.voivodeship.charAt(0).toUpperCase() + nearest.voivodeship.slice(1);
+  return { city: nearest.gmina, region, label: nearest.gmina + ' · ' + region };
 }
 
 /** Public interface of the data layer used by screens. */
 const chronApi = {
   getUser: getUser,
   getPlace: getPlace,
+  getOfflineSince: offlineSince,
   getZones: function () {
     return D.ZONES;
   },

@@ -137,6 +137,8 @@ export default function StreetMap(inputProps) {
   const [route, setRoute] = useState(null);
 
   const target = pins.find((pin) => pin.highlighted);
+  // GPS jitter of a few meters must not rebuild the route or reset the view: react to ~100 m moves.
+  const areaKey = `${location.lat.toFixed(3)},${location.lng.toFixed(3)}`;
   const routeTarget = props.showRoute && target ? target : null;
 
   // Create the Leaflet map once and remove it when the component unmounts.
@@ -162,7 +164,7 @@ export default function StreetMap(inputProps) {
     return () => {
       cancelled = true;
     };
-  }, [routeTarget?.id, routeTarget?.lat, routeTarget?.lng, location.lat, location.lng]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [routeTarget?.id, routeTarget?.lat, routeTarget?.lng, areaKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Redraw all overlays when data changes.
   const pinsKey = pins.map((pin) => `${pin.id}:${pin.color}:${pin.opacity}:${pin.highlighted}`).join('|');
@@ -206,7 +208,7 @@ export default function StreetMap(inputProps) {
     inView.forEach((pin) => points.push([pin.lat, pin.lng]));
     if (route) points.push(...route.coords);
     mapRef.current.fitBounds(points, { padding: [36, 36], maxZoom: 17 });
-  }, [target?.id, route, pins.length, location.lat, location.lng]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [target?.id, route, pins.length, areaKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div

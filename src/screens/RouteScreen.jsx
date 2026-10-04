@@ -42,7 +42,11 @@ function buildViewModel(props) {
       });
     });
   const isRec = emergency && rec.primary && rec.primary.id === sel.id;
+  // No open, suitable shelter is left: say so honestly and point to the official instruction instead of a route.
+  const noSafeShelter = emergency && rec.none && sel.status === 'closed';
   return {
+    noSafeShelter,
+    noSafeText: rec.reason,
     sel,
     route,
     rec,
@@ -71,10 +75,11 @@ function buildViewModel(props) {
     others,
     hasOthers: others.length > 0,
     othersTitle: threat ? threat.othersTitle : 'Inne schrony',
-    navBtnText: s.navigating ? 'Zakończ nawigację' : 'Rozpocznij nawigację',
+    navBtnText: noSafeShelter ? 'Co robić teraz' : s.navigating ? 'Zakończ nawigację' : 'Rozpocznij nawigację',
     navBtnBg: s.navigating ? '#4A1A22' : '#E3203A',
     toggleNav: function () {
-      a.toggleNavigating();
+      if (noSafeShelter) a.openLate(s.threatId);
+      else a.toggleNavigating();
     },
     pick: function (id) {
       a.openShelter(id);
@@ -99,6 +104,8 @@ function buildViewModel(props) {
 export default function RouteScreen(inputProps) {
   const props = inputProps;
   const {
+    noSafeShelter,
+    noSafeText,
     back,
     canReach,
     cantReach,
@@ -244,6 +251,27 @@ export default function RouteScreen(inputProps) {
             </section>
           </>
         )}
+        {noSafeShelter && (
+          <section
+            role="alert"
+            style={{
+              flex: 'none',
+              padding: '14px 16px',
+              borderRadius: '16px',
+              background: 'rgba(242,163,58,.12)',
+              border: '1px solid #F2A33A',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '4px',
+              animation: 'chronIn .45s ease both, chronAttention 1.2s ease 2',
+            }}
+          >
+            <span style={{ fontSize: '15px', fontWeight: '800', lineHeight: '1.35' }}>
+              {sel.name} zamknięty · brak potwierdzonego schronienia
+            </span>
+            <span style={{ fontSize: '13px', lineHeight: '1.45', color: '#DCD5DD' }}>{noSafeText}</span>
+          </section>
+        )}
         {navigating && (
           <>
             <div
@@ -277,7 +305,7 @@ export default function RouteScreen(inputProps) {
         <StreetMap
           pins={pins}
           highlightId={sel.id}
-          showRoute
+          showRoute={!noSafeShelter}
           routeDashed={false}
           zone={zone}
           zoneLevel={level}

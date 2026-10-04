@@ -43,7 +43,7 @@ function buildViewModel(props, state, setState) {
         ' ' +
         sh.community.text +
         (sh.community.time ? ' · ' + sh.community.time : '')
-      : sh.community.text,
+      : 'Brak potwierdzeń od mieszkańców',
     confirmText: stale
       ? 'Potwierdzenie wyślemy po odzyskaniu połączenia'
       : state.confirmed

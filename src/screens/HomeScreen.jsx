@@ -34,6 +34,19 @@ const NET = {
   recovering: { label: 'SYNC', color: '#7CC4FF', anim: 'schronLive 1s infinite' },
 };
 
+/** Title of the home zone Safety Pack card for its download status. */
+function packTitle(pack) {
+  if (pack.status === 'ready') return 'Safety Pack „Dom” gotowy';
+  if (pack.status === 'downloading') return `Pobieranie Safety Pack „Dom”… ${pack.progress || 0}%`;
+  return 'Pobierz Safety Pack „Dom”';
+}
+
+/** Subtitle of the home zone Safety Pack card. */
+function packSubtitle(pack) {
+  if (pack.status === 'ready') return `${pack.date} · ${pack.size} · działa bez internetu`;
+  return 'Schrony, mapa i trasy okolicy — dostępne bez internetu';
+}
+
 /** Builds view data (texts, colors, handlers) from props and local state. */
 function buildViewModel(props, state, setState) {
   const api = chronApi;
@@ -72,6 +85,8 @@ function buildViewModel(props, state, setState) {
     net: NET[s.system] || NET.online,
     stale,
     pack: packs[0],
+    packTitle: packTitle(packs[0]),
+    packSub: packSubtitle(packs[0]),
     tabs: {
       regionsPressed: state.tab === 'regions' ? 'true' : 'false',
       nearbyPressed: state.tab === 'nearby' ? 'true' : 'false',
@@ -89,7 +104,7 @@ function buildViewModel(props, state, setState) {
     showRoute: !!route,
     zone: threat ? threat.zone : '',
     level: s.level,
-    offlineMapLabel: stale ? 'Mapa offline · pobrana 14:32' : '',
+    offlineMapLabel: stale ? 'Mapa offline · dane z ' + api.getOfflineSince(s) : '',
     nearby,
     showReach: !green,
     goProfile: function () {
@@ -127,6 +142,8 @@ export default function HomeScreen(inputProps) {
   const props = inputProps;
   const [state, setState] = useMergedState({ tab: 'regions' });
   const {
+    packTitle,
+    packSub,
     place,
     goProfile,
     goRoute,
@@ -671,10 +688,8 @@ export default function HomeScreen(inputProps) {
               </svg>
             </span>
             <span style={{ flex: '1', minWidth: '0', display: 'flex', flexDirection: 'column', gap: '2px' }}>
-              <span style={{ fontSize: '14px', fontWeight: '800' }}>Safety Pack „Dom” gotowy</span>
-              <span style={{ fontSize: '12px', color: '#A49DA6' }}>
-                {pack.date} · {pack.size} · działa bez internetu
-              </span>
+              <span style={{ fontSize: '14px', fontWeight: '800' }}>{packTitle}</span>
+              <span style={{ fontSize: '12px', color: '#A49DA6' }}>{packSub}</span>
             </span>
             <svg
               width="18"
@@ -745,7 +760,7 @@ export default function HomeScreen(inputProps) {
                 regionLevels={regionLevels}
                 threatTitle={mapTitle}
                 offline={stale}
-                offlineLabel="Mapa offline · pobrana 14:32"
+                offlineLabel={offlineMapLabel}
               />
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 14px' }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#B9B1BB' }}>

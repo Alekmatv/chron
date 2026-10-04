@@ -84,7 +84,7 @@ function buildViewModel(props, state, setState) {
     level: s.level,
     zone: threat ? threat.zone : '',
     count: list.length + ' obiektów',
-    note: stale ? 'statusy z 14:32' : 'posortowane wg odległości',
+    note: stale ? 'statusy z ' + api.getOfflineSince(s) : 'posortowane wg odległości',
     stale,
     offlineLabel: stale ? 'Mapa offline · Safety Pack' : '',
     showReach: s.level !== 'green',

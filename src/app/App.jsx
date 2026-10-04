@@ -141,6 +141,9 @@ function buildViewModel(controller) {
           border: '0',
           shadow: 'none',
           anim: s.shaking ? 'chronShake .1s 8' : 'none',
+          // Keeps content clear of the notch and the home indicator in the installed app.
+          safeTop: 'env(safe-area-inset-top)',
+          safeBottom: 'env(safe-area-inset-bottom)',
         }
       : {
           w: '390px',
@@ -152,6 +155,8 @@ function buildViewModel(controller) {
           border: '1px solid #2C2830',
           shadow: '0 40px 100px rgba(0,0,0,.6)',
           anim: s.shaking ? 'chronShake .1s 8' : 'none',
+          safeTop: '0',
+          safeBottom: '0',
         },
     push: {
       y: s.pushVisible ? '0' : '-160%',
@@ -343,6 +348,9 @@ export default function App() {
               display: 'flex',
               flexDirection: 'column',
               transform: 'translateZ(0)',
+              boxSizing: 'border-box',
+              paddingTop: frame.safeTop,
+              paddingBottom: frame.safeBottom,
             }}
           >
             {showOnboarding && (
@@ -498,7 +506,7 @@ export default function App() {
                 position: 'absolute',
                 left: '10px',
                 right: '10px',
-                top: '10px',
+                top: 'calc(env(safe-area-inset-top) + 10px)',
                 zIndex: '70',
                 padding: '14px',
                 borderRadius: '18px',

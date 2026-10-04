@@ -9,14 +9,22 @@
  * opening hours and the information source are shown.
  */
 
-/** Event times (HH:MM) for each threat level and connectivity state. */
+/** Moment the app was opened: scenario times are relative to it, so they always look current. */
+const OPENED_AT = Date.now();
+
+/** HH:MM time shifted from the app opening moment by the given number of minutes. */
+function timeAt(minutes) {
+  return new Date(OPENED_AT + minutes * 60000).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
+}
+
+/** Event times (HH:MM) for each threat level and connectivity state in the demo scenario. */
 export const TIMES = {
-  green: { source: '14:12', updated: '14:20' },
-  yellow: { source: '14:18', updated: '14:21' },
-  red: { source: '14:21', updated: '14:24' },
-  closure: '14:27',
-  offlineSince: '14:32',
-  synced: '14:41',
+  green: { source: timeAt(-28), updated: timeAt(-20) },
+  yellow: { source: timeAt(-6), updated: timeAt(-3) },
+  red: { source: timeAt(-1), updated: timeAt(0) },
+  closure: timeAt(2),
+  offlineSince: timeAt(4),
+  synced: timeAt(8),
 };
 
 export const USER = {
