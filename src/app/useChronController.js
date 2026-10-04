@@ -128,7 +128,7 @@ function createInitialState() {
     confirmations: {},
     // Demo scenario
     demoStep: 0,
-    panelOpen: true,
+    panelOpen: false,
     // Signals: notification, full-screen alarm, screen flash, shake
     push: null,
     pushVisible: false,

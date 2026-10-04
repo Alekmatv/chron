@@ -9,9 +9,9 @@ body {
   margin: 0;
   background: #0b0a0d;
   height: 100%;
+  overscroll-behavior: none;
 }
 body {
-  overscroll-behavior: none;
   -webkit-font-smoothing: antialiased;
 }
 a {

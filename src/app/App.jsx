@@ -33,7 +33,9 @@ function buildViewModel(controller) {
     a = controller.actions,
     api = chronApi;
   const mobile = s.vw < 760;
-  const appH = mobile ? s.vh : Math.max(560, Math.min(844, s.vh - 48));
+  // Desktop: the phone frame fits the window together with the page padding (2 × 24 px),
+  // the bezel (2 × 10 px) and its border (2 × 1 px), so the page itself never scrolls.
+  const appH = mobile ? s.vh : Math.max(560, Math.min(844, s.vh - 48 - 20 - 2));
   const top = s.stack[s.stack.length - 1];
   const emergencyBase = s.level === 'red' && !s.emergencyMinimized;
   const screen = top ? top.name : emergencyBase ? 'emergency' : s.tab;
@@ -186,19 +188,20 @@ function buildViewModel(controller) {
     panelClosed: !s.panelOpen,
     panel: mobile
       ? {
+          // Mobile: a dialog centered on the screen (inset 0 + auto margins; transform is used by the entry animation).
           position: 'fixed',
-          left: '0',
-          right: '0',
-          bottom: '0',
-          width: 'auto',
-          maxHeight: '62vh',
-          radius: '24px 24px 0 0',
+          inset: '0',
+          margin: 'auto',
+          height: 'fit-content',
+          width: 'min(360px, calc(100vw - 32px))',
+          maxHeight: '80dvh',
+          radius: '24px',
         }
       : {
           position: 'relative',
-          left: 'auto',
-          right: 'auto',
-          bottom: 'auto',
+          inset: 'auto',
+          margin: '0',
+          height: 'auto',
           width: '330px',
           maxHeight: appH + 20 + 'px',
           radius: '24px',
@@ -305,7 +308,7 @@ export default function App() {
     <LocationContext.Provider value={controller.state.location}>
       <div
         style={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           boxSizing: 'border-box',
           display: 'flex',
           alignItems: 'center',
@@ -885,9 +888,9 @@ export default function App() {
               aria-label="Panel sterowania demo"
               style={{
                 position: panel.position,
-                left: panel.left,
-                right: panel.right,
-                bottom: panel.bottom,
+                inset: panel.inset,
+                margin: panel.margin,
+                height: panel.height,
                 zIndex: '100',
                 width: panel.width,
                 maxHeight: panel.maxHeight,
