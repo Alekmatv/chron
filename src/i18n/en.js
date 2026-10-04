@@ -477,6 +477,10 @@ export default {
     'Underground facility — not recommended in a flood, risk of inundation',
   'Teren wyniesiony — poza zasięgiem wody': 'High ground — out of reach of the water',
   'Teren nisko położony': 'Low-lying area',
+  'Użytkownicy CHROŃ w pobliżu wejścia: ~{v0}': 'CHROŃ users near the entrance: ~{v0}',
+  'Brak użytkowników CHROŃ w pobliżu wejścia': 'No CHROŃ users near the entrance',
+  'Szacunek na podstawie lokalizacji użytkowników aplikacji — nie pełna liczba osób w obiekcie.':
+    'Estimate based on the locations of app users — not the full number of people inside.',
   'Zgłoszenia użytkowników': 'User reports',
   'Brak potwierdzeń od mieszkańców': 'No confirmations from residents',
   'Brak zgłoszeń od użytkowników': 'No reports from users',

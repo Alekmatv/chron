@@ -475,6 +475,10 @@ export default {
     'Підземний об’єкт — не рекомендований під час повені, ризик затоплення',
   'Teren wyniesiony — poza zasięgiem wody': 'Підвищення — поза досяжністю води',
   'Teren nisko położony': 'Низинна місцевість',
+  'Użytkownicy CHROŃ w pobliżu wejścia: ~{v0}': 'Користувачі CHROŃ біля входу: ~{v0}',
+  'Brak użytkowników CHROŃ w pobliżu wejścia': 'Біля входу немає користувачів CHROŃ',
+  'Szacunek na podstawie lokalizacji użytkowników aplikacji — nie pełna liczba osób w obiekcie.':
+    'Оцінка за геолокацією користувачів застосунку — не повна кількість людей в об’єкті.',
   'Zgłoszenia użytkowników': 'Повідомлення користувачів',
   'Brak potwierdzeń od mieszkańców': 'Немає підтверджень від мешканців',
   'Brak zgłoszeń od użytkowników': 'Немає повідомлень від користувачів',

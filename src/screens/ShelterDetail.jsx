@@ -5,7 +5,7 @@ import useMergedState from '@/hooks/useMergedState.js';
 import StatusBadge from '@/components/StatusBadge.jsx';
 import StreetMap from '@/components/StreetMap.jsx';
 import chronApi from '@/api/chronApi.js';
-import { t } from '@/i18n/index.js';
+import { t, tf } from '@/i18n/index.js';
 
 /** Builds view data (texts, colors, handlers) from props and local state. */
 function buildViewModel(props, state, setState) {
@@ -23,6 +23,9 @@ function buildViewModel(props, state, setState) {
   const isClosed = sh.status === 'closed';
   const alt = rec.primary && rec.primary.id !== sh.id ? rec.primary : null;
   return {
+    nearbyUsersText: sh.nearbyUsers
+      ? tf('Użytkownicy CHROŃ w pobliżu wejścia: ~{v0}', { v0: sh.nearbyUsers })
+      : t('Brak użytkowników CHROŃ w pobliżu wejścia'),
     sh,
     route,
     stale,
@@ -100,6 +103,7 @@ export default function ShelterDetail(inputProps) {
     confirmed: false,
   });
   const {
+    nearbyUsersText,
     back,
     barCols,
     category,
@@ -619,6 +623,12 @@ export default function ShelterDetail(inputProps) {
             }}
           >
             {community}
+          </span>
+          <span style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+            <span style={{ fontSize: '14px', fontWeight: '700' }}>{nearbyUsersText}</span>
+            <span style={{ fontSize: '12px', lineHeight: '1.4', color: '#A49DA6' }}>
+              {t('Szacunek na podstawie lokalizacji użytkowników aplikacji — nie pełna liczba osób w obiekcie.')}
+            </span>
           </span>
           <button
             type="button"

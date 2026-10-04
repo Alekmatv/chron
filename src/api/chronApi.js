@@ -235,6 +235,21 @@ function shelterStatus(s, ctx) {
   };
 }
 
+/** Range of CHROŃ users near a shelter entrance for each threat level. */
+const NEARBY_USERS_RANGE = { green: [0, 3], yellow: [2, 12], red: [8, 45] };
+
+/**
+ * Estimated number of CHROŃ users near the shelter entrance (a community signal, not occupancy).
+ * Simplified version: a stable value per shelter and threat level instead of aggregated user locations.
+ */
+function estimateNearbyUsers(s, status, level) {
+  if (status === 'closed') return 0;
+  const [min, max] = NEARBY_USERS_RANGE[level] || NEARBY_USERS_RANGE.green;
+  let hash = 0;
+  for (const char of s.id + level) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
+  return min + (hash % (max - min + 1));
+}
+
 /** Opening mode label shown on shelter cards. */
 function hoursLabel(s) {
   if (s.hours === '24/7') return t('Otwarte 24/7');
@@ -256,6 +271,7 @@ function decorate(s, ctx) {
     statusNote: isStale(ctx) ? t('status z ') + offlineSince(ctx) : 'aktualizacja ' + s.updated,
     typeLabel: s.category === 'schron' ? t(s.kind) : t('Miejsce przystosowane · ') + t(s.kind),
     hoursLabel: hoursLabel(s),
+    nearbyUsers: estimateNearbyUsers(s, st.status, ctx.level),
     // Real addresses already include the city; demo addresses do not.
     fullAddress: s.address.indexOf(',') >= 0 ? s.address : s.address + ', ' + D.USER.city,
     hoursColor: s.hours === '24/7' ? '#7FE0BE' : '#F2CC3D',
