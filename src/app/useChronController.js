@@ -8,6 +8,7 @@ import { loadLastShelters, loadPacks, saveLastShelters } from '@/services/offlin
 import { downloadSafetyPack } from '@/services/safetyPack.js';
 import { showSystemNotification } from '@/services/notifications.js';
 import { fetchLiveThreats } from '@/services/threatsService.js';
+import { getLanguage, setLanguage, t, tf } from '@/i18n/index.js';
 
 /** Shelters are reloaded when the user moves farther than this from the last search point, in meters. */
 const SHELTER_RELOAD_DISTANCE_M = 250;
@@ -22,9 +23,13 @@ const DEFAULT_SETTINGS = {
   vibrate: true,
   flashLed: true,
   flashScreen: true,
-  notif: { air: true, chem: true, flood: true },
+  notif: {
+    air: true,
+    chem: true,
+    flood: true,
+  },
   scope: 'zones',
-  lang: 'pl',
+  lang: getLanguage(),
 };
 
 /** localStorage key that records completed onboarding. */
@@ -63,9 +68,18 @@ function initialPacks() {
   const saved = loadPacks();
   return chronApi.getSafetyPacks().map((pack) => {
     const stored = saved[pack.zoneId];
-    if (!stored) return { ...pack, status: 'none', date: '', version: '' };
+    if (!stored)
+      return {
+        ...pack,
+        status: 'none',
+        date: '',
+        version: '',
+      };
     const { shelters, ...meta } = stored; // shelters stay in storage; state keeps only metadata
-    return { ...pack, ...meta };
+    return {
+      ...pack,
+      ...meta,
+    };
   });
 }
 
@@ -78,7 +92,10 @@ function offlineShelters(location) {
     (entry) => entry && entry.shelters && entry.shelters.length,
   );
   const near = sources
-    .map((entry) => ({ entry, distance: distanceMeters(entry.location || entry.center, location) }))
+    .map((entry) => ({
+      entry,
+      distance: distanceMeters(entry.location || entry.center, location),
+    }))
     .filter(({ distance }) => distance <= OFFLINE_SHELTERS_MAX_DISTANCE_M)
     .sort((a, b) => a.distance - b.distance)[0];
   return near ? relocateShelters(near.entry.shelters, location) : null;
@@ -87,7 +104,12 @@ function offlineShelters(location) {
 /** HH:MM when shelters were last saved on the device; used as the data time when starting offline. */
 function lastSavedTime() {
   const savedAt = loadLastShelters()?.savedAt;
-  return savedAt ? new Date(savedAt).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' }) : null;
+  return savedAt
+    ? new Date(savedAt).toLocaleTimeString('pl-PL', {
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+    : null;
 }
 
 /** Initial app state. */
@@ -124,7 +146,11 @@ function createInitialState() {
     liveThreats: null,
     // Profile
     settings: DEFAULT_SETTINGS,
-    zoneNotify: { dom: true, praca: true, uczelnia: false },
+    zoneNotify: {
+      dom: true,
+      praca: true,
+      uczelnia: false,
+    },
     packs: initialPacks(),
     confirmations: {},
     // Demo scenario
@@ -154,16 +180,21 @@ export default function useChronController() {
   // Latest state for timers and handlers that are created only once.
   const stateRef = useRef(state);
   stateRef.current = state;
-
   const timers = useRef({});
-
   const controller = useMemo(() => {
     const getState = () => stateRef.current;
-    const t = timers.current;
+    const entry = timers.current;
 
     /** Pushes a new screen onto the navigation stack. */
     function pushScreen(name, params) {
-      setState((s) => ({ stack: s.stack.concat([{ name, params: params || {} }]) }));
+      setState((s) => ({
+        stack: s.stack.concat([
+          {
+            name,
+            params: params || {},
+          },
+        ]),
+      }));
     }
 
     /**
@@ -171,22 +202,41 @@ export default function useChronController() {
      * progress grows to 100%, then the system returns to ONLINE.
      */
     function setSystem(system) {
-      clearInterval(t.sync);
-      clearTimeout(t.synced);
+      clearInterval(entry.sync);
+      clearTimeout(entry.synced);
       if (system !== 'recovering') {
-        setState({ system, justSynced: false });
+        setState({
+          system,
+          justSynced: false,
+        });
         return;
       }
-      setState({ system: 'recovering', syncProgress: 0, justSynced: false });
-      t.sync = setInterval(() => {
+      setState({
+        system: 'recovering',
+        syncProgress: 0,
+        justSynced: false,
+      });
+      entry.sync = setInterval(() => {
         const progress = Math.min(100, getState().syncProgress + 4);
         if (progress < 100) {
-          setState({ syncProgress: progress });
+          setState({
+            syncProgress: progress,
+          });
           return;
         }
-        clearInterval(t.sync);
-        setState({ system: 'online', syncProgress: 100, justSynced: true });
-        t.synced = setTimeout(() => setState({ justSynced: false }), 3200);
+        clearInterval(entry.sync);
+        setState({
+          system: 'online',
+          syncProgress: 100,
+          justSynced: true,
+        });
+        entry.synced = setTimeout(
+          () =>
+            setState({
+              justSynced: false,
+            }),
+          3200,
+        );
       }, 110);
     }
 
@@ -194,19 +244,41 @@ export default function useChronController() {
     function downloadPack(zoneId) {
       const patchPack = (patch) =>
         setState((s) => ({
-          packs: s.packs.map((pack) => (pack.zoneId === zoneId ? { ...pack, ...patch } : pack)),
+          packs: s.packs.map((pack) =>
+            pack.zoneId === zoneId
+              ? {
+                  ...pack,
+                  ...patch,
+                }
+              : pack,
+          ),
         }));
       const { location } = getState();
       const zone = chronApi.getZones().find((item) => item.id === zoneId);
       // The home zone follows the real position; other zones use their saved addresses.
-      const center = zoneId === 'dom' && location.source === 'gps' ? location : { lat: zone.lat, lng: zone.lng };
-
-      patchPack({ status: 'downloading', progress: 0 });
-      downloadSafetyPack(zone, center, (progress) => patchPack({ progress }))
+      const center =
+        zoneId === 'dom' && location.source === 'gps'
+          ? location
+          : {
+              lat: zone.lat,
+              lng: zone.lng,
+            };
+      patchPack({
+        status: 'downloading',
+        progress: 0,
+      });
+      downloadSafetyPack(zone, center, (progress) =>
+        patchPack({
+          progress,
+        }),
+      )
         .then(({ shelters, ...meta }) => patchPack(meta))
         .catch((error) => {
           console.warn('Safety Pack download failed', error);
-          patchPack({ status: 'none', progress: 0 });
+          patchPack({
+            status: 'none',
+            progress: 0,
+          });
         });
     }
 
@@ -214,32 +286,69 @@ export default function useChronController() {
     function vibrate() {
       if (!getState().settings.vibrate) return;
       vibrateDevice([200, 120, 200]);
-      clearTimeout(t.shake);
+      clearTimeout(entry.shake);
       // Reset the animation first so that it plays again.
-      setState({ shaking: false });
-      setTimeout(() => setState({ shaking: true }), 20);
-      t.shake = setTimeout(() => setState({ shaking: false }), 900);
+      setState({
+        shaking: false,
+      });
+      setTimeout(
+        () =>
+          setState({
+            shaking: true,
+          }),
+        20,
+      );
+      entry.shake = setTimeout(
+        () =>
+          setState({
+            shaking: false,
+          }),
+        900,
+      );
     }
 
     /** Shows a notification banner at the top of the screen for 6.5 seconds. */
     function showPush(push) {
-      clearTimeout(t.push);
-      setState({ push, pushVisible: true });
-      showSystemNotification({ title: `CHROŃ · ${push.tag}`, text: push.title, tag: push.tag });
+      clearTimeout(entry.push);
+      setState({
+        push,
+        pushVisible: true,
+      });
+      showSystemNotification({
+        title: tf('CHROŃ · {v0}', {
+          v0: push.tag,
+        }),
+        text: push.title,
+        tag: push.tag,
+      });
       vibrate();
-      t.push = setTimeout(() => setState({ pushVisible: false }), 6500);
+      entry.push = setTimeout(
+        () =>
+          setState({
+            pushVisible: false,
+          }),
+        6500,
+      );
     }
 
     /** Short screen flash in the threat level color. */
     function flash() {
-      clearTimeout(t.flash);
-      setState({ flashing: true });
-      t.flash = setTimeout(() => setState({ flashing: false }), 1800);
+      clearTimeout(entry.flash);
+      setState({
+        flashing: true,
+      });
+      entry.flash = setTimeout(
+        () =>
+          setState({
+            flashing: false,
+          }),
+        1800,
+      );
     }
 
     /** Stops the repeating alarm sound and vibration. */
     function stopAlarmLoop() {
-      clearInterval(t.alarm);
+      clearInterval(entry.alarm);
       vibrateDevice(0);
     }
 
@@ -249,7 +358,13 @@ export default function useChronController() {
      */
     function showAlarm(mode, scenario, level) {
       stopAlarmLoop();
-      setState({ alarm: { mode, scenario, level } });
+      setState({
+        alarm: {
+          mode,
+          scenario,
+          level,
+        },
+      });
       const isRed = level === 'red';
       const play = () => {
         const { settings } = getState();
@@ -258,18 +373,25 @@ export default function useChronController() {
         if (settings.vibrate) vibrateDevice(isRed ? [400, 150, 400, 150, 400] : [200, 200, 200]);
       };
       play();
-      if (mode === 'demo') t.alarm = setInterval(play, isRed ? 1900 : 2600);
+      if (mode === 'demo') entry.alarm = setInterval(play, isRed ? 1900 : 2600);
     }
 
     /** Dismisses the full-screen alarm. */
     function closeAlarm() {
       stopAlarmLoop();
-      setState({ alarm: null });
+      setState({
+        alarm: null,
+      });
     }
 
     /** Id of the primary recommended shelter, which becomes closed in the demo scenario. */
     function closedFor(s) {
-      const primary = chronApi.getRecommendation({ ...s, level: 'red', closedIds: [], system: 'online' }).primary;
+      const primary = chronApi.getRecommendation({
+        ...s,
+        level: 'red',
+        closedIds: [],
+        system: 'online',
+      }).primary;
       return primary ? [primary.id] : [];
     }
 
@@ -282,7 +404,7 @@ export default function useChronController() {
       const s = getState();
       const threat = chronApi.getThreat(s.threatId, s, step === 2 ? 'yellow' : 'red');
       const times = chronApi.getTimes();
-      clearTimeout(t.push);
+      clearTimeout(entry.push);
       stopAlarmLoop();
       // Starting the scenario skips onboarding, also after the app is reopened.
       writeOnboarded(true);
@@ -294,32 +416,59 @@ export default function useChronController() {
         emergencyMinimized: false,
         justSynced: false,
       };
-      const freshStart = { closedIds: [], stack: [], navigating: false, selectedShelterId: null };
-
+      const freshStart = {
+        closedIds: [],
+        stack: [],
+        navigating: false,
+        selectedShelterId: null,
+      };
       if (step === 1) {
         setSystem('online');
-        setState({ ...base, ...freshStart, level: 'green', tab: 'map' });
+        setState({
+          ...base,
+          ...freshStart,
+          level: 'green',
+          tab: 'map',
+        });
       } else if (step === 2) {
         setSystem('online');
-        setState({ ...base, ...freshStart, level: 'yellow', tab: 'map' });
+        setState({
+          ...base,
+          ...freshStart,
+          level: 'yellow',
+          tab: 'map',
+        });
         setTimeout(() => {
           showPush({
             level: 'yellow',
-            tag: 'OSTRZEŻENIE',
+            tag: t('OSTRZEŻENIE'),
             title: threat.headline + ' · ' + chronApi.getPlace(s).region,
-            text: `${threat.source} · ${times.yellow.source} · do zagrożenia ${threat.ttr}. Sprawdź najbliższy schron.`,
+            text: tf('{v0} · {v1} · do zagrożenia {v2}. Sprawdź najbliższy schron.', {
+              v0: threat.source,
+              v1: times.yellow.source,
+              v2: threat.ttr,
+            }),
             action: 'threat',
           });
         }, 350);
       } else if (step === 3) {
         setSystem('online');
-        setState({ ...base, ...freshStart, level: 'red' });
+        setState({
+          ...base,
+          ...freshStart,
+          level: 'red',
+        });
         if (s.settings.flashScreen) flash();
         vibrate();
         showAlarm('live', s.threatId, 'red');
       } else if (step === 4) {
         // The primary shelter closes while the user is already walking to it.
-        const ctx = { ...s, level: 'red', closedIds: [], system: 'online' };
+        const ctx = {
+          ...s,
+          level: 'red',
+          closedIds: [],
+          system: 'online',
+        };
         const first = chronApi.getRecommendation(ctx).primary;
         const closed = first ? [first.id] : [];
         setSystem('online');
@@ -327,53 +476,133 @@ export default function useChronController() {
           ...base,
           level: 'red',
           closedIds: closed,
-          stack: first ? [{ name: 'route', params: { id: first.id } }] : [],
+          stack: first
+            ? [
+                {
+                  name: 'route',
+                  params: {
+                    id: first.id,
+                  },
+                },
+              ]
+            : [],
           navigating: true,
         });
-        const after = chronApi.getRecommendation({ ...ctx, closedIds: closed });
+        const after = chronApi.getRecommendation({
+          ...ctx,
+          closedIds: closed,
+        });
         if (after.reassessment) {
           setTimeout(() => {
             showPush({
               level: 'red',
-              tag: 'ZMIANA SCHRONU',
+              tag: t('ZMIANA SCHRONU'),
               title: after.reassessment.title,
-              text: `Trasa przeliczona: ${after.primary.walk} min pieszo, ${after.primary.hoursLabel.toLowerCase()}.`,
+              text: tf('Trasa przeliczona: {v0} min pieszo, {v1}.', {
+                v0: after.primary.walk,
+                v1: after.primary.hoursLabel.toLowerCase(),
+              }),
               action: 'route',
             });
           }, 400);
         }
       } else if (step === 5) {
-        setState({ ...base, level: 'red', closedIds: s.demoStep >= 4 ? s.closedIds : closedFor(s) });
+        setState({
+          ...base,
+          level: 'red',
+          closedIds: s.demoStep >= 4 ? s.closedIds : closedFor(s),
+        });
         setSystem('offline');
       } else if (step === 6) {
-        setState({ ...base, level: 'red', closedIds: s.closedIds.length ? s.closedIds : closedFor(s) });
+        setState({
+          ...base,
+          level: 'red',
+          closedIds: s.closedIds.length ? s.closedIds : closedFor(s),
+        });
         setSystem('recovering');
       }
     }
 
     /** Actions that screens receive through the actions prop. */
     const actions = {
-      setTab: (tab) => setState({ tab, stack: [] }),
-      back: () => setState((s) => ({ stack: s.stack.slice(0, -1), navigating: false })),
+      setTab: (tab) =>
+        setState({
+          tab,
+          stack: [],
+        }),
+      back: () =>
+        setState((s) => ({
+          stack: s.stack.slice(0, -1),
+          navigating: false,
+        })),
       openShelter: (id, replace) =>
         setState((s) => {
           const base = replace ? s.stack.slice(0, -1) : s.stack;
-          return { stack: base.concat([{ name: 'shelter', params: { id } }]) };
+          return {
+            stack: base.concat([
+              {
+                name: 'shelter',
+                params: {
+                  id,
+                },
+              },
+            ]),
+          };
         }),
       openRoute: (id) =>
         setState((s) => {
           const top = s.stack[s.stack.length - 1];
           const base = top && top.name === 'route' ? s.stack.slice(0, -1) : s.stack;
-          return { stack: base.concat([{ name: 'route', params: { id } }]), selectedShelterId: id, navigating: false };
+          return {
+            stack: base.concat([
+              {
+                name: 'route',
+                params: {
+                  id,
+                },
+              },
+            ]),
+            selectedShelterId: id,
+            navigating: false,
+          };
         }),
-      openThreat: (threatId, level) => pushScreen('threat', { threatId, level }),
-      openLate: (threatId) => pushScreen('late', { threatId }),
-      openGuide: (threatId) => pushScreen('guide', { threatId }),
-      selectShelter: (id) => setState({ selectedShelterId: id }),
-      minimizeEmergency: () => setState({ emergencyMinimized: true, stack: [], tab: 'map' }),
-      openEmergency: () => setState({ emergencyMinimized: false, stack: [] }),
-      toggleNavigating: () => setState((s) => ({ navigating: !s.navigating })),
-      setSetting: (key, value) => setState((s) => ({ settings: { ...s.settings, [key]: value } })),
+      openThreat: (threatId, level) =>
+        pushScreen('threat', {
+          threatId,
+          level,
+        }),
+      openLate: (threatId) =>
+        pushScreen('late', {
+          threatId,
+        }),
+      openGuide: (threatId) =>
+        pushScreen('guide', {
+          threatId,
+        }),
+      selectShelter: (id) =>
+        setState({
+          selectedShelterId: id,
+        }),
+      minimizeEmergency: () =>
+        setState({
+          emergencyMinimized: true,
+          stack: [],
+          tab: 'map',
+        }),
+      openEmergency: () =>
+        setState({
+          emergencyMinimized: false,
+          stack: [],
+        }),
+      toggleNavigating: () =>
+        setState((s) => ({
+          navigating: !s.navigating,
+        })),
+      setSetting: (key, value) => {
+        // The language is applied before the state update, so the re-render already uses it.
+        if (key === 'lang') setLanguage(value);
+        setState((s) => ({ settings: { ...s.settings, [key]: value } }));
+      },
       toggleZoneNotify: (id) => setState((s) => ({ zoneNotify: { ...s.zoneNotify, [id]: !s.zoneNotify[id] } })),
       downloadPack,
       confirmShelter: (id) =>
@@ -385,11 +614,23 @@ export default function useChronController() {
       },
       setSystem,
       setLoc: (loc) => setState({ loc }),
-      login: () => setState({ loggedIn: true }),
-      logout: () => setState({ loggedIn: false }),
+      login: () =>
+        setState({
+          loggedIn: true,
+        }),
+      logout: () =>
+        setState({
+          loggedIn: false,
+        }),
       finishOnboarding: (result) => {
         writeOnboarded(true);
-        setState({ onboarded: true, loggedIn: !!result.loggedIn, loc: result.loc || 'zawsze', tab: 'map', stack: [] });
+        setState({
+          onboarded: true,
+          loggedIn: !!result.loggedIn,
+          loc: result.loc || 'zawsze',
+          tab: 'map',
+          stack: [],
+        });
       },
     };
 
@@ -425,7 +666,6 @@ export default function useChronController() {
         closedIds: [],
       });
     }
-
     return {
       getState,
       setState,
@@ -443,8 +683,14 @@ export default function useChronController() {
   useEffect(() => {
     if (!state.onboarded) return undefined;
     return watchLocation(
-      (location) => setState({ location }),
-      () => setState({ location: DEFAULT_LOCATION }),
+      (location) =>
+        setState({
+          location,
+        }),
+      () =>
+        setState({
+          location: DEFAULT_LOCATION,
+        }),
     );
   }, [state.onboarded, setState]);
 
@@ -458,14 +704,20 @@ export default function useChronController() {
     lastShelterSearch.current = location;
     fetchNearbyShelters(location)
       .then(({ build, shelters }) => {
-        setState({ shelters, sheltersBuild: build });
+        setState({
+          shelters,
+          sheltersBuild: build,
+        });
         saveLastShelters(location, shelters, build);
       })
       .catch((error) => {
         // Without the server, use shelters saved on the device; the built-in set is the last resort.
         lastShelterSearch.current = null;
         const saved = offlineShelters(location);
-        if (saved) setState({ shelters: saved });
+        if (saved)
+          setState({
+            shelters: saved,
+          });
         console.warn('Shelters are unavailable from the server', error);
       });
   }, [state.location, state.networkOnline, setState]);
@@ -488,13 +740,19 @@ export default function useChronController() {
         hour: '2-digit',
         minute: '2-digit',
       });
-      setState({ networkOnline: false, offlineSince: since });
+      setState({
+        networkOnline: false,
+        offlineSince: since,
+      });
       controller.setSystem('offline');
     };
     const goOnline = () => {
       // Forget the last search point so shelters are reloaded from the server.
       lastShelterSearch.current = null;
-      setState({ networkOnline: true, offlineSince: null });
+      setState({
+        networkOnline: true,
+        offlineSince: null,
+      });
       if (stateRef.current.system === 'offline') controller.setSystem('recovering');
     };
     window.addEventListener('offline', goOffline);
@@ -513,13 +771,17 @@ export default function useChronController() {
   useEffect(() => {
     const load = () => {
       fetchLiveThreats(stateRef.current.location, voivodeship)
-        .then((liveThreats) => setState({ liveThreats }))
+        .then((liveThreats) =>
+          setState({
+            liveThreats,
+          }),
+        )
         .catch((error) => console.warn('Live threat feed is unavailable', error));
     };
     load();
     const timer = setInterval(load, THREATS_REFRESH_MS);
     return () => clearInterval(timer);
-  }, [latKey, lngKey, voivodeship, state.networkOnline, setState]);
+  }, [latKey, lngKey, voivodeship, state.networkOnline, state.settings.lang, setState]);
 
   // Outside the demo scenario, the connectivity state follows the real sources:
   // DEGRADED when at least one source is unavailable, ONLINE when all respond.
@@ -532,7 +794,11 @@ export default function useChronController() {
 
   // Window resize and arrow key listeners (arrow keys step through the demo).
   useEffect(() => {
-    const onResize = () => setState({ vw: window.innerWidth, vh: window.innerHeight });
+    const onResize = () =>
+      setState({
+        vw: window.innerWidth,
+        vh: window.innerHeight,
+      });
     const onKey = (event) => {
       const tag = event.target?.tagName || '';
       if (tag === 'INPUT' || tag === 'TEXTAREA') return;
@@ -542,7 +808,6 @@ export default function useChronController() {
     };
     window.addEventListener('resize', onResize);
     window.addEventListener('keydown', onKey);
-
     const activeTimers = timers.current;
     return () => {
       window.removeEventListener('resize', onResize);
@@ -554,6 +819,8 @@ export default function useChronController() {
       vibrateDevice(0);
     };
   }, [controller, setState]);
-
-  return { state, ...controller };
+  return {
+    state,
+    ...controller,
+  };
 }

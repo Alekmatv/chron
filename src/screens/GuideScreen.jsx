@@ -4,6 +4,7 @@
 import { Fragment } from 'react';
 import useMergedState from '@/hooks/useMergedState.js';
 import chronApi from '@/api/chronApi.js';
+import { t } from '@/i18n/index.js';
 
 /** Builds view data (texts, colors, handlers) from props and local state. */
 function buildViewModel(props, state, setState) {
@@ -22,10 +23,17 @@ function buildViewModel(props, state, setState) {
       rule: g.rule || '',
       ruleText: g.ruleText || '',
       items: g.items.map((it, i) => {
-        return { n: i + 1, title: it[0], text: it[1], pt: i === 0 && !g.rule ? 14 : 0 };
+        return {
+          n: i + 1,
+          title: it[0],
+          text: it[1],
+          pt: i === 0 && !g.rule ? 14 : 0,
+        };
       }),
       toggle: function () {
-        setState({ open: state.open === g.id ? null : g.id });
+        setState({
+          open: state.open === g.id ? null : g.id,
+        });
       },
     };
   });
@@ -62,11 +70,18 @@ export default function GuideScreen(inputProps) {
         animation: 'chronIn .35s ease both',
       }}
     >
-      <header style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '20px 16px 12px' }}>
+      <header
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          padding: '20px 16px 12px',
+        }}
+      >
         <button
           type="button"
           onClick={back}
-          aria-label="Wstecz"
+          aria-label={t('Wstecz')}
           style={{
             width: '44px',
             height: '44px',
@@ -95,11 +110,30 @@ export default function GuideScreen(inputProps) {
             <path d="M15 5l-7 7 7 7"></path>
           </svg>
         </button>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-          <span style={{ fontFamily: "'Unbounded', 'Arial Black', sans-serif", fontWeight: '500', fontSize: '18px' }}>
-            Poradnik
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '2px',
+          }}
+        >
+          <span
+            style={{
+              fontFamily: "'Unbounded', 'Arial Black', sans-serif",
+              fontWeight: '500',
+              fontSize: '18px',
+            }}
+          >
+            {t('Poradnik')}
           </span>
-          <span style={{ fontSize: '12px', color: '#9C95A0' }}>Przeczytaj spokojnie, zanim coś się wydarzy</span>
+          <span
+            style={{
+              fontSize: '12px',
+              color: '#9C95A0',
+            }}
+          >
+            {t('Przeczytaj spokojnie, zanim coś się wydarzy')}
+          </span>
         </div>
       </header>
       <div
@@ -145,11 +179,39 @@ export default function GuideScreen(inputProps) {
                 }}
               >
                 <span
-                  style={{ width: '10px', height: '10px', flex: 'none', borderRadius: '5px', background: g.dot }}
+                  style={{
+                    width: '10px',
+                    height: '10px',
+                    flex: 'none',
+                    borderRadius: '5px',
+                    background: g.dot,
+                  }}
                 ></span>
-                <span style={{ flex: '1', display: 'flex', flexDirection: 'column', gap: '2px', minWidth: '0' }}>
-                  <span style={{ fontSize: '16px', fontWeight: '800' }}>{g.title}</span>
-                  <span style={{ fontSize: '13px', color: '#9C95A0' }}>{g.sub}</span>
+                <span
+                  style={{
+                    flex: '1',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '2px',
+                    minWidth: '0',
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: '16px',
+                      fontWeight: '800',
+                    }}
+                  >
+                    {g.title}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: '13px',
+                      color: '#9C95A0',
+                    }}
+                  >
+                    {g.sub}
+                  </span>
                 </span>
                 <svg
                   width="18"
@@ -161,7 +223,11 @@ export default function GuideScreen(inputProps) {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   aria-hidden="true"
-                  style={{ transform: g.rot, flex: 'none', transition: 'transform .25s' }}
+                  style={{
+                    transform: g.rot,
+                    flex: 'none',
+                    transition: 'transform .25s',
+                  }}
                 >
                   <path d="M6 9l6 6 6-6"></path>
                 </svg>
@@ -190,15 +256,35 @@ export default function GuideScreen(inputProps) {
                             gap: '4px',
                           }}
                         >
-                          <span style={{ fontSize: '14px', fontWeight: '800' }}>{g.rule}</span>
-                          <span style={{ fontSize: '14px', lineHeight: '1.5', color: '#C9C1CB' }}>{g.ruleText}</span>
+                          <span
+                            style={{
+                              fontSize: '14px',
+                              fontWeight: '800',
+                            }}
+                          >
+                            {g.rule}
+                          </span>
+                          <span
+                            style={{
+                              fontSize: '14px',
+                              lineHeight: '1.5',
+                              color: '#C9C1CB',
+                            }}
+                          >
+                            {g.ruleText}
+                          </span>
                         </div>
                       </>
                     )}
                     {(g.items || []).map((it, itIndex) => (
                       <Fragment key={itIndex}>
                         <div
-                          style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', paddingTop: `${it.pt}px` }}
+                          style={{
+                            display: 'flex',
+                            gap: '12px',
+                            alignItems: 'flex-start',
+                            paddingTop: `${it.pt}px`,
+                          }}
                         >
                           <span
                             style={{
@@ -215,9 +301,30 @@ export default function GuideScreen(inputProps) {
                           >
                             {it.n}
                           </span>
-                          <span style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                            <span style={{ fontSize: '15px', fontWeight: '700' }}>{it.title}</span>
-                            <span style={{ fontSize: '14px', lineHeight: '1.5', color: '#C9C1CB' }}>{it.text}</span>
+                          <span
+                            style={{
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: '2px',
+                            }}
+                          >
+                            <span
+                              style={{
+                                fontSize: '15px',
+                                fontWeight: '700',
+                              }}
+                            >
+                              {it.title}
+                            </span>
+                            <span
+                              style={{
+                                fontSize: '14px',
+                                lineHeight: '1.5',
+                                color: '#C9C1CB',
+                              }}
+                            >
+                              {it.text}
+                            </span>
                           </span>
                         </div>
                       </Fragment>
@@ -228,8 +335,15 @@ export default function GuideScreen(inputProps) {
             </section>
           </Fragment>
         ))}
-        <p style={{ margin: '6px 4px 0', fontSize: '12px', lineHeight: '1.5', color: '#9C95A0' }}>
-          W sytuacji zagrożenia życia dzwoń pod 112.
+        <p
+          style={{
+            margin: '6px 4px 0',
+            fontSize: '12px',
+            lineHeight: '1.5',
+            color: '#9C95A0',
+          }}
+        >
+          {t('W sytuacji zagrożenia życia dzwoń pod 112.')}
         </p>
       </div>
     </div>

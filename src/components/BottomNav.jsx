@@ -1,19 +1,27 @@
+import { t } from '@/i18n/index.js';
 /**
  * Bottom tab bar (Mapa, Zagrożenia, Schrony, Profil) with an active threat indicator.
  */
-const DEFAULT_PROPS = { tab: 'map', alertLevel: 'green' };
+const DEFAULT_PROPS = {
+  tab: 'map',
+  alertLevel: 'green',
+};
 
 /** Builds view data (texts, colors, handlers) from props. */
 function buildViewModel(props) {
   const tab = props.tab || 'map';
   const onTab = props.onTab || function () {};
-  const t = {};
+  const entry = {};
   ['map', 'threats', 'shelters', 'profile'].forEach((k) => {
     const on = k === tab;
-    t[k] = { fg: on ? '#F4F1F2' : '#9C95A0', bg: on ? '#2C2930' : 'transparent', cur: on ? 'page' : 'false' };
+    entry[k] = {
+      fg: on ? '#F4F1F2' : '#9C95A0',
+      bg: on ? '#2C2930' : 'transparent',
+      cur: on ? 'page' : 'false',
+    };
   });
   return {
-    t,
+    t: entry,
     hasAlert: !!props.alertLevel && props.alertLevel !== 'green',
     alertColor: props.alertLevel === 'red' ? '#FF2D3D' : '#C9A43A',
     goMap: function () {
@@ -40,11 +48,14 @@ function buildViewModel(props) {
  * @param {Function} props.onTab
  */
 export default function BottomNav(inputProps) {
-  const props = { ...DEFAULT_PROPS, ...inputProps };
-  const { alertColor, goMap, goProfile, goShelters, goThreats, hasAlert, t } = buildViewModel(props);
+  const props = {
+    ...DEFAULT_PROPS,
+    ...inputProps,
+  };
+  const { alertColor, goMap, goProfile, goShelters, goThreats, hasAlert, t: entry } = buildViewModel(props);
   return (
     <nav
-      aria-label="Nawigacja główna"
+      aria-label={t('Nawigacja główna')}
       style={{
         flex: 'none',
         display: 'grid',
@@ -59,12 +70,12 @@ export default function BottomNav(inputProps) {
       <button
         type="button"
         onClick={goMap}
-        aria-current={t.map.cur}
+        aria-current={entry.map.cur}
         style={{
           minHeight: '56px',
           border: '0',
           background: 'transparent',
-          color: t.map.fg,
+          color: entry.map.fg,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -80,7 +91,7 @@ export default function BottomNav(inputProps) {
             width: '52px',
             height: '30px',
             borderRadius: '15px',
-            background: t.map.bg,
+            background: entry.map.bg,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -102,17 +113,17 @@ export default function BottomNav(inputProps) {
             <path d="M9 4v13.5M15 6.5V20"></path>
           </svg>
         </span>
-        Mapa
+        {t('Mapa')}
       </button>
       <button
         type="button"
         onClick={goThreats}
-        aria-current={t.threats.cur}
+        aria-current={entry.threats.cur}
         style={{
           minHeight: '56px',
           border: '0',
           background: 'transparent',
-          color: t.threats.fg,
+          color: entry.threats.fg,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -129,7 +140,7 @@ export default function BottomNav(inputProps) {
             width: '52px',
             height: '30px',
             borderRadius: '15px',
-            background: t.threats.bg,
+            background: entry.threats.bg,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -168,17 +179,17 @@ export default function BottomNav(inputProps) {
             </>
           )}
         </span>
-        Zagrożenia
+        {t('Zagrożenia')}
       </button>
       <button
         type="button"
         onClick={goShelters}
-        aria-current={t.shelters.cur}
+        aria-current={entry.shelters.cur}
         style={{
           minHeight: '56px',
           border: '0',
           background: 'transparent',
-          color: t.shelters.fg,
+          color: entry.shelters.fg,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -194,7 +205,7 @@ export default function BottomNav(inputProps) {
             width: '52px',
             height: '30px',
             borderRadius: '15px',
-            background: t.shelters.bg,
+            background: entry.shelters.bg,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -212,17 +223,17 @@ export default function BottomNav(inputProps) {
             <path d="M24 56V42a12 12 0 0 1 24 0V56" stroke="currentColor" strokeWidth="6" strokeLinecap="round"></path>
           </svg>
         </span>
-        Schrony
+        {t('Schrony')}
       </button>
       <button
         type="button"
         onClick={goProfile}
-        aria-current={t.profile.cur}
+        aria-current={entry.profile.cur}
         style={{
           minHeight: '56px',
           border: '0',
           background: 'transparent',
-          color: t.profile.fg,
+          color: entry.profile.fg,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -238,7 +249,7 @@ export default function BottomNav(inputProps) {
             width: '52px',
             height: '30px',
             borderRadius: '15px',
-            background: t.profile.bg,
+            background: entry.profile.bg,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -260,7 +271,7 @@ export default function BottomNav(inputProps) {
             <path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"></path>
           </svg>
         </span>
-        Profil
+        {t('Profil')}
       </button>
     </nav>
   );

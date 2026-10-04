@@ -3,23 +3,12 @@
  * Newly activated military and danger zones are an auxiliary signal, not a threat by themselves.
  */
 import { distanceKm, fetchJson } from './http.js';
+import { labelsFor } from './labels.js';
 
 const PANSA_UUP_URL = 'https://airspace.pansa.pl/map-configuration/uup';
 
 /** Zones farther than this from the user are ignored. */
 const RADIUS_KM = 100;
-
-/** Zone types in Polish. */
-const ZONE_LABELS = {
-  TRA: 'strefa ćwiczeń',
-  TSA: 'strefa wydzielona',
-  D: 'strefa niebezpieczna',
-  R: 'strefa ograniczeń',
-  P: 'strefa zakazana',
-  EA: 'strefa tymczasowa',
-  MRT: 'trasa lotów wojskowych',
-  ATZ: 'strefa lotniska',
-};
 
 /** Zone types that restrict or prohibit flights: reported with a higher level. */
 const RESTRICTIVE_TYPES = new Set(['D', 'R', 'P']);
@@ -35,9 +24,10 @@ function isActiveNow(properties, now) {
 
 /**
  * Airspace zones active right now within the radius around the user.
- * @param {{ lat: number, lng: number }} context user location
+ * @param {{ lat: number, lng: number, lang?: string }} context user location and interface language
  */
-export async function collectPansa({ lat, lng }) {
+export async function collectPansa({ lat, lng, lang }) {
+  const L = labelsFor(lang);
   const data = await fetchJson(PANSA_UUP_URL);
   const features = Array.isArray(data) ? data : data?.features || [];
   const now = Date.now();
@@ -58,9 +48,9 @@ export async function collectPansa({ lat, lng }) {
         source: 'PAŻP',
         category: 'airspace',
         level: RESTRICTIVE_TYPES.has(type) ? 'yellow' : 'info',
-        title: `Aktywna ${ZONE_LABELS[type] || 'strefa przestrzeni powietrznej'} ${properties.designator}`,
-        text: `${Math.round(distance)} km od Ciebie · rezerwacja przestrzeni powietrznej`,
-        region: 'Polska',
+        title: L.activeZone(L.zones[type] || L.airspaceZone, properties.designator),
+        text: `${L.kmFromYou(Math.round(distance))} · ${L.reservation}`,
+        region: L.poland,
         time: new Date(now).toISOString(),
         distanceKm: Math.round(distance),
       };

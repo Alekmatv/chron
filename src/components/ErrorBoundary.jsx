@@ -3,23 +3,26 @@
  * instead of a blank screen, so the rest of the app keeps working.
  */
 import { Component } from 'react';
-
+import { t } from '@/i18n/index.js';
 export default class ErrorBoundary extends Component {
-  state = { failed: false };
-
+  state = {
+    failed: false,
+  };
   static getDerivedStateFromError() {
-    return { failed: true };
+    return {
+      failed: true,
+    };
   }
-
   componentDidCatch(error) {
     console.error('Screen failed to render', error);
   }
-
   componentDidUpdate(prevProps) {
     // Navigating to another screen gives the boundary a new resetKey and clears the error.
-    if (this.state.failed && prevProps.resetKey !== this.props.resetKey) this.setState({ failed: false });
+    if (this.state.failed && prevProps.resetKey !== this.props.resetKey)
+      this.setState({
+        failed: false,
+      });
   }
-
   render() {
     if (!this.state.failed) return this.props.children;
     return (
@@ -38,8 +41,22 @@ export default class ErrorBoundary extends Component {
           fontFamily: "'Manrope', system-ui, sans-serif",
         }}
       >
-        <span style={{ fontSize: '16px', fontWeight: '800', color: '#F4F1F2' }}>Nie udało się wyświetlić ekranu</span>
-        <span style={{ fontSize: '13px' }}>Wybierz inną zakładkę. W sytuacji zagrożenia życia dzwoń pod 112.</span>
+        <span
+          style={{
+            fontSize: '16px',
+            fontWeight: '800',
+            color: '#F4F1F2',
+          }}
+        >
+          {t('Nie udało się wyświetlić ekranu')}
+        </span>
+        <span
+          style={{
+            fontSize: '13px',
+          }}
+        >
+          {t('Wybierz inną zakładkę. W sytuacji zagrożenia życia dzwoń pod 112.')}
+        </span>
       </div>
     );
   }

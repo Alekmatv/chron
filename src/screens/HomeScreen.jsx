@@ -8,7 +8,7 @@ import ShelterRow from '@/components/ShelterRow.jsx';
 import StatusBadge from '@/components/StatusBadge.jsx';
 import StreetMap from '@/components/StreetMap.jsx';
 import chronApi from '@/api/chronApi.js';
-
+import { t, tf } from '@/i18n/index.js';
 const LVL = {
   yellow: {
     short: 'Żółty',
@@ -28,23 +28,46 @@ const LVL = {
   },
 };
 const NET = {
-  online: { label: 'LIVE', color: '#FF7A85', anim: 'schronLive 2s infinite' },
-  degraded: { label: 'OPÓŹNIENIA', color: '#F2B866', anim: 'schronLive 2s infinite' },
-  offline: { label: 'OFFLINE', color: '#9C95A0', anim: 'none' },
-  recovering: { label: 'SYNC', color: '#7CC4FF', anim: 'schronLive 1s infinite' },
+  online: {
+    label: 'LIVE',
+    color: '#FF7A85',
+    anim: 'schronLive 2s infinite',
+  },
+  degraded: {
+    label: 'OPÓŹNIENIA',
+    color: '#F2B866',
+    anim: 'schronLive 2s infinite',
+  },
+  offline: {
+    label: 'OFFLINE',
+    color: '#9C95A0',
+    anim: 'none',
+  },
+  recovering: {
+    label: 'SYNC',
+    color: '#7CC4FF',
+    anim: 'schronLive 1s infinite',
+  },
 };
 
 /** Title of the home zone Safety Pack card for its download status. */
 function packTitle(pack) {
-  if (pack.status === 'ready') return 'Safety Pack „Dom” gotowy';
-  if (pack.status === 'downloading') return `Pobieranie Safety Pack „Dom”… ${pack.progress || 0}%`;
-  return 'Pobierz Safety Pack „Dom”';
+  if (pack.status === 'ready') return t('Safety Pack „Dom” gotowy');
+  if (pack.status === 'downloading')
+    return tf('Pobieranie Safety Pack „Dom”… {v0}%', {
+      v0: pack.progress || 0,
+    });
+  return t('Pobierz Safety Pack „Dom”');
 }
 
 /** Subtitle of the home zone Safety Pack card. */
 function packSubtitle(pack) {
-  if (pack.status === 'ready') return `${pack.date} · ${pack.size} · działa bez internetu`;
-  return 'Schrony, mapa i trasy okolicy — dostępne bez internetu';
+  if (pack.status === 'ready')
+    return tf('{v0} · {v1} · działa bez internetu', {
+      v0: pack.date,
+      v1: pack.size,
+    });
+  return t('Schrony, mapa i trasy okolicy — dostępne bez internetu');
 }
 
 /** Builds view data (texts, colors, handlers) from props and local state. */
@@ -95,16 +118,16 @@ function buildViewModel(props, state, setState) {
     },
     isRegions: state.tab === 'regions',
     isNearby: state.tab === 'nearby',
-    tabNear: threat ? threat.tabNear : 'Schrony obok',
-    listTitle: green ? 'Najbliższe otwarte schrony' : threat.listTitle,
+    tabNear: threat ? threat.tabNear : t('Schrony obok'),
+    listTitle: green ? t('Najbliższe otwarte schrony') : threat.listTitle,
     regionLevels: api.getRegionLevels(s),
-    mapTitle: threat ? threat.title : 'Sytuacja w kraju',
+    mapTitle: threat ? threat.title : t('Sytuacja w kraju'),
     shelters,
     recId: r.id || '',
     showRoute: !!route,
     zone: threat ? threat.zone : '',
     level: s.level,
-    offlineMapLabel: stale ? 'Mapa offline · dane z ' + api.getOfflineSince(s) : '',
+    offlineMapLabel: stale ? t('Mapa offline · dane z ') + api.getOfflineSince(s) : '',
     nearby,
     showReach: !green,
     goProfile: function () {
@@ -123,10 +146,14 @@ function buildViewModel(props, state, setState) {
       a.openShelter(id);
     },
     showRegions: function () {
-      setState({ tab: 'regions' });
+      setState({
+        tab: 'regions',
+      });
     },
     showNearby: function () {
-      setState({ tab: 'nearby' });
+      setState({
+        tab: 'nearby',
+      });
     },
   };
 }
@@ -140,7 +167,9 @@ function buildViewModel(props, state, setState) {
  */
 export default function HomeScreen(inputProps) {
   const props = inputProps;
-  const [state, setState] = useMergedState({ tab: 'regions' });
+  const [state, setState] = useMergedState({
+    tab: 'regions',
+  });
   const {
     packTitle,
     packSub,
@@ -202,14 +231,23 @@ export default function HomeScreen(inputProps) {
           padding: '20px 16px 12px',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+          }}
+        >
           <svg
             width="30"
             height="27"
             viewBox="0 0 72 64"
             fill="none"
             aria-hidden="true"
-            style={{ filter: 'drop-shadow(0 0 3px rgba(255,45,61,.45))', overflow: 'visible' }}
+            style={{
+              filter: 'drop-shadow(0 0 3px rgba(255,45,61,.45))',
+              overflow: 'visible',
+            }}
           >
             <path
               d="M10 56V28L36 8L62 28V56"
@@ -221,7 +259,13 @@ export default function HomeScreen(inputProps) {
             <path d="M24 56V42a12 12 0 0 1 24 0V56" stroke="#FF2D3D" strokeWidth="5" strokeLinecap="round"></path>
             <circle cx="36" cy="27" r="3.4" fill="#FF2D3D"></circle>
           </svg>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '2px',
+            }}
+          >
             <span
               style={{
                 fontFamily: "'Unbounded', 'Arial Black', sans-serif",
@@ -231,9 +275,17 @@ export default function HomeScreen(inputProps) {
                 color: '#FF2D3D',
               }}
             >
-              CHROŃ
+              {t('CHROŃ')}
             </span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#A49DA6' }}>
+            <span
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                fontSize: '12px',
+                color: '#A49DA6',
+              }}
+            >
               {place.label}
               <span
                 style={{
@@ -255,7 +307,7 @@ export default function HomeScreen(inputProps) {
                     animation: net.anim,
                   }}
                 ></span>
-                {net.label}
+                {t(net.label)}
               </span>
             </span>
           </div>
@@ -263,7 +315,7 @@ export default function HomeScreen(inputProps) {
         <button
           type="button"
           onClick={goProfile}
-          aria-label="Profil"
+          aria-label={t('Profil')}
           style={{
             width: '44px',
             height: '44px',
@@ -357,7 +409,15 @@ export default function HomeScreen(inputProps) {
                     <path d="M8.5 12l2.5 2.5 4.5-5"></path>
                   </svg>
                 </span>
-                <span style={{ flex: '1', display: 'flex', flexDirection: 'column', gap: '6px', minWidth: '0' }}>
+                <span
+                  style={{
+                    flex: '1',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '6px',
+                    minWidth: '0',
+                  }}
+                >
                   <StatusBadge kind="green" size="sm" />
                   <span
                     style={{
@@ -373,11 +433,40 @@ export default function HomeScreen(inputProps) {
                   </span>
                 </span>
               </div>
-              <div style={{ padding: '14px 18px 16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <span style={{ fontSize: '15px', lineHeight: '1.5', color: '#D9D4DB' }}>{status.reason}</span>
-                <span style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: '13px', fontWeight: '700', color: '#9C95A0' }}>
-                    Źródło: {status.source} · {status.updated}
+              <div
+                style={{
+                  padding: '14px 18px 16px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '10px',
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: '15px',
+                    lineHeight: '1.5',
+                    color: '#D9D4DB',
+                  }}
+                >
+                  {status.reason}
+                </span>
+                <span
+                  style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    alignItems: 'center',
+                    gap: '8px',
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: '13px',
+                      fontWeight: '700',
+                      color: '#9C95A0',
+                    }}
+                  >
+                    {t('Źródło: ')}
+                    {status.source} · {status.updated}
                   </span>
                   <StatusBadge kind={status.freshness.key} size="sm" />
                 </span>
@@ -401,7 +490,7 @@ export default function HomeScreen(inputProps) {
               <button
                 type="button"
                 onClick={goThreat}
-                aria-label="Pokaż szczegóły zagrożenia"
+                aria-label={t('Pokaż szczegóły zagrożenia')}
                 style={{
                   display: 'flex',
                   flexDirection: 'column',
@@ -453,7 +542,15 @@ export default function HomeScreen(inputProps) {
                       <path d="M12 10v4.5M12 17.2v.1"></path>
                     </svg>
                   </span>
-                  <span style={{ flex: '1', display: 'flex', flexDirection: 'column', gap: '4px', minWidth: '0' }}>
+                  <span
+                    style={{
+                      flex: '1',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '4px',
+                      minWidth: '0',
+                    }}
+                  >
                     <span
                       style={{
                         fontSize: '11px',
@@ -465,8 +562,15 @@ export default function HomeScreen(inputProps) {
                     >
                       {threat.title}
                     </span>
-                    <span style={{ fontSize: '14px', fontWeight: '800', letterSpacing: '0.01em', color: lvl.text }}>
-                      {lvl.short} · {lvl.label}
+                    <span
+                      style={{
+                        fontSize: '14px',
+                        fontWeight: '800',
+                        letterSpacing: '0.01em',
+                        color: lvl.text,
+                      }}
+                    >
+                      {t(lvl.short)} · {t(lvl.label)}
                     </span>
                     <span
                       style={{
@@ -477,7 +581,8 @@ export default function HomeScreen(inputProps) {
                         color: '#FFFFFF',
                       }}
                     >
-                      Zagrożenie: {threat.kind}
+                      {t('Zagrożenie: ')}
+                      {threat.kind}
                     </span>
                   </span>
                   <svg
@@ -490,21 +595,61 @@ export default function HomeScreen(inputProps) {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     aria-hidden="true"
-                    style={{ flex: 'none' }}
+                    style={{
+                      flex: 'none',
+                    }}
                   >
                     <path d="M9 5l7 7-7 7"></path>
                   </svg>
                 </span>
-                <span style={{ padding: '14px 18px 16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  <span style={{ display: 'block', fontSize: '15px', lineHeight: '1.5', color: '#D9D4DB' }}>
+                <span
+                  style={{
+                    padding: '14px 18px 16px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '10px',
+                  }}
+                >
+                  <span
+                    style={{
+                      display: 'block',
+                      fontSize: '15px',
+                      lineHeight: '1.5',
+                      color: '#D9D4DB',
+                    }}
+                  >
                     {threat.text}
                   </span>
-                  <span style={{ display: 'block', fontSize: '13px', lineHeight: '1.45', color: '#B9B1BB' }}>
-                    Powód: {threat.reason}
+                  <span
+                    style={{
+                      display: 'block',
+                      fontSize: '13px',
+                      lineHeight: '1.45',
+                      color: '#B9B1BB',
+                    }}
+                  >
+                    {t('Powód: ')}
+                    {threat.reason}
                   </span>
-                  <span style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontSize: '13px', fontWeight: '700', color: '#9C95A0' }}>
-                      Źródło: {threat.source} · {threat.sourceTime} · aktualizacja {threat.updated}
+                  <span
+                    style={{
+                      display: 'flex',
+                      flexWrap: 'wrap',
+                      alignItems: 'center',
+                      gap: '8px',
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: '13px',
+                        fontWeight: '700',
+                        color: '#9C95A0',
+                      }}
+                    >
+                      {t('Źródło: ')}
+                      {threat.source} · {threat.sourceTime}
+                      {t(' · aktualizacja ')}
+                      {threat.updated}
                     </span>
                     <StatusBadge kind={threat.freshness.key} size="sm" />
                   </span>
@@ -520,7 +665,15 @@ export default function HomeScreen(inputProps) {
                   gap: '12px',
                 }}
               >
-                <span style={{ fontSize: '14px', fontWeight: '700', color: '#9C95A0' }}>Do zagrożenia (szacunek)</span>
+                <span
+                  style={{
+                    fontSize: '14px',
+                    fontWeight: '700',
+                    color: '#9C95A0',
+                  }}
+                >
+                  {t('Do zagrożenia (szacunek)')}
+                </span>
                 <span
                   style={{
                     fontFamily: "'Unbounded', 'Arial Black', sans-serif",
@@ -552,14 +705,41 @@ export default function HomeScreen(inputProps) {
                       fontFamily: 'inherit',
                     }}
                   >
-                    <span style={{ flex: '1', display: 'flex', flexDirection: 'column', gap: '3px', minWidth: '0' }}>
-                      <span style={{ fontSize: '13px', fontWeight: '700', color: '#9C95A0' }}>
+                    <span
+                      style={{
+                        flex: '1',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '3px',
+                        minWidth: '0',
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: '13px',
+                          fontWeight: '700',
+                          color: '#9C95A0',
+                        }}
+                      >
                         {threat.nearestLabel}
                       </span>
-                      <span style={{ fontSize: '17px', fontWeight: '800' }}>
-                        {rec.walk} min pieszo · {rec.name}
+                      <span
+                        style={{
+                          fontSize: '17px',
+                          fontWeight: '800',
+                        }}
+                      >
+                        {rec.walk}
+                        {t(' min pieszo · ')}
+                        {rec.name}
                       </span>
-                      <span style={{ fontSize: '13px', fontWeight: '700', color: '#A49DA6' }}>
+                      <span
+                        style={{
+                          fontSize: '13px',
+                          fontWeight: '700',
+                          color: '#A49DA6',
+                        }}
+                      >
                         {rec.statusLabel} · {rec.hoursLabel}
                       </span>
                     </span>
@@ -606,7 +786,14 @@ export default function HomeScreen(inputProps) {
             border: '1px solid #222026',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 14px' }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              padding: '12px 14px',
+            }}
+          >
             <span
               style={{
                 width: '36px',
@@ -635,12 +822,41 @@ export default function HomeScreen(inputProps) {
                 <circle cx="12" cy="10" r="2.6"></circle>
               </svg>
             </span>
-            <span style={{ flex: '1', minWidth: '0', display: 'flex', flexDirection: 'column', gap: '2px' }}>
-              <span style={{ fontSize: '12px', fontWeight: '700', color: '#9C95A0' }}>Twoja lokalizacja</span>
-              <span style={{ fontSize: '15px', fontWeight: '800' }}>
+            <span
+              style={{
+                flex: '1',
+                minWidth: '0',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '2px',
+              }}
+            >
+              <span
+                style={{
+                  fontSize: '12px',
+                  fontWeight: '700',
+                  color: '#9C95A0',
+                }}
+              >
+                {t('Twoja lokalizacja')}
+              </span>
+              <span
+                style={{
+                  fontSize: '15px',
+                  fontWeight: '800',
+                }}
+              >
                 {user.location.label} · {user.location.address}
               </span>
-              <span style={{ fontSize: '12px', color: '#A49DA6' }}>Strefa: Dom · GPS {user.location.accuracy}</span>
+              <span
+                style={{
+                  fontSize: '12px',
+                  color: '#A49DA6',
+                }}
+              >
+                {t('Strefa: Dom · GPS ')}
+                {user.location.accuracy}
+              </span>
             </span>
           </div>
           <button
@@ -687,9 +903,31 @@ export default function HomeScreen(inputProps) {
                 <path d="M12 3v12M7 10l5 5 5-5M5 21h14"></path>
               </svg>
             </span>
-            <span style={{ flex: '1', minWidth: '0', display: 'flex', flexDirection: 'column', gap: '2px' }}>
-              <span style={{ fontSize: '14px', fontWeight: '800' }}>{packTitle}</span>
-              <span style={{ fontSize: '12px', color: '#A49DA6' }}>{packSub}</span>
+            <span
+              style={{
+                flex: '1',
+                minWidth: '0',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '2px',
+              }}
+            >
+              <span
+                style={{
+                  fontSize: '14px',
+                  fontWeight: '800',
+                }}
+              >
+                {packTitle}
+              </span>
+              <span
+                style={{
+                  fontSize: '12px',
+                  color: '#A49DA6',
+                }}
+              >
+                {packSub}
+              </span>
             </span>
             <svg
               width="18"
@@ -732,7 +970,7 @@ export default function HomeScreen(inputProps) {
               fontFamily: 'inherit',
             }}
           >
-            Mapa Polski
+            {t('Mapa Polski')}
           </button>
           <button
             type="button"
@@ -755,25 +993,82 @@ export default function HomeScreen(inputProps) {
         </div>
         {isRegions && (
           <>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px',
+              }}
+            >
               <PolandMap
                 regionLevels={regionLevels}
                 threatTitle={mapTitle}
                 offline={stale}
                 offlineLabel={offlineMapLabel}
               />
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 14px' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#B9B1BB' }}>
-                  <span style={{ width: '12px', height: '12px', borderRadius: '3px', background: '#2A4F43' }}></span>
-                  Bezpiecznie
+              <div
+                style={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: '6px 14px',
+                }}
+              >
+                <span
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    fontSize: '12px',
+                    color: '#B9B1BB',
+                  }}
+                >
+                  <span
+                    style={{
+                      width: '12px',
+                      height: '12px',
+                      borderRadius: '3px',
+                      background: '#2A4F43',
+                    }}
+                  ></span>
+                  {t('Bezpiecznie')}
                 </span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#B9B1BB' }}>
-                  <span style={{ width: '12px', height: '12px', borderRadius: '3px', background: '#C9A43A' }}></span>
-                  Żółty — podwyższone zagrożenie
+                <span
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    fontSize: '12px',
+                    color: '#B9B1BB',
+                  }}
+                >
+                  <span
+                    style={{
+                      width: '12px',
+                      height: '12px',
+                      borderRadius: '3px',
+                      background: '#C9A43A',
+                    }}
+                  ></span>
+                  {t('Żółty — podwyższone zagrożenie')}
                 </span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#B9B1BB' }}>
-                  <span style={{ width: '12px', height: '12px', borderRadius: '3px', background: '#C8323F' }}></span>
-                  Czerwony — wysokie zagrożenie
+                <span
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    fontSize: '12px',
+                    color: '#B9B1BB',
+                  }}
+                >
+                  <span
+                    style={{
+                      width: '12px',
+                      height: '12px',
+                      borderRadius: '3px',
+                      background: '#C8323F',
+                    }}
+                  ></span>
+                  {t('Czerwony — wysokie zagrożenie')}
                 </span>
               </div>
             </div>
@@ -794,8 +1089,21 @@ export default function HomeScreen(inputProps) {
             />
           </>
         )}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span style={{ fontSize: '16px', fontWeight: '800' }}>{listTitle}</span>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
+          <span
+            style={{
+              fontSize: '16px',
+              fontWeight: '800',
+            }}
+          >
+            {listTitle}
+          </span>
           <button
             type="button"
             onClick={goShelters}
@@ -811,7 +1119,7 @@ export default function HomeScreen(inputProps) {
               fontFamily: 'inherit',
             }}
           >
-            Wszystkie →
+            {t('Wszystkie →')}
           </button>
         </div>
         {(nearby || []).map((s, sIndex) => (

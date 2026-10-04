@@ -5,9 +5,16 @@ import { Fragment } from 'react';
 import StatusBadge from '@/components/StatusBadge.jsx';
 import chronApi from '@/api/chronApi.js';
 import LiveSourcesPanel from '@/components/LiveSourcesPanel.jsx';
-
-const TINT = { yellow: ['rgba(201,164,58,.14)', '#4A3E1A'], red: ['rgba(200,50,63,.16)', '#5A1A22'] };
-const DOT = { air: '#C8323F', chem: '#C9A43A', flood: '#7CC4FF' };
+import { t } from '@/i18n/index.js';
+const TINT = {
+  yellow: ['rgba(201,164,58,.14)', '#4A3E1A'],
+  red: ['rgba(200,50,63,.16)', '#5A1A22'],
+};
+const DOT = {
+  air: '#C8323F',
+  chem: '#C9A43A',
+  flood: '#7CC4FF',
+};
 
 /** Builds view data (texts, colors, handlers) from props. */
 function buildViewModel(props) {
@@ -15,12 +22,12 @@ function buildViewModel(props) {
   const s = props.store || {},
     a = props.actions || {};
   const active = api.getActiveThreats(s);
-  const threats = active.map((t) => {
-    return Object.assign({}, t, {
-      tint: TINT[t.level][0],
-      border: TINT[t.level][1],
+  const threats = active.map((entry) => {
+    return Object.assign({}, entry, {
+      tint: TINT[entry.level][0],
+      border: TINT[entry.level][1],
       open: function () {
-        a.openThreat(t.id);
+        a.openThreat(entry.id);
       },
     });
   });
@@ -30,7 +37,11 @@ function buildViewModel(props) {
       title: ty.title,
       dot: DOT[ty.id],
       divider: i ? '1px solid #24212A' : '0',
-      sub: on ? (s.level === 'red' ? 'Aktywne · RED' : 'Aktywne · YELLOW') : 'Brak ostrzeżeń · instrukcje w poradniku',
+      sub: on
+        ? s.level === 'red'
+          ? t('Aktywne · RED')
+          : t('Aktywne · YELLOW')
+        : t('Brak ostrzeżeń · instrukcje w poradniku'),
       open: function () {
         if (on) a.openThreat(ty.id);
         else a.openGuide(ty.id);
@@ -73,11 +84,32 @@ export default function ThreatsScreen(inputProps) {
         animation: 'chronIn .35s ease both',
       }}
     >
-      <header style={{ display: 'flex', flexDirection: 'column', gap: '2px', padding: '20px 16px 12px' }}>
-        <span style={{ fontFamily: "'Unbounded', 'Arial Black', sans-serif", fontWeight: '500', fontSize: '18px' }}>
-          Zagrożenia
+      <header
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '2px',
+          padding: '20px 16px 12px',
+        }}
+      >
+        <span
+          style={{
+            fontFamily: "'Unbounded', 'Arial Black', sans-serif",
+            fontWeight: '500',
+            fontSize: '18px',
+          }}
+        >
+          {t('Zagrożenia')}
         </span>
-        <span style={{ fontSize: '12px', color: '#A49DA6' }}>{place.city} · źródła: RSO / RCB, NEPTUN, PAŻP</span>
+        <span
+          style={{
+            fontSize: '12px',
+            color: '#A49DA6',
+          }}
+        >
+          {place.city}
+          {t(' · źródła: RSO / RCB, NEPTUN, PAŻP')}
+        </span>
       </header>
       <div
         style={{
@@ -94,7 +126,14 @@ export default function ThreatsScreen(inputProps) {
       >
         {isEmpty && (
           <>
-            <section style={{ flex: 'none', borderRadius: '20px', background: '#17151A', overflow: 'hidden' }}>
+            <section
+              style={{
+                flex: 'none',
+                borderRadius: '20px',
+                background: '#17151A',
+                overflow: 'hidden',
+              }}
+            >
               <div
                 style={{
                   padding: '18px',
@@ -117,27 +156,49 @@ export default function ThreatsScreen(inputProps) {
                   {status.title}
                 </span>
               </div>
-              <div style={{ padding: '14px 18px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <span style={{ fontSize: '14px', lineHeight: '1.5', color: '#D9D4DB' }}>{status.reason}</span>
-                <span style={{ fontSize: '13px', fontWeight: '700', color: '#9C95A0' }}>
-                  OSTATNIA AKTUALIZACJA {status.updated} · {status.source}
+              <div
+                style={{
+                  padding: '14px 18px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '4px',
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: '14px',
+                    lineHeight: '1.5',
+                    color: '#D9D4DB',
+                  }}
+                >
+                  {status.reason}
+                </span>
+                <span
+                  style={{
+                    fontSize: '13px',
+                    fontWeight: '700',
+                    color: '#9C95A0',
+                  }}
+                >
+                  {t('OSTATNIA AKTUALIZACJA ')}
+                  {status.updated} · {status.source}
                 </span>
               </div>
             </section>
           </>
         )}
-        {(threats || []).map((t, tIndex) => (
+        {(threats || []).map((entry, tIndex) => (
           <Fragment key={tIndex}>
             <button
               type="button"
-              onClick={t.open}
+              onClick={entry.open}
               style={{
                 flex: 'none',
                 width: '100%',
                 textAlign: 'left',
                 borderRadius: '20px',
                 background: '#17151A',
-                border: `1px solid ${t.border}`,
+                border: `1px solid ${entry.border}`,
                 padding: '0',
                 overflow: 'hidden',
                 color: '#F4F1F2',
@@ -151,13 +212,13 @@ export default function ThreatsScreen(inputProps) {
               <span
                 style={{
                   padding: '16px 18px',
-                  background: t.tint,
+                  background: entry.tint,
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '8px',
                 }}
               >
-                <StatusBadge kind={t.level} size="sm" />
+                <StatusBadge kind={entry.level} size="sm" />
                 <span
                   style={{
                     fontFamily: "'Unbounded', 'Arial Black', sans-serif",
@@ -167,9 +228,17 @@ export default function ThreatsScreen(inputProps) {
                     color: '#FFFFFF',
                   }}
                 >
-                  {t.title} · {t.kind}
+                  {entry.title} · {entry.kind}
                 </span>
-                <span style={{ fontSize: '14px', lineHeight: '1.45', color: '#D9D4DB' }}>{t.reason}</span>
+                <span
+                  style={{
+                    fontSize: '14px',
+                    lineHeight: '1.45',
+                    color: '#D9D4DB',
+                  }}
+                >
+                  {entry.reason}
+                </span>
               </span>
               <span
                 style={{
@@ -180,16 +249,49 @@ export default function ThreatsScreen(inputProps) {
                   gap: '12px',
                 }}
               >
-                <span style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                  <span style={{ fontSize: '13px', fontWeight: '700', color: '#9C95A0' }}>
-                    {t.source} · {t.sourceTime}
+                <span
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '2px',
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: '13px',
+                      fontWeight: '700',
+                      color: '#9C95A0',
+                    }}
+                  >
+                    {entry.source} · {entry.sourceTime}
                   </span>
-                  <span style={{ fontSize: '13px', color: '#A49DA6' }}>{t.area}</span>
+                  <span
+                    style={{
+                      fontSize: '13px',
+                      color: '#A49DA6',
+                    }}
+                  >
+                    {entry.area}
+                  </span>
                 </span>
                 <span
-                  style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px', flex: 'none' }}
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'flex-end',
+                    gap: '2px',
+                    flex: 'none',
+                  }}
                 >
-                  <span style={{ fontSize: '11px', fontWeight: '700', color: '#9C95A0' }}>TTR</span>
+                  <span
+                    style={{
+                      fontSize: '11px',
+                      fontWeight: '700',
+                      color: '#9C95A0',
+                    }}
+                  >
+                    {t('TTR')}
+                  </span>
                   <span
                     style={{
                       fontFamily: "'Unbounded', 'Arial Black', sans-serif",
@@ -197,12 +299,16 @@ export default function ThreatsScreen(inputProps) {
                       fontSize: '16px',
                     }}
                   >
-                    {t.ttr}
+                    {entry.ttr}
                   </span>
                 </span>
               </span>
-              <span style={{ padding: '0 18px 14px' }}>
-                <StatusBadge kind={t.freshness.key} label={t.freshness.label} size="sm" />
+              <span
+                style={{
+                  padding: '0 18px 14px',
+                }}
+              >
+                <StatusBadge kind={entry.freshness.key} label={entry.freshness.label} size="sm" />
               </span>
             </button>
           </Fragment>
@@ -218,7 +324,7 @@ export default function ThreatsScreen(inputProps) {
             marginTop: '4px',
           }}
         >
-          Monitorowane typy zagrożeń
+          {t('Monitorowane typy zagrożeń')}
         </span>
         <section
           style={{
@@ -251,11 +357,38 @@ export default function ThreatsScreen(inputProps) {
                 }}
               >
                 <span
-                  style={{ width: '10px', height: '10px', flex: 'none', borderRadius: '5px', background: ty.dot }}
+                  style={{
+                    width: '10px',
+                    height: '10px',
+                    flex: 'none',
+                    borderRadius: '5px',
+                    background: ty.dot,
+                  }}
                 ></span>
-                <span style={{ flex: '1', display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                  <span style={{ fontSize: '15px', fontWeight: '800' }}>{ty.title}</span>
-                  <span style={{ fontSize: '12px', color: '#A49DA6' }}>{ty.sub}</span>
+                <span
+                  style={{
+                    flex: '1',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '2px',
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: '15px',
+                      fontWeight: '800',
+                    }}
+                  >
+                    {ty.title}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: '12px',
+                      color: '#A49DA6',
+                    }}
+                  >
+                    {ty.sub}
+                  </span>
                 </span>
                 <svg
                   width="18"
@@ -320,9 +453,31 @@ export default function ThreatsScreen(inputProps) {
               <path d="M4 5.5v16M9 8h7M9 12h5"></path>
             </svg>
           </span>
-          <span style={{ flex: '1', display: 'flex', flexDirection: 'column', gap: '2px', minWidth: '0' }}>
-            <span style={{ fontSize: '16px', fontWeight: '800' }}>Poradnik</span>
-            <span style={{ fontSize: '13px', color: '#9C95A0' }}>Jak zachować się w sytuacji zagrożenia</span>
+          <span
+            style={{
+              flex: '1',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '2px',
+              minWidth: '0',
+            }}
+          >
+            <span
+              style={{
+                fontSize: '16px',
+                fontWeight: '800',
+              }}
+            >
+              {t('Poradnik')}
+            </span>
+            <span
+              style={{
+                fontSize: '13px',
+                color: '#9C95A0',
+              }}
+            >
+              {t('Jak zachować się w sytuacji zagrożenia')}
+            </span>
           </span>
           <svg
             width="20"
@@ -338,8 +493,15 @@ export default function ThreatsScreen(inputProps) {
             <path d="M9 5l7 7-7 7"></path>
           </svg>
         </button>
-        <p style={{ margin: '0 4px', fontSize: '12px', lineHeight: '1.5', color: '#9C95A0' }}>
-          CHROŃ nie zastępuje RCB, RSO ani numeru 112. W sytuacji zagrożenia życia dzwoń pod 112.
+        <p
+          style={{
+            margin: '0 4px',
+            fontSize: '12px',
+            lineHeight: '1.5',
+            color: '#9C95A0',
+          }}
+        >
+          {t('CHROŃ nie zastępuje RCB, RSO ani numeru 112. W sytuacji zagrożenia życia dzwoń pod 112.')}
         </p>
       </div>
     </div>

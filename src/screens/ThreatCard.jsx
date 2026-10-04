@@ -4,12 +4,21 @@
 import { Fragment } from 'react';
 import StatusBadge from '@/components/StatusBadge.jsx';
 import chronApi from '@/api/chronApi.js';
-
+import { t } from '@/i18n/index.js';
 const LVL = {
-  yellow: { tint: 'rgba(201,164,58,.14)', text: '#E6C65E' },
-  red: { tint: 'rgba(200,50,63,.16)', text: '#FF7A85' },
+  yellow: {
+    tint: 'rgba(201,164,58,.14)',
+    text: '#E6C65E',
+  },
+  red: {
+    tint: 'rgba(200,50,63,.16)',
+    text: '#FF7A85',
+  },
 };
-const REG = { red: ['#C8323F', 'czerwony'], yellow: ['#C9A43A', 'żółty'] };
+const REG = {
+  red: ['#C8323F', 'czerwony'],
+  yellow: ['#C9A43A', 'żółty'],
+};
 
 /** Builds view data (texts, colors, handlers) from props. */
 function buildViewModel(props) {
@@ -18,19 +27,29 @@ function buildViewModel(props) {
     a = props.actions || {},
     params = props.params || {};
   const threatId = params.threatId || s.threatId;
-  const t = api.getThreat(threatId, s, params.level);
-  const ctx = Object.assign({}, s, { threatId, level: t.level });
+  const entry = api.getThreat(threatId, s, params.level);
+  const ctx = Object.assign({}, s, {
+    threatId,
+    level: entry.level,
+  });
   const rec = api.getRecommendation(ctx);
   const r = rec.primary || {};
   return {
     place: chronApi.getPlace(s),
-    t,
-    lvl: LVL[t.level] || LVL.yellow,
-    todo: t.todo.map((x, i) => {
-      return { n: i + 1, text: x };
+    t: entry,
+    lvl: LVL[entry.level] || LVL.yellow,
+    todo: entry.todo.map((x, i) => {
+      return {
+        n: i + 1,
+        text: x,
+      };
     }),
-    regions: t.regions.map((g) => {
-      return { name: g.name, color: REG[g.level][0], label: REG[g.level][1] };
+    regions: entry.regions.map((g) => {
+      return {
+        name: g.name,
+        color: REG[g.level][0],
+        label: t(REG[g.level][1]),
+      };
     }),
     rec: r,
     hasRec: !!rec.primary,
@@ -38,7 +57,7 @@ function buildViewModel(props) {
       bg: r.canReach ? 'rgba(79,209,165,.13)' : 'rgba(255,122,133,.13)',
       fg: r.canReach ? '#86CDB2' : '#FF8A95',
     },
-    cta: t.level === 'red' ? 'WYZNACZ TRASĘ' : t.cta,
+    cta: entry.level === 'red' ? t('WYZNACZ TRASĘ') : entry.cta,
     back: function () {
       a.back();
     },
@@ -61,7 +80,7 @@ function buildViewModel(props) {
  */
 export default function ThreatCard(inputProps) {
   const props = inputProps;
-  const { place, back, cta, goLate, goRoute, hasRec, lvl, reach, rec, regions, t, todo } = buildViewModel(props);
+  const { place, back, cta, goLate, goRoute, hasRec, lvl, reach, rec, regions, t: entry, todo } = buildViewModel(props);
   return (
     <div
       style={{
@@ -74,11 +93,18 @@ export default function ThreatCard(inputProps) {
         animation: 'chronIn .35s ease both',
       }}
     >
-      <header style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '20px 16px 12px' }}>
+      <header
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          padding: '20px 16px 12px',
+        }}
+      >
         <button
           type="button"
           onClick={back}
-          aria-label="Wstecz"
+          aria-label={t('Wstecz')}
           style={{
             width: '44px',
             height: '44px',
@@ -107,8 +133,14 @@ export default function ThreatCard(inputProps) {
             <path d="M15 5l-7 7 7 7"></path>
           </svg>
         </button>
-        <span style={{ fontFamily: "'Unbounded', 'Arial Black', sans-serif", fontWeight: '500', fontSize: '18px' }}>
-          Szczegóły zagrożenia
+        <span
+          style={{
+            fontFamily: "'Unbounded', 'Arial Black', sans-serif",
+            fontWeight: '500',
+            fontSize: '18px',
+          }}
+        >
+          {t('Szczegóły zagrożenia')}
         </span>
       </header>
       <div
@@ -134,8 +166,16 @@ export default function ThreatCard(inputProps) {
             flexDirection: 'column',
           }}
         >
-          <div style={{ padding: '18px', background: lvl.tint, display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <StatusBadge kind={t.level} size="md" />
+          <div
+            style={{
+              padding: '18px',
+              background: lvl.tint,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px',
+            }}
+          >
+            <StatusBadge kind={entry.level} size="md" />
             <span
               style={{
                 fontFamily: "'Unbounded', 'Arial Black', sans-serif",
@@ -145,10 +185,16 @@ export default function ThreatCard(inputProps) {
                 color: '#FFFFFF',
               }}
             >
-              {t.headline}
+              {entry.headline}
             </span>
-            <span style={{ fontSize: '15px', fontWeight: '800', color: lvl.text }}>
-              {t.title} · {t.kind}
+            <span
+              style={{
+                fontSize: '15px',
+                fontWeight: '800',
+                color: lvl.text,
+              }}
+            >
+              {entry.title} · {entry.kind}
             </span>
           </div>
           <div
@@ -160,21 +206,22 @@ export default function ThreatCard(inputProps) {
               gap: '4px',
             }}
           >
-            <span style={{ fontSize: '13px', color: '#9C95A0' }}>Powód statusu</span>
-            <span style={{ fontSize: '15px', fontWeight: '700', lineHeight: '1.45' }}>{t.reason}</span>
-          </div>
-          <div
-            style={{
-              padding: '12px 18px',
-              borderTop: '1px solid #26232A',
-              display: 'flex',
-              justifyContent: 'space-between',
-              gap: '12px',
-            }}
-          >
-            <span style={{ fontSize: '14px', color: '#9C95A0' }}>Źródło</span>
-            <span style={{ fontSize: '14px', fontWeight: '700', textAlign: 'right' }}>
-              {t.source} · {t.sourceGroup}
+            <span
+              style={{
+                fontSize: '13px',
+                color: '#9C95A0',
+              }}
+            >
+              {t('Powód statusu')}
+            </span>
+            <span
+              style={{
+                fontSize: '15px',
+                fontWeight: '700',
+                lineHeight: '1.45',
+              }}
+            >
+              {entry.reason}
             </span>
           </div>
           <div
@@ -186,8 +233,23 @@ export default function ThreatCard(inputProps) {
               gap: '12px',
             }}
           >
-            <span style={{ fontSize: '14px', color: '#9C95A0' }}>Godzina źródła</span>
-            <span style={{ fontSize: '14px', fontWeight: '700' }}>dziś, {t.sourceTime}</span>
+            <span
+              style={{
+                fontSize: '14px',
+                color: '#9C95A0',
+              }}
+            >
+              {t('Źródło')}
+            </span>
+            <span
+              style={{
+                fontSize: '14px',
+                fontWeight: '700',
+                textAlign: 'right',
+              }}
+            >
+              {entry.source} · {entry.sourceGroup}
+            </span>
           </div>
           <div
             style={{
@@ -198,8 +260,49 @@ export default function ThreatCard(inputProps) {
               gap: '12px',
             }}
           >
-            <span style={{ fontSize: '14px', color: '#9C95A0' }}>Ostatnia aktualizacja</span>
-            <span style={{ fontSize: '14px', fontWeight: '700' }}>{t.updated}</span>
+            <span
+              style={{
+                fontSize: '14px',
+                color: '#9C95A0',
+              }}
+            >
+              {t('Godzina źródła')}
+            </span>
+            <span
+              style={{
+                fontSize: '14px',
+                fontWeight: '700',
+              }}
+            >
+              {t('dziś, ')}
+              {entry.sourceTime}
+            </span>
+          </div>
+          <div
+            style={{
+              padding: '12px 18px',
+              borderTop: '1px solid #26232A',
+              display: 'flex',
+              justifyContent: 'space-between',
+              gap: '12px',
+            }}
+          >
+            <span
+              style={{
+                fontSize: '14px',
+                color: '#9C95A0',
+              }}
+            >
+              {t('Ostatnia aktualizacja')}
+            </span>
+            <span
+              style={{
+                fontSize: '14px',
+                fontWeight: '700',
+              }}
+            >
+              {entry.updated}
+            </span>
           </div>
           <div
             style={{
@@ -211,7 +314,14 @@ export default function ThreatCard(inputProps) {
               gap: '12px',
             }}
           >
-            <span style={{ fontSize: '14px', color: '#9C95A0' }}>Wiarygodność</span>
+            <span
+              style={{
+                fontSize: '14px',
+                color: '#9C95A0',
+              }}
+            >
+              {t('Wiarygodność')}
+            </span>
             <span
               style={{
                 padding: '4px 10px',
@@ -222,7 +332,7 @@ export default function ThreatCard(inputProps) {
                 letterSpacing: '0.04em',
               }}
             >
-              {t.confidence}
+              {entry.confidence}
             </span>
           </div>
           <div
@@ -234,8 +344,22 @@ export default function ThreatCard(inputProps) {
               gap: '12px',
             }}
           >
-            <span style={{ fontSize: '14px', color: '#9C95A0' }}>Twoja lokalizacja</span>
-            <span style={{ fontSize: '14px', fontWeight: '700' }}>{place.label}</span>
+            <span
+              style={{
+                fontSize: '14px',
+                color: '#9C95A0',
+              }}
+            >
+              {t('Twoja lokalizacja')}
+            </span>
+            <span
+              style={{
+                fontSize: '14px',
+                fontWeight: '700',
+              }}
+            >
+              {place.label}
+            </span>
           </div>
           <div
             style={{
@@ -247,9 +371,22 @@ export default function ThreatCard(inputProps) {
               gap: '12px',
             }}
           >
-            <span style={{ fontSize: '14px', color: '#9C95A0' }}>Do zagrożenia (szacunek)</span>
-            <span style={{ fontFamily: "'Unbounded', 'Arial Black', sans-serif", fontSize: '22px', fontWeight: '700' }}>
-              {t.ttr}
+            <span
+              style={{
+                fontSize: '14px',
+                color: '#9C95A0',
+              }}
+            >
+              {t('Do zagrożenia (szacunek)')}
+            </span>
+            <span
+              style={{
+                fontFamily: "'Unbounded', 'Arial Black', sans-serif",
+                fontSize: '22px',
+                fontWeight: '700',
+              }}
+            >
+              {entry.ttr}
             </span>
           </div>
         </section>
@@ -273,9 +410,18 @@ export default function ThreatCard(inputProps) {
               color: '#9C95A0',
             }}
           >
-            Co się dzieje
+            {t('Co się dzieje')}
           </span>
-          <p style={{ margin: '0', fontSize: '15px', lineHeight: '1.55', color: '#E4DFE6' }}>{t.what}</p>
+          <p
+            style={{
+              margin: '0',
+              fontSize: '15px',
+              lineHeight: '1.55',
+              color: '#E4DFE6',
+            }}
+          >
+            {entry.what}
+          </p>
         </section>
         <section
           style={{
@@ -297,11 +443,17 @@ export default function ThreatCard(inputProps) {
               color: '#9C95A0',
             }}
           >
-            Co robić teraz
+            {t('Co robić teraz')}
           </span>
           {(todo || []).map((td, tdIndex) => (
             <Fragment key={tdIndex}>
-              <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  gap: '12px',
+                  alignItems: 'flex-start',
+                }}
+              >
                 <span
                   style={{
                     minWidth: '26px',
@@ -317,7 +469,15 @@ export default function ThreatCard(inputProps) {
                 >
                   {td.n}
                 </span>
-                <span style={{ fontSize: '15px', lineHeight: '1.5', color: '#E4DFE6' }}>{td.text}</span>
+                <span
+                  style={{
+                    fontSize: '15px',
+                    lineHeight: '1.5',
+                    color: '#E4DFE6',
+                  }}
+                >
+                  {td.text}
+                </span>
               </div>
             </Fragment>
           ))}
@@ -342,10 +502,23 @@ export default function ThreatCard(inputProps) {
               color: '#9C95A0',
             }}
           >
-            Obszar zagrożenia
+            {t('Obszar zagrożenia')}
           </span>
-          <span style={{ fontSize: '15px', fontWeight: '700' }}>{t.area}</span>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+          <span
+            style={{
+              fontSize: '15px',
+              fontWeight: '700',
+            }}
+          >
+            {entry.area}
+          </span>
+          <div
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: '8px',
+            }}
+          >
             {(regions || []).map((c, cIndex) => (
               <Fragment key={cIndex}>
                 <span
@@ -360,7 +533,14 @@ export default function ThreatCard(inputProps) {
                     gap: '6px',
                   }}
                 >
-                  <span style={{ width: '8px', height: '8px', borderRadius: '4px', background: c.color }}></span>
+                  <span
+                    style={{
+                      width: '8px',
+                      height: '8px',
+                      borderRadius: '4px',
+                      background: c.color,
+                    }}
+                  ></span>
                   {c.name} · {c.label}
                 </span>
               </Fragment>
@@ -376,9 +556,30 @@ export default function ThreatCard(inputProps) {
             flexDirection: 'column',
           }}
         >
-          <div style={{ padding: '14px 18px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <span style={{ fontSize: '13px', color: '#9C95A0' }}>Źródło szczegółów</span>
-            <span style={{ fontSize: '14px', fontWeight: '700' }}>{t.detailsSource}</span>
+          <div
+            style={{
+              padding: '14px 18px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '4px',
+            }}
+          >
+            <span
+              style={{
+                fontSize: '13px',
+                color: '#9C95A0',
+              }}
+            >
+              {t('Źródło szczegółów')}
+            </span>
+            <span
+              style={{
+                fontSize: '14px',
+                fontWeight: '700',
+              }}
+            >
+              {entry.detailsSource}
+            </span>
           </div>
           <div
             style={{
@@ -390,8 +591,15 @@ export default function ThreatCard(inputProps) {
               gap: '12px',
             }}
           >
-            <span style={{ fontSize: '14px', color: '#9C95A0' }}>Aktualność danych</span>
-            <StatusBadge kind={t.freshness.key} label={t.freshness.label} size="sm" />
+            <span
+              style={{
+                fontSize: '14px',
+                color: '#9C95A0',
+              }}
+            >
+              {t('Aktualność danych')}
+            </span>
+            <StatusBadge kind={entry.freshness.key} label={entry.freshness.label} size="sm" />
           </div>
         </section>
         {hasRec && (
@@ -415,12 +623,41 @@ export default function ThreatCard(inputProps) {
                 fontFamily: 'inherit',
               }}
             >
-              <span style={{ flex: '1', display: 'flex', flexDirection: 'column', gap: '3px', minWidth: '0' }}>
-                <span style={{ fontSize: '13px', fontWeight: '700', color: '#9C95A0' }}>{t.nearestLabel}</span>
-                <span style={{ fontSize: '17px', fontWeight: '800' }}>
-                  {rec.walk} min pieszo · {rec.name}
+              <span
+                style={{
+                  flex: '1',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '3px',
+                  minWidth: '0',
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: '13px',
+                    fontWeight: '700',
+                    color: '#9C95A0',
+                  }}
+                >
+                  {entry.nearestLabel}
                 </span>
-                <span style={{ fontSize: '13px', fontWeight: '700', color: '#A49DA6' }}>
+                <span
+                  style={{
+                    fontSize: '17px',
+                    fontWeight: '800',
+                  }}
+                >
+                  {rec.walk}
+                  {t(' min pieszo · ')}
+                  {rec.name}
+                </span>
+                <span
+                  style={{
+                    fontSize: '13px',
+                    fontWeight: '700',
+                    color: '#A49DA6',
+                  }}
+                >
                   {rec.statusLabel} · {rec.hoursLabel}
                 </span>
               </span>
@@ -496,7 +733,7 @@ export default function ThreatCard(inputProps) {
             fontFamily: 'inherit',
           }}
         >
-          Nie zdążę
+          {t('Nie zdążę')}
         </button>
       </div>
     </div>

@@ -5,6 +5,7 @@ import { Fragment } from 'react';
 import StatusBadge from '@/components/StatusBadge.jsx';
 import StreetMap from '@/components/StreetMap.jsx';
 import chronApi from '@/api/chronApi.js';
+import { t } from '@/i18n/index.js';
 
 /** Builds view data (texts, colors, handlers) from props. */
 function buildViewModel(props) {
@@ -57,25 +58,25 @@ function buildViewModel(props) {
     level: s.level,
     zone: threat ? threat.zone : '',
     stale,
-    offlineLabel: stale ? 'Trasa zapisana offline' : '',
+    offlineLabel: stale ? t('Trasa zapisana offline') : '',
     routeSub: stale
       ? route.cachedLabel
       : threat
-        ? threat.title + ' · ' + (s.level === 'red' ? 'RED' : 'YELLOW')
-        : 'Trasa piesza',
+        ? threat.title + ' · ' + (s.level === 'red' ? t('RED') : t('YELLOW'))
+        : t('Trasa piesza'),
     hasReassess: !!rec.reassessment && (rerouted || sel.id === rec.reassessment.newId),
     reassess: rec.reassessment || {},
     navigating: !!s.navigating,
     isRec,
     showReason: isRec,
-    thirdLabel: emergency ? 'Zagrożenie za' : 'Status',
+    thirdLabel: emergency ? t('Zagrożenie za') : t('Status'),
     thirdValue: emergency ? sel.ttr : sel.statusLabel,
     canReach: emergency && sel.canReach === true && sel.status !== 'closed',
     cantReach: emergency && sel.canReach === false,
     others,
     hasOthers: others.length > 0,
-    othersTitle: threat ? threat.othersTitle : 'Inne schrony',
-    navBtnText: noSafeShelter ? 'Co robić teraz' : s.navigating ? 'Zakończ nawigację' : 'Rozpocznij nawigację',
+    othersTitle: threat ? threat.othersTitle : t('Inne schrony'),
+    navBtnText: noSafeShelter ? t('Co robić teraz') : s.navigating ? t('Zakończ nawigację') : t('Rozpocznij nawigację'),
     navBtnBg: s.navigating ? '#4A1A22' : '#E3203A',
     toggleNav: function () {
       if (noSafeShelter) a.openLate(s.threatId);
@@ -146,11 +147,18 @@ export default function RouteScreen(inputProps) {
         animation: 'chronIn .35s ease both',
       }}
     >
-      <header style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '20px 16px 12px' }}>
+      <header
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          padding: '20px 16px 12px',
+        }}
+      >
         <button
           type="button"
           onClick={back}
-          aria-label="Wstecz"
+          aria-label={t('Wstecz')}
           style={{
             width: '44px',
             height: '44px',
@@ -179,11 +187,30 @@ export default function RouteScreen(inputProps) {
             <path d="M15 5l-7 7 7 7"></path>
           </svg>
         </button>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-          <span style={{ fontFamily: "'Unbounded', 'Arial Black', sans-serif", fontWeight: '500', fontSize: '18px' }}>
-            Trasa
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '2px',
+          }}
+        >
+          <span
+            style={{
+              fontFamily: "'Unbounded', 'Arial Black', sans-serif",
+              fontWeight: '500',
+              fontSize: '18px',
+            }}
+          >
+            {t('Trasa')}
           </span>
-          <span style={{ fontSize: '12px', color: '#A49DA6' }}>{routeSub}</span>
+          <span
+            style={{
+              fontSize: '12px',
+              color: '#A49DA6',
+            }}
+          >
+            {routeSub}
+          </span>
         </div>
       </header>
       <div
@@ -242,10 +269,31 @@ export default function RouteScreen(inputProps) {
                   <path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v4h-4"></path>
                 </svg>
               </span>
-              <span style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <span style={{ fontSize: '15px', fontWeight: '800', lineHeight: '1.35' }}>{reassess.title}</span>
-                <span style={{ fontSize: '13px', lineHeight: '1.45', color: '#DCD5DD' }}>
-                  Trasa przeliczona. {reassess.text}
+              <span
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '4px',
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: '15px',
+                    fontWeight: '800',
+                    lineHeight: '1.35',
+                  }}
+                >
+                  {reassess.title}
+                </span>
+                <span
+                  style={{
+                    fontSize: '13px',
+                    lineHeight: '1.45',
+                    color: '#DCD5DD',
+                  }}
+                >
+                  {t('Trasa przeliczona. ')}
+                  {reassess.text}
                 </span>
               </span>
             </section>
@@ -266,10 +314,25 @@ export default function RouteScreen(inputProps) {
               animation: 'chronIn .45s ease both, chronAttention 1.2s ease 2',
             }}
           >
-            <span style={{ fontSize: '15px', fontWeight: '800', lineHeight: '1.35' }}>
-              {sel.name} zamknięty · brak potwierdzonego schronienia
+            <span
+              style={{
+                fontSize: '15px',
+                fontWeight: '800',
+                lineHeight: '1.35',
+              }}
+            >
+              {sel.name}
+              {t(' zamknięty · brak potwierdzonego schronienia')}
             </span>
-            <span style={{ fontSize: '13px', lineHeight: '1.45', color: '#DCD5DD' }}>{noSafeText}</span>
+            <span
+              style={{
+                fontSize: '13px',
+                lineHeight: '1.45',
+                color: '#DCD5DD',
+              }}
+            >
+              {noSafeText}
+            </span>
           </section>
         )}
         {navigating && (
@@ -298,7 +361,15 @@ export default function RouteScreen(inputProps) {
               >
                 <path d="M12 20V6M6 12l6-6 6 6"></path>
               </svg>
-              <span style={{ fontSize: '15px', fontWeight: '800', lineHeight: '1.35' }}>{sel.nav}</span>
+              <span
+                style={{
+                  fontSize: '15px',
+                  fontWeight: '800',
+                  lineHeight: '1.35',
+                }}
+              >
+                {sel.nav}
+              </span>
             </div>
           </>
         )}
@@ -324,15 +395,48 @@ export default function RouteScreen(inputProps) {
             gap: '12px',
           }}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: '0' }}>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'flex-start',
+              gap: '10px',
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '4px',
+                minWidth: '0',
+              }}
+            >
               <span
-                style={{ fontFamily: "'Unbounded', 'Arial Black', sans-serif", fontWeight: '500', fontSize: '18px' }}
+                style={{
+                  fontFamily: "'Unbounded', 'Arial Black', sans-serif",
+                  fontWeight: '500',
+                  fontSize: '18px',
+                }}
               >
                 {sel.name}
               </span>
-              <span style={{ fontSize: '13px', fontWeight: '700', color: '#DCD5DD' }}>{sel.typeLabel}</span>
-              <span style={{ fontSize: '13px', color: '#A49DA6' }}>{sel.address}</span>
+              <span
+                style={{
+                  fontSize: '13px',
+                  fontWeight: '700',
+                  color: '#DCD5DD',
+                }}
+              >
+                {sel.typeLabel}
+              </span>
+              <span
+                style={{
+                  fontSize: '13px',
+                  color: '#A49DA6',
+                }}
+              >
+                {sel.address}
+              </span>
             </div>
             {isRec && (
               <>
@@ -347,12 +451,18 @@ export default function RouteScreen(inputProps) {
                     whiteSpace: 'nowrap',
                   }}
                 >
-                  Polecamy
+                  {t('Polecamy')}
                 </span>
               </>
             )}
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '8px' }}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+              gap: '8px',
+            }}
+          >
             <div
               style={{
                 background: '#1F1C24',
@@ -363,8 +473,22 @@ export default function RouteScreen(inputProps) {
                 gap: '2px',
               }}
             >
-              <span style={{ fontSize: '12px', color: '#A49DA6' }}>Pieszo</span>
-              <span style={{ fontSize: '18px', fontWeight: '800' }}>{sel.walk} min</span>
+              <span
+                style={{
+                  fontSize: '12px',
+                  color: '#A49DA6',
+                }}
+              >
+                {t('Pieszo')}
+              </span>
+              <span
+                style={{
+                  fontSize: '18px',
+                  fontWeight: '800',
+                }}
+              >
+                {sel.walk} min
+              </span>
             </div>
             <div
               style={{
@@ -376,8 +500,22 @@ export default function RouteScreen(inputProps) {
                 gap: '2px',
               }}
             >
-              <span style={{ fontSize: '12px', color: '#A49DA6' }}>Dystans</span>
-              <span style={{ fontSize: '18px', fontWeight: '800' }}>{sel.dist} m</span>
+              <span
+                style={{
+                  fontSize: '12px',
+                  color: '#A49DA6',
+                }}
+              >
+                {t('Dystans')}
+              </span>
+              <span
+                style={{
+                  fontSize: '18px',
+                  fontWeight: '800',
+                }}
+              >
+                {sel.dist} m
+              </span>
             </div>
             <div
               style={{
@@ -389,11 +527,32 @@ export default function RouteScreen(inputProps) {
                 gap: '2px',
               }}
             >
-              <span style={{ fontSize: '12px', color: '#A49DA6' }}>{thirdLabel}</span>
-              <span style={{ fontSize: '15px', fontWeight: '800' }}>{thirdValue}</span>
+              <span
+                style={{
+                  fontSize: '12px',
+                  color: '#A49DA6',
+                }}
+              >
+                {thirdLabel}
+              </span>
+              <span
+                style={{
+                  fontSize: '15px',
+                  fontWeight: '800',
+                }}
+              >
+                {thirdValue}
+              </span>
             </div>
           </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '6px' }}>
+          <div
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              alignItems: 'center',
+              gap: '6px',
+            }}
+          >
             <StatusBadge kind={sel.status} size="sm" />
             <span
               style={{
@@ -407,11 +566,27 @@ export default function RouteScreen(inputProps) {
             >
               {sel.hoursLabel}
             </span>
-            <span style={{ fontSize: '12px', color: '#A49DA6' }}>{sel.statusNote}</span>
+            <span
+              style={{
+                fontSize: '12px',
+                color: '#A49DA6',
+              }}
+            >
+              {sel.statusNote}
+            </span>
           </div>
           {showReason && (
             <>
-              <p style={{ margin: '0', fontSize: '14px', lineHeight: '1.45', color: '#DCD5DD' }}>{rec.reason}</p>
+              <p
+                style={{
+                  margin: '0',
+                  fontSize: '14px',
+                  lineHeight: '1.45',
+                  color: '#DCD5DD',
+                }}
+              >
+                {rec.reason}
+              </p>
             </>
           )}
           {canReach && (
@@ -427,7 +602,7 @@ export default function RouteScreen(inputProps) {
                   fontWeight: '800',
                 }}
               >
-                Zdążysz przed zagrożeniem
+                {t('Zdążysz przed zagrożeniem')}
               </span>
             </>
           )}
@@ -450,14 +625,21 @@ export default function RouteScreen(inputProps) {
                   fontFamily: 'inherit',
                 }}
               >
-                Nie zdążysz przed zagrożeniem — schroń się na miejscu →
+                {t('Nie zdążysz przed zagrożeniem — schroń się na miejscu →')}
               </button>
             </>
           )}
         </section>
         {hasOthers && (
           <>
-            <span style={{ fontSize: '15px', fontWeight: '800' }}>{othersTitle}</span>
+            <span
+              style={{
+                fontSize: '15px',
+                fontWeight: '800',
+              }}
+            >
+              {othersTitle}
+            </span>
           </>
         )}
         {(others || []).map((o, oIndex) => (
@@ -497,8 +679,21 @@ export default function RouteScreen(inputProps) {
               >
                 {o.num}
               </span>
-              <span style={{ flex: '1', display: 'flex', flexDirection: 'column', gap: '2px', minWidth: '0' }}>
-                <span style={{ fontSize: '14px', fontWeight: '800' }}>
+              <span
+                style={{
+                  flex: '1',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '2px',
+                  minWidth: '0',
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: '14px',
+                    fontWeight: '800',
+                  }}
+                >
                   {o.name} · {o.kind}
                 </span>
                 <span
@@ -511,7 +706,9 @@ export default function RouteScreen(inputProps) {
                   }}
                 >
                   <span>
-                    {o.walk} min · {o.statusLabel}
+                    {o.walk}
+                    {t(' min · ')}
+                    {o.statusLabel}
                   </span>
                   <span>{o.hoursLabel}</span>
                 </span>
@@ -561,7 +758,7 @@ export default function RouteScreen(inputProps) {
             fontFamily: 'inherit',
           }}
         >
-          Nie zdążę
+          {t('Nie zdążę')}
         </button>
       </div>
     </div>

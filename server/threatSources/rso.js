@@ -3,6 +3,7 @@
  * This is the channel behind the "Alert RCB" text messages.
  */
 import { fetchJson, foldText } from './http.js';
+import { labelsFor } from './labels.js';
 
 const RSO_URL = 'https://komunikaty.tvp.pl/komunikatyxml/wszystkie/wszystkie/1?_format=json';
 
@@ -44,9 +45,11 @@ function provinces(item) {
 
 /**
  * Current RSO messages relevant to the user's voivodeship.
- * @param {{ voivodeship?: string }} context
+ * Message texts are official and stay in Polish; only generated labels are translated.
+ * @param {{ voivodeship?: string, lang?: string }} context
  */
-export async function collectRso({ voivodeship }) {
+export async function collectRso({ voivodeship, lang }) {
+  const L = labelsFor(lang);
   const data = await fetchJson(RSO_URL);
   const items = Array.isArray(data?.newses) ? data.newses : [];
   const userRegion = foldText(voivodeship);
@@ -64,9 +67,9 @@ export async function collectRso({ voivodeship }) {
         category,
         // Red is reserved for official air threats; other official warnings are yellow.
         level: official && category === 'air' ? 'red' : official ? 'yellow' : 'info',
-        title: item.title || 'Komunikat RSO',
+        title: item.title || L.rsoMessage,
         text: item.shortcut || item.content || '',
-        region: regions.length ? regions.join(', ') : 'cała Polska',
+        region: regions.length ? regions.join(', ') : L.wholeCountry,
         time: item.valid_from ? item.valid_from.replace(' ', 'T') : null,
         appliesToUser: !regions.length || !userRegion || regions.some((name) => foldText(name).includes(userRegion)),
       };

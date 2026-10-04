@@ -11,23 +11,41 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { LocationContext } from '@/app/LocationContext.js';
 import { fetchWalkingRoute } from '@/services/routing.js';
-
+import { t } from '@/i18n/index.js';
 const TILE_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 const TILE_ATTRIBUTION = '© OpenStreetMap';
-
-const PIN = { open: ['#4FD1A5', '#04170F'], unconfirmed: ['#F2A33A', '#1A0E05'], closed: ['#4A4550', '#E6E0E8'] };
-const ZONE = {
-  red: { fill: 'rgba(255,45,61,.12)', stroke: '#FF2D3D', text: '#FF8A95' },
-  yellow: { fill: 'rgba(230,198,94,.12)', stroke: '#C9A43A', text: '#E6C65E' },
+const PIN = {
+  open: ['#4FD1A5', '#04170F'],
+  unconfirmed: ['#F2A33A', '#1A0E05'],
+  closed: ['#4A4550', '#E6E0E8'],
 };
-const ZONE_LABEL = { area: 'Strefa alarmu', plume: 'Chmura chloru', river: 'Strefa zalewowa' };
+const ZONE = {
+  red: {
+    fill: 'rgba(255,45,61,.12)',
+    stroke: '#FF2D3D',
+    text: '#FF8A95',
+  },
+  yellow: {
+    fill: 'rgba(230,198,94,.12)',
+    stroke: '#C9A43A',
+    text: '#E6C65E',
+  },
+};
+const ZONE_LABEL = {
+  area: 'Strefa alarmu',
+  plume: 'Chmura chloru',
+  river: 'Strefa zalewowa',
+};
 
 /** Radius of the threat zone drawn around the user, in meters, per zone type. */
-const ZONE_RADIUS_M = { area: 1500, plume: 1100, river: 900 };
+const ZONE_RADIUS_M = {
+  area: 1500,
+  plume: 1100,
+  river: 900,
+};
 
 /** Number of nearest pins kept in view when the map fits its bounds. */
 const PINS_IN_VIEW = 5;
-
 const DEFAULT_PROPS = {
   highlightId: '',
   showRoute: false,
@@ -64,7 +82,7 @@ function buildViewModel(props) {
     pins,
     zone,
     zc: ZONE[p.zoneLevel] || ZONE.yellow,
-    zoneLabel: ZONE_LABEL[zone] || '',
+    zoneLabel: t(ZONE_LABEL[zone] || ''),
     offlineLabel: p.offlineLabel || '',
   };
 }
@@ -126,7 +144,10 @@ function MapLabel({ side, edge = 'top', color, border, children }) {
  * @param {Function} props.onPin called with the shelter id when a pin is tapped
  */
 export default function StreetMap(inputProps) {
-  const props = { ...DEFAULT_PROPS, ...inputProps };
+  const props = {
+    ...DEFAULT_PROPS,
+    ...inputProps,
+  };
   const { pins, zone, zc, zoneLabel, offlineLabel } = buildViewModel(props);
   const location = useContext(LocationContext);
   const containerRef = useRef(null);
@@ -135,7 +156,6 @@ export default function StreetMap(inputProps) {
   const onPinRef = useRef(props.onPin);
   onPinRef.current = props.onPin;
   const [route, setRoute] = useState(null);
-
   const target = pins.find((pin) => pin.highlighted);
   // GPS jitter of a few meters must not rebuild the route or reset the view: react to ~100 m moves.
   const areaKey = `${location.lat.toFixed(3)},${location.lng.toFixed(3)}`;
@@ -143,8 +163,14 @@ export default function StreetMap(inputProps) {
 
   // Create the Leaflet map once and remove it when the component unmounts.
   useEffect(() => {
-    const map = L.map(containerRef.current, { zoomControl: false, attributionControl: true });
-    L.tileLayer(TILE_URL, { attribution: TILE_ATTRIBUTION, maxZoom: 19 }).addTo(map);
+    const map = L.map(containerRef.current, {
+      zoomControl: false,
+      attributionControl: true,
+    });
+    L.tileLayer(TILE_URL, {
+      attribution: TILE_ATTRIBUTION,
+      maxZoom: 19,
+    }).addTo(map);
     map.attributionControl.setPrefix(false);
     mapRef.current = map;
     layersRef.current = L.layerGroup().addTo(map);
@@ -173,7 +199,6 @@ export default function StreetMap(inputProps) {
     const layers = layersRef.current;
     layers.clearLayers();
     const user = [location.lat, location.lng];
-
     if (zone) {
       L.circle(user, {
         radius: ZONE_RADIUS_M[zone] || ZONE_RADIUS_M.area,
@@ -194,11 +219,19 @@ export default function StreetMap(inputProps) {
       }).addTo(layers);
     }
     pins.forEach((pin) => {
-      L.marker([pin.lat, pin.lng], { icon: shelterIcon(pin), keyboard: true, zIndexOffset: pin.highlighted ? 500 : 0 })
+      L.marker([pin.lat, pin.lng], {
+        icon: shelterIcon(pin),
+        keyboard: true,
+        zIndexOffset: pin.highlighted ? 500 : 0,
+      })
         .on('click', () => onPinRef.current && onPinRef.current(pin.id))
         .addTo(layers);
     });
-    L.marker(user, { icon: userIcon, interactive: false, zIndexOffset: 1000 }).addTo(layers);
+    L.marker(user, {
+      icon: userIcon,
+      interactive: false,
+      zIndexOffset: 1000,
+    }).addTo(layers);
   }, [pinsKey, route, zone, zc.stroke, location.lat, location.lng, props.routeDashed]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fit the view to the user, the nearest shelters and the route.
@@ -207,7 +240,10 @@ export default function StreetMap(inputProps) {
     const inView = target ? [target] : pins.slice(0, PINS_IN_VIEW);
     inView.forEach((pin) => points.push([pin.lat, pin.lng]));
     if (route) points.push(...route.coords);
-    mapRef.current.fitBounds(points, { padding: [36, 36], maxZoom: 17 });
+    mapRef.current.fitBounds(points, {
+      padding: [36, 36],
+      maxZoom: 17,
+    });
   }, [target?.id, route, pins.length, areaKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
@@ -224,7 +260,15 @@ export default function StreetMap(inputProps) {
         fontFamily: "'Manrope', system-ui, sans-serif",
       }}
     >
-      <div ref={containerRef} className="chron-map" style={{ position: 'absolute', inset: 0, background: '#121015' }} />
+      <div
+        ref={containerRef}
+        className="chron-map"
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background: '#121015',
+        }}
+      />
       {zone && (
         <MapLabel side="right" color={zc.text} border={zc.stroke}>
           {zoneLabel}
@@ -232,7 +276,7 @@ export default function StreetMap(inputProps) {
       )}
       {route && !route.exact && (
         <MapLabel side="left" edge="bottom" color="#F2B866" border="#5C4520">
-          Trasa przybliżona · linia prosta
+          {t('Trasa przybliżona · linia prosta')}
         </MapLabel>
       )}
       {offlineLabel && (

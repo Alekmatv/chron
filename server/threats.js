@@ -7,6 +7,7 @@
 import { collectNeptun } from './threatSources/neptun.js';
 import { collectPansa } from './threatSources/pansa.js';
 import { collectRso } from './threatSources/rso.js';
+import { labelsFor } from './threatSources/labels.js';
 
 /** Source registry: id, display name, authority level and collector. */
 const SOURCES = [
@@ -45,7 +46,7 @@ async function runSource(source, context) {
         ok: false,
         latencyMs: Date.now() - startedAt,
         count: 0,
-        error: error.name === 'TimeoutError' ? 'Przekroczono czas odpowiedzi' : 'Źródło niedostępne',
+        error: error.name === 'TimeoutError' ? labelsFor(context.lang).timeout : labelsFor(context.lang).unavailable,
       },
       alerts: [],
     };
@@ -54,7 +55,7 @@ async function runSource(source, context) {
 
 /**
  * Current alerts for a location from all sources.
- * @param {{ lat: number, lng: number, voivodeship?: string }} context
+ * @param {{ lat: number, lng: number, voivodeship?: string, lang?: string }} context
  */
 export async function getLiveThreats(context) {
   const results = await Promise.all(SOURCES.map((source) => runSource(source, context)));

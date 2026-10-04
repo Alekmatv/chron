@@ -5,9 +5,16 @@ import { Fragment, useContext } from 'react';
 import { LocationContext } from '@/app/LocationContext.js';
 import useMergedState from '@/hooks/useMergedState.js';
 import chronApi from '@/api/chronApi.js';
-
+import { t } from '@/i18n/index.js';
 const LEVELS = [
-  { short: 'Zielony', label: 'Bezpiecznie', bg: '#24493D', fg: '#CFEFE2', map: '#2A4F43', glow: 'none' },
+  {
+    short: 'Zielony',
+    label: 'Bezpiecznie',
+    bg: '#24493D',
+    fg: '#CFEFE2',
+    map: '#2A4F43',
+    glow: 'none',
+  },
   {
     short: 'Żółty',
     label: 'Podwyższone zagrożenie',
@@ -38,12 +45,20 @@ function subOf(p, i) {
 function pct(v, total) {
   return ((v / total) * 100).toFixed(2);
 }
-
-const DEFAULT_PROPS = { threatTitle: 'Alarm powietrzny', offline: false, offlineLabel: 'Mapa offline · pobrana 14:32' };
+const DEFAULT_PROPS = {
+  threatTitle: 'Alarm powietrzny',
+  offline: false,
+  offlineLabel: 'Mapa offline · pobrana 14:32',
+};
 
 /** Builds view data (texts, colors, handlers) from props and local state. */
 /** Geographic bounds of Poland used for the linear projection onto the map image. */
-const POLAND_BOUNDS = { west: 14.12, east: 24.15, south: 49.0, north: 54.92 };
+const POLAND_BOUNDS = {
+  west: 14.12,
+  east: 24.15,
+  south: 49.0,
+  north: 54.92,
+};
 
 /**
  * Position of a point on the map image, in percent of its width and height.
@@ -53,9 +68,11 @@ function projectToMap({ lat, lng }) {
   const clamp = (value) => Math.min(100, Math.max(0, value));
   const x = ((lng - POLAND_BOUNDS.west) / (POLAND_BOUNDS.east - POLAND_BOUNDS.west)) * 100;
   const y = ((POLAND_BOUNDS.north - lat) / (POLAND_BOUNDS.north - POLAND_BOUNDS.south)) * 100;
-  return { left: clamp(x).toFixed(2) + '%', top: clamp(y).toFixed(2) + '%' };
+  return {
+    left: clamp(x).toFixed(2) + '%',
+    top: clamp(y).toFixed(2) + '%',
+  };
 }
-
 function buildViewModel(props, state, setState) {
   const st = state,
     p = props;
@@ -156,7 +173,9 @@ function buildViewModel(props, state, setState) {
     const rl = LEVELS[rn];
     const sel = full && r.code === st.region;
     const pick = function () {
-      setState({ region: r.code });
+      setState({
+        region: r.code,
+      });
     };
     m[r.code] = {
       fill: offline ? '#24212A' : rl.map,
@@ -173,7 +192,7 @@ function buildViewModel(props, state, setState) {
         l: pct(r.x, 358),
         t: pct(r.y, 340),
         pick,
-        aria: r.name + ': ' + rl.short + ', ' + rl.label,
+        aria: r.name + ': ' + t(rl.short) + ', ' + t(rl.label),
       });
   });
   const sr = regions.find((r) => {
@@ -189,20 +208,20 @@ function buildViewModel(props, state, setState) {
     name: sr.name,
     bg: LEVELS[srn].bg,
     fg: LEVELS[srn].fg,
-    badge: LEVELS[srn].short + ' · ' + LEVELS[srn].label,
-    where: sr.code === 'PM' ? 'Tu jesteś' : 'Wybrane województwo',
+    badge: t(LEVELS[srn].short) + ' · ' + t(LEVELS[srn].label),
+    where: sr.code === 'PM' ? t('Tu jesteś') : t('Wybrane województwo'),
     shelters:
-      'Schrony (wg filtrów): ' +
+      t('Schrony (wg filtrów): ') +
       srAll.length +
-      ', w tym 24/7: ' +
+      t(', w tym 24/7: ') +
       srAll.filter((d) => {
         return d[4];
       }).length +
       (srAd.length
-        ? '. Przystosowane: ' +
+        ? t('. Przystosowane: ') +
           SUBS.map((n, j) => {
             return (
-              n +
+              t(n) +
               ': ' +
               srAd.filter((d) => {
                 return d[5] === j;
@@ -222,36 +241,47 @@ function buildViewModel(props, state, setState) {
     mapFull: full,
     mapSmall: !full,
     offline,
-    offlineLabel: p.offlineLabel || 'Mapa offline',
-    threatTitle: p.threatTitle || 'Sytuacja w kraju',
+    offlineLabel: p.offlineLabel || t('Mapa offline'),
+    threatTitle: t(p.threatTitle) || t('Sytuacja w kraju'),
     filters: [
-      chip(st.f247, 'Całodobowe 24/7', C247, '50%', 'none', 'f247'),
-      chip(st.fAlarm, 'Przy alarmie', CALARM, '50%', 'none', 'fAlarm'),
-      chip(st.fAdapted, 'Miejsca przystosowane', '#9C95A0', '1px', 'rotate(45deg)', 'fAdapted'),
+      chip(st.f247, t('Całodobowe 24/7'), C247, '50%', 'none', 'f247'),
+      chip(st.fAlarm, t('Przy alarmie'), CALARM, '50%', 'none', 'fAlarm'),
+      chip(st.fAdapted, t('Miejsca przystosowane'), '#9C95A0', '1px', 'rotate(45deg)', 'fAdapted'),
     ],
     shelterSummary:
-      'Na mapie: ' +
+      t('Na mapie: ') +
       visible.length +
-      ' schronów · całodobowych: ' +
+      t(' schronów · całodobowych: ') +
       visible.filter((d) => {
         return d[4];
       }).length +
-      ' (dane demo)',
+      t(' (dane demo)'),
     zoomHint:
       zoom === 1
-        ? 'Liczby pokazują schrony w województwie. Przybliż (+), aby zobaczyć każdy schron.'
-        : 'Kolor — godziny otwarcia. Kształt — schron lub miejsce przystosowane. Pokazujemy tylko sprawdzone, bezpieczne miejsca.',
+        ? t('Liczby pokazują schrony w województwie. Przybliż (+), aby zobaczyć każdy schron.')
+        : t(
+            'Kolor — godziny otwarcia. Kształt — schron lub miejsce przystosowane. Pokazujemy tylko sprawdzone, bezpieczne miejsca.',
+          ),
     openMap: function () {
-      setState({ full: true, zoom: 0 });
+      setState({
+        full: true,
+        zoom: 0,
+      });
     },
     closeMap: function () {
-      setState({ full: false });
+      setState({
+        full: false,
+      });
     },
     zoomIn: function () {
-      setState({ zoom: Math.min(ZOOMS.length - 1, state.zoom + 1) });
+      setState({
+        zoom: Math.min(ZOOMS.length - 1, state.zoom + 1),
+      });
     },
     zoomOut: function () {
-      setState({ zoom: Math.max(0, state.zoom - 1) });
+      setState({
+        zoom: Math.max(0, state.zoom - 1),
+      });
     },
   };
 }
@@ -266,7 +296,10 @@ function buildViewModel(props, state, setState) {
  * @param {string} props.offlineLabel
  */
 export default function PolandMap(inputProps) {
-  const props = { ...DEFAULT_PROPS, ...inputProps };
+  const props = {
+    ...DEFAULT_PROPS,
+    ...inputProps,
+  };
   const [state, setState] = useMergedState({
     full: false,
     zoom: 0,
@@ -334,19 +367,42 @@ export default function PolandMap(inputProps) {
               borderBottom: '1px solid #1F1C24',
             }}
           >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '2px',
+              }}
+            >
               <span
-                style={{ fontFamily: "'Unbounded', 'Arial Black', sans-serif", fontWeight: '500', fontSize: '17px' }}
+                style={{
+                  fontFamily: "'Unbounded', 'Arial Black', sans-serif",
+                  fontWeight: '500',
+                  fontSize: '17px',
+                }}
               >
-                Mapa zagrożeń
+                {t('Mapa zagrożeń')}
               </span>
-              <span style={{ fontSize: '12px', color: '#A49DA6' }}>{threatTitle} · dotknij województwa</span>
+              <span
+                style={{
+                  fontSize: '12px',
+                  color: '#A49DA6',
+                }}
+              >
+                {threatTitle}
+                {t(' · dotknij województwa')}
+              </span>
             </div>
-            <div style={{ display: 'flex', gap: '6px' }}>
+            <div
+              style={{
+                display: 'flex',
+                gap: '6px',
+              }}
+            >
               <button
                 type="button"
                 onClick={zoomOut}
-                aria-label="Oddal"
+                aria-label={t('Oddal')}
                 style={{
                   width: '44px',
                   height: '44px',
@@ -364,7 +420,7 @@ export default function PolandMap(inputProps) {
               <button
                 type="button"
                 onClick={zoomIn}
-                aria-label="Przybliż"
+                aria-label={t('Przybliż')}
                 style={{
                   width: '44px',
                   height: '44px',
@@ -382,7 +438,7 @@ export default function PolandMap(inputProps) {
               <button
                 type="button"
                 onClick={closeMap}
-                aria-label="Zamknij mapę"
+                aria-label={t('Zamknij mapę')}
                 style={{
                   width: '44px',
                   height: '44px',
@@ -421,8 +477,22 @@ export default function PolandMap(inputProps) {
               borderBottom: '1px solid #1F1C24',
             }}
           >
-            <span style={{ fontSize: '12px', fontWeight: '700', color: '#9C95A0' }}>Filtruj schrony na mapie</span>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+            <span
+              style={{
+                fontSize: '12px',
+                fontWeight: '700',
+                color: '#9C95A0',
+              }}
+            >
+              {t('Filtruj schrony na mapie')}
+            </span>
+            <div
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: '6px',
+              }}
+            >
               {(filters || []).map((fl, flIndex) => (
                 <Fragment key={flIndex}>
                   <button
@@ -461,13 +531,33 @@ export default function PolandMap(inputProps) {
           </div>
         </>
       )}
-      <div style={{ position: 'relative', width: '100%', height: mv.vh, overflow: mv.ov, flex: 'none' }}>
-        <div style={{ position: 'relative', width: mv.iw, height: mv.ih, margin: mv.margin }}>
+      <div
+        style={{
+          position: 'relative',
+          width: '100%',
+          height: mv.vh,
+          overflow: mv.ov,
+          flex: 'none',
+        }}
+      >
+        <div
+          style={{
+            position: 'relative',
+            width: mv.iw,
+            height: mv.ih,
+            margin: mv.margin,
+          }}
+        >
           <svg
             viewBox="0 0 358 340"
             role="img"
-            aria-label="Mapa Polski z podziałem na województwa"
-            style={{ display: 'block', width: '100%', height: mv.svgH, overflow: 'visible' }}
+            aria-label={t('Mapa Polski z podziałem na województwa')}
+            style={{
+              display: 'block',
+              width: '100%',
+              height: mv.svgH,
+              overflow: 'visible',
+            }}
           >
             <path
               d="M84 28L89 23L95 21L96 23L97 26L98 26L99 27L100 28L99 30L100 31L99 32L99 34L99 35L100 36L101 38L95 41L96 42L96 43L98 44L98 46L99 46L98 49L99 49L98 52L98 53L100 53L101 54L101 56L105 58L104 60L101 60L101 61L101 62L102 63L102 64L103 64L103 65L100 67L102 72L100 74L99 73L99 74L97 74L96 80L93 82L88 83L86 82L86 83L87 87L89 88L89 88L90 89L92 90L95 92L93 94L92 96L93 97L92 97L91 96L90 96L89 97L88 100L87 99L85 101L85 100L84 102L83 103L83 104L82 107L80 106L76 108L74 108L70 107L71 104L70 103L68 102L66 102L66 104L64 104L65 105L64 106L64 106L64 107L63 109L62 110L60 109L58 110L57 110L55 108L51 110L49 112L46 111L46 113L48 115L39 118L38 117L36 118L36 116L33 115L32 117L34 118L33 118L32 118L32 121L29 123L29 126L27 130L24 129L24 128L21 130L19 129L17 127L14 123L11 122L9 119L6 119L6 118L7 115L7 111L11 109L14 106L15 101L14 99L15 98L16 97L17 94L16 92L14 83L12 78L13 74L12 73L11 70L12 66L9 60L9 58L10 57L11 57L11 56L14 58L16 57L19 55L27 52L46 45L53 44L66 39L74 38L80 33L84 28Z"
@@ -768,7 +858,14 @@ export default function PolandMap(inputProps) {
                     backdropFilter: 'blur(4px)',
                   }}
                 >
-                  <span style={{ width: '6px', height: '6px', borderRadius: '3px', background: k.color }}></span>
+                  <span
+                    style={{
+                      width: '6px',
+                      height: '6px',
+                      borderRadius: '3px',
+                      background: k.color,
+                    }}
+                  ></span>
                   {k.name}
                 </span>
               </button>
@@ -780,7 +877,7 @@ export default function PolandMap(inputProps) {
             <button
               type="button"
               onClick={openMap}
-              aria-label="Otwórz mapę na pełnym ekranie"
+              aria-label={t('Otwórz mapę na pełnym ekranie')}
               style={{
                 position: 'absolute',
                 left: '0',
@@ -823,7 +920,7 @@ export default function PolandMap(inputProps) {
                 >
                   <path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7"></path>
                 </svg>
-                Powiększ
+                {t('Powiększ')}
               </span>
               {offline && (
                 <>
@@ -876,10 +973,38 @@ export default function PolandMap(inputProps) {
                 gap: '12px',
               }}
             >
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <span style={{ fontSize: '16px', fontWeight: '800' }}>{reg.name}</span>
-                <span style={{ fontSize: '13px', color: '#A49DA6' }}>{reg.where}</span>
-                <span style={{ fontSize: '13px', fontWeight: '700', color: '#DCD5DD' }}>{reg.shelters}</span>
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '4px',
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: '16px',
+                    fontWeight: '800',
+                  }}
+                >
+                  {reg.name}
+                </span>
+                <span
+                  style={{
+                    fontSize: '13px',
+                    color: '#A49DA6',
+                  }}
+                >
+                  {reg.where}
+                </span>
+                <span
+                  style={{
+                    fontSize: '13px',
+                    fontWeight: '700',
+                    color: '#DCD5DD',
+                  }}
+                >
+                  {reg.shelters}
+                </span>
               </div>
               <span
                 style={{
@@ -905,22 +1030,95 @@ export default function PolandMap(inputProps) {
                 background: '#17151A',
               }}
             >
-              <span style={{ fontSize: '13px', fontWeight: '800' }}>{shelterSummary}</span>
-              <span style={{ fontSize: '12px', color: '#9C95A0' }}>{zoomHint}</span>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 14px' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#C9C1CB' }}>
-                  <span style={{ width: '9px', height: '9px', borderRadius: '50%', background: '#7CC4FF' }}></span>
-                  Całodobowe 24/7
+              <span
+                style={{
+                  fontSize: '13px',
+                  fontWeight: '800',
+                }}
+              >
+                {shelterSummary}
+              </span>
+              <span
+                style={{
+                  fontSize: '12px',
+                  color: '#9C95A0',
+                }}
+              >
+                {zoomHint}
+              </span>
+              <div
+                style={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: '6px 14px',
+                }}
+              >
+                <span
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    fontSize: '12px',
+                    color: '#C9C1CB',
+                  }}
+                >
+                  <span
+                    style={{
+                      width: '9px',
+                      height: '9px',
+                      borderRadius: '50%',
+                      background: '#7CC4FF',
+                    }}
+                  ></span>
+                  {t('Całodobowe 24/7')}
                 </span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#C9C1CB' }}>
-                  <span style={{ width: '9px', height: '9px', borderRadius: '50%', background: '#C9B8FF' }}></span>
-                  Otwierane przy alarmie
+                <span
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    fontSize: '12px',
+                    color: '#C9C1CB',
+                  }}
+                >
+                  <span
+                    style={{
+                      width: '9px',
+                      height: '9px',
+                      borderRadius: '50%',
+                      background: '#C9B8FF',
+                    }}
+                  ></span>
+                  {t('Otwierane przy alarmie')}
                 </span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#C9C1CB' }}>
-                  <span style={{ width: '9px', height: '9px', borderRadius: '50%', background: '#9C95A0' }}></span>
-                  Schron
+                <span
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    fontSize: '12px',
+                    color: '#C9C1CB',
+                  }}
+                >
+                  <span
+                    style={{
+                      width: '9px',
+                      height: '9px',
+                      borderRadius: '50%',
+                      background: '#9C95A0',
+                    }}
+                  ></span>
+                  {t('Schron')}
                 </span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#C9C1CB' }}>
+                <span
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    fontSize: '12px',
+                    color: '#C9C1CB',
+                  }}
+                >
                   <span
                     style={{
                       width: '8px',
@@ -930,12 +1128,26 @@ export default function PolandMap(inputProps) {
                       transform: 'rotate(45deg)',
                     }}
                   ></span>
-                  Miejsce przystosowane (parking, piwnica, przejście)
+                  {t('Miejsce przystosowane (parking, piwnica, przejście)')}
                 </span>
               </div>
             </div>
-            <span style={{ fontSize: '13px', fontWeight: '700', color: '#A49DA6' }}>Województwa z zagrożeniem</span>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+            <span
+              style={{
+                fontSize: '13px',
+                fontWeight: '700',
+                color: '#A49DA6',
+              }}
+            >
+              {t('Województwa z zagrożeniem')}
+            </span>
+            <div
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: '8px',
+              }}
+            >
               {(marks || []).map((c, cIndex) => (
                 <Fragment key={cIndex}>
                   <button
@@ -956,7 +1168,14 @@ export default function PolandMap(inputProps) {
                       cursor: 'pointer',
                     }}
                   >
-                    <span style={{ width: '8px', height: '8px', borderRadius: '4px', background: c.color }}></span>
+                    <span
+                      style={{
+                        width: '8px',
+                        height: '8px',
+                        borderRadius: '4px',
+                        background: c.color,
+                      }}
+                    ></span>
                     {c.name}
                   </button>
                 </Fragment>

@@ -5,6 +5,7 @@ import useMergedState from '@/hooks/useMergedState.js';
 import StatusBadge from '@/components/StatusBadge.jsx';
 import StreetMap from '@/components/StreetMap.jsx';
 import chronApi from '@/api/chronApi.js';
+import { t } from '@/i18n/index.js';
 
 /** Builds view data (texts, colors, handlers) from props and local state. */
 function buildViewModel(props, state, setState) {
@@ -28,38 +29,48 @@ function buildViewModel(props, state, setState) {
     pins: [sh],
     level: s.level,
     zone: threat ? threat.zone : '',
-    offlineLabel: stale ? 'Trasa zapisana offline' : '',
-    hoursShort: sh.hours === '24/7' ? '24/7' : 'Przy alarmie',
-    category: sh.category === 'schron' ? 'Budowla ochronna' : 'Miejsce przystosowane',
-    updated: stale ? sh.statusNote : 'dziś, ' + sh.updated,
+    offlineLabel: stale ? t('Trasa zapisana offline') : '',
+    hoursShort: sh.hours === '24/7' ? '24/7' : t('Przy alarmie'),
+    category: sh.category === 'schron' ? t('Budowla ochronna') : t('Miejsce przystosowane'),
+    updated: stale ? sh.statusNote : t('dziś, ') + sh.updated,
     showSuit: !!threat,
     suit: sh.suitable
-      ? { bg: 'rgba(79,209,165,.1)', fg: '#86CDB2', label: 'Odpowiedni' }
-      : { bg: 'rgba(255,122,133,.1)', fg: '#FF8A95', label: 'Niezalecany' },
+      ? {
+          bg: 'rgba(79,209,165,.1)',
+          fg: '#86CDB2',
+          label: t('Odpowiedni'),
+        }
+      : {
+          bg: 'rgba(255,122,133,.1)',
+          fg: '#FF8A95',
+          label: t('Niezalecany'),
+        },
     community: count
       ? count +
         ' ' +
-        (count === 1 ? 'osoba' : count < 5 ? 'osoby' : 'osób') +
+        (count === 1 ? 'osoba' : count < 5 ? 'osoby' : t('osób')) +
         ' ' +
         sh.community.text +
         (sh.community.time ? ' · ' + sh.community.time : '')
-      : 'Brak potwierdzeń od mieszkańców',
+      : t('Brak potwierdzeń od mieszkańców'),
     confirmText: stale
-      ? 'Potwierdzenie wyślemy po odzyskaniu połączenia'
+      ? t('Potwierdzenie wyślemy po odzyskaniu połączenia')
       : state.confirmed
-        ? 'Dziękujemy — potwierdzenie zapisane'
-        : 'Potwierdź: wejście otwarte',
+        ? t('Dziękujemy — potwierdzenie zapisane')
+        : t('Potwierdź: wejście otwarte'),
     confirmDisabled: stale || state.confirmed,
     confirmColor: stale || state.confirmed ? '#A49DA6' : '#F4F1F2',
     confirm: function () {
       a.confirmShelter(sh.id);
-      setState({ confirmed: true });
+      setState({
+        confirmed: true,
+      });
     },
     isClosed,
     isOpen: !isClosed,
     showLate: s.level !== 'green',
     barCols: s.level !== 'green' ? '1.6fr 1fr' : '1fr',
-    recText: alt ? 'Zamknięte — pokaż ' + alt.name : 'Obiekt zamknięty',
+    recText: alt ? t('Zamknięte — pokaż ') + alt.name : t('Obiekt zamknięty'),
     goRec: function () {
       if (alt) a.openShelter(alt.id, true);
     },
@@ -85,7 +96,9 @@ function buildViewModel(props, state, setState) {
  */
 export default function ShelterDetail(inputProps) {
   const props = inputProps;
-  const [state, setState] = useMergedState({ confirmed: false });
+  const [state, setState] = useMergedState({
+    confirmed: false,
+  });
   const {
     back,
     barCols,
@@ -126,11 +139,18 @@ export default function ShelterDetail(inputProps) {
         animation: 'chronIn .35s ease both',
       }}
     >
-      <header style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '20px 16px 12px' }}>
+      <header
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          padding: '20px 16px 12px',
+        }}
+      >
         <button
           type="button"
           onClick={back}
-          aria-label="Wstecz"
+          aria-label={t('Wstecz')}
           style={{
             width: '44px',
             height: '44px',
@@ -159,11 +179,28 @@ export default function ShelterDetail(inputProps) {
             <path d="M15 5l-7 7 7 7"></path>
           </svg>
         </button>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-          <span style={{ fontFamily: "'Unbounded', 'Arial Black', sans-serif", fontWeight: '500', fontSize: '18px' }}>
-            Schronienie
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '2px',
+          }}
+        >
+          <span
+            style={{
+              fontFamily: "'Unbounded', 'Arial Black', sans-serif",
+              fontWeight: '500',
+              fontSize: '18px',
+            }}
+          >
+            {t('Schronienie')}
           </span>
-          <span style={{ fontSize: '12px', color: '#A49DA6' }}>
+          <span
+            style={{
+              fontSize: '12px',
+              color: '#A49DA6',
+            }}
+          >
             ID {sh.id} · {sh.statusNote}
           </span>
         </div>
@@ -202,18 +239,65 @@ export default function ShelterDetail(inputProps) {
             gap: '12px',
           }}
         >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <span style={{ fontFamily: "'Unbounded', 'Arial Black', sans-serif", fontWeight: '500', fontSize: '18px' }}>
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '4px',
+            }}
+          >
+            <span
+              style={{
+                fontFamily: "'Unbounded', 'Arial Black', sans-serif",
+                fontWeight: '500',
+                fontSize: '18px',
+              }}
+            >
               {sh.name}
             </span>
-            <span style={{ fontSize: '13px', fontWeight: '700', color: '#DCD5DD' }}>{sh.typeLabel}</span>
-            <span style={{ fontSize: '13px', color: '#A49DA6' }}>{sh.fullAddress}</span>
+            <span
+              style={{
+                fontSize: '13px',
+                fontWeight: '700',
+                color: '#DCD5DD',
+              }}
+            >
+              {sh.typeLabel}
+            </span>
+            <span
+              style={{
+                fontSize: '13px',
+                color: '#A49DA6',
+              }}
+            >
+              {sh.fullAddress}
+            </span>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '6px',
+            }}
+          >
             <StatusBadge kind={sh.status} size="lg" />
-            <span style={{ fontSize: '13px', lineHeight: '1.45', color: '#C9C1CB' }}>{sh.statusReason}</span>
+            <span
+              style={{
+                fontSize: '13px',
+                lineHeight: '1.45',
+                color: '#C9C1CB',
+              }}
+            >
+              {sh.statusReason}
+            </span>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '8px' }}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+              gap: '8px',
+            }}
+          >
             <div
               style={{
                 background: '#1F1C24',
@@ -224,8 +308,22 @@ export default function ShelterDetail(inputProps) {
                 gap: '2px',
               }}
             >
-              <span style={{ fontSize: '12px', color: '#A49DA6' }}>Pieszo</span>
-              <span style={{ fontSize: '18px', fontWeight: '800' }}>{sh.walk} min</span>
+              <span
+                style={{
+                  fontSize: '12px',
+                  color: '#A49DA6',
+                }}
+              >
+                {t('Pieszo')}
+              </span>
+              <span
+                style={{
+                  fontSize: '18px',
+                  fontWeight: '800',
+                }}
+              >
+                {sh.walk} min
+              </span>
             </div>
             <div
               style={{
@@ -237,8 +335,22 @@ export default function ShelterDetail(inputProps) {
                 gap: '2px',
               }}
             >
-              <span style={{ fontSize: '12px', color: '#A49DA6' }}>Dystans</span>
-              <span style={{ fontSize: '18px', fontWeight: '800' }}>{sh.dist} m</span>
+              <span
+                style={{
+                  fontSize: '12px',
+                  color: '#A49DA6',
+                }}
+              >
+                {t('Dystans')}
+              </span>
+              <span
+                style={{
+                  fontSize: '18px',
+                  fontWeight: '800',
+                }}
+              >
+                {sh.dist} m
+              </span>
             </div>
             <div
               style={{
@@ -250,8 +362,23 @@ export default function ShelterDetail(inputProps) {
                 gap: '2px',
               }}
             >
-              <span style={{ fontSize: '12px', color: '#A49DA6' }}>Godziny</span>
-              <span style={{ fontSize: '15px', fontWeight: '800', color: sh.hoursColor }}>{hoursShort}</span>
+              <span
+                style={{
+                  fontSize: '12px',
+                  color: '#A49DA6',
+                }}
+              >
+                {t('Godziny')}
+              </span>
+              <span
+                style={{
+                  fontSize: '15px',
+                  fontWeight: '800',
+                  color: sh.hoursColor,
+                }}
+              >
+                {hoursShort}
+              </span>
             </div>
           </div>
           {showSuit && (
@@ -266,10 +393,25 @@ export default function ShelterDetail(inputProps) {
                   background: suit.bg,
                 }}
               >
-                <span style={{ fontSize: '13px', fontWeight: '800', color: suit.fg, whiteSpace: 'nowrap' }}>
+                <span
+                  style={{
+                    fontSize: '13px',
+                    fontWeight: '800',
+                    color: suit.fg,
+                    whiteSpace: 'nowrap',
+                  }}
+                >
                   {suit.label}
                 </span>
-                <span style={{ fontSize: '13px', lineHeight: '1.45', color: '#DCD5DD' }}>{sh.suitNote}</span>
+                <span
+                  style={{
+                    fontSize: '13px',
+                    lineHeight: '1.45',
+                    color: '#DCD5DD',
+                  }}
+                >
+                  {sh.suitNote}
+                </span>
               </div>
             </>
           )}
@@ -283,9 +425,31 @@ export default function ShelterDetail(inputProps) {
             flexDirection: 'column',
           }}
         >
-          <div style={{ padding: '12px 18px', display: 'flex', justifyContent: 'space-between', gap: '12px' }}>
-            <span style={{ fontSize: '14px', color: '#9C95A0' }}>Godziny otwarcia</span>
-            <span style={{ fontSize: '14px', fontWeight: '700', textAlign: 'right' }}>{sh.hoursLabel}</span>
+          <div
+            style={{
+              padding: '12px 18px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              gap: '12px',
+            }}
+          >
+            <span
+              style={{
+                fontSize: '14px',
+                color: '#9C95A0',
+              }}
+            >
+              {t('Godziny otwarcia')}
+            </span>
+            <span
+              style={{
+                fontSize: '14px',
+                fontWeight: '700',
+                textAlign: 'right',
+              }}
+            >
+              {sh.hoursLabel}
+            </span>
           </div>
           <div
             style={{
@@ -296,8 +460,23 @@ export default function ShelterDetail(inputProps) {
               gap: '12px',
             }}
           >
-            <span style={{ fontSize: '14px', color: '#9C95A0' }}>Kategoria</span>
-            <span style={{ fontSize: '14px', fontWeight: '700', textAlign: 'right' }}>{category}</span>
+            <span
+              style={{
+                fontSize: '14px',
+                color: '#9C95A0',
+              }}
+            >
+              {t('Kategoria')}
+            </span>
+            <span
+              style={{
+                fontSize: '14px',
+                fontWeight: '700',
+                textAlign: 'right',
+              }}
+            >
+              {category}
+            </span>
           </div>
           <div
             style={{
@@ -309,7 +488,14 @@ export default function ShelterDetail(inputProps) {
               gap: '12px',
             }}
           >
-            <span style={{ fontSize: '14px', color: '#9C95A0' }}>Wiarygodność</span>
+            <span
+              style={{
+                fontSize: '14px',
+                color: '#9C95A0',
+              }}
+            >
+              {t('Wiarygodność')}
+            </span>
             <span
               style={{
                 padding: '4px 10px',
@@ -332,8 +518,23 @@ export default function ShelterDetail(inputProps) {
               gap: '12px',
             }}
           >
-            <span style={{ fontSize: '14px', color: '#9C95A0' }}>Źródło</span>
-            <span style={{ fontSize: '14px', fontWeight: '700', textAlign: 'right' }}>{sh.source}</span>
+            <span
+              style={{
+                fontSize: '14px',
+                color: '#9C95A0',
+              }}
+            >
+              {t('Źródło')}
+            </span>
+            <span
+              style={{
+                fontSize: '14px',
+                fontWeight: '700',
+                textAlign: 'right',
+              }}
+            >
+              {sh.source}
+            </span>
           </div>
           <div
             style={{
@@ -344,8 +545,22 @@ export default function ShelterDetail(inputProps) {
               gap: '12px',
             }}
           >
-            <span style={{ fontSize: '14px', color: '#9C95A0' }}>Ostatnia aktualizacja</span>
-            <span style={{ fontSize: '14px', fontWeight: '700' }}>{updated}</span>
+            <span
+              style={{
+                fontSize: '14px',
+                color: '#9C95A0',
+              }}
+            >
+              {t('Ostatnia aktualizacja')}
+            </span>
+            <span
+              style={{
+                fontSize: '14px',
+                fontWeight: '700',
+              }}
+            >
+              {updated}
+            </span>
           </div>
           <div
             style={{
@@ -356,8 +571,20 @@ export default function ShelterDetail(inputProps) {
               gap: '12px',
             }}
           >
-            <span style={{ fontSize: '14px', color: '#9C95A0' }}>Współrzędne</span>
-            <span style={{ fontSize: '14px', fontWeight: '700' }}>
+            <span
+              style={{
+                fontSize: '14px',
+                color: '#9C95A0',
+              }}
+            >
+              {t('Współrzędne')}
+            </span>
+            <span
+              style={{
+                fontSize: '14px',
+                fontWeight: '700',
+              }}
+            >
               {sh.lat}, {sh.lng}
             </span>
           </div>
@@ -382,9 +609,17 @@ export default function ShelterDetail(inputProps) {
               color: '#9C95A0',
             }}
           >
-            Zgłoszenia użytkowników
+            {t('Zgłoszenia użytkowników')}
           </span>
-          <span style={{ fontSize: '15px', fontWeight: '700', lineHeight: '1.45' }}>{community}</span>
+          <span
+            style={{
+              fontSize: '15px',
+              fontWeight: '700',
+              lineHeight: '1.45',
+            }}
+          >
+            {community}
+          </span>
           <button
             type="button"
             onClick={confirm}
@@ -403,8 +638,14 @@ export default function ShelterDetail(inputProps) {
           >
             {confirmText}
           </button>
-          <span style={{ fontSize: '12px', lineHeight: '1.45', color: '#A49DA6' }}>
-            Zgłoszenia uzupełniają, ale nie zastępują oficjalnego statusu.
+          <span
+            style={{
+              fontSize: '12px',
+              lineHeight: '1.45',
+              color: '#A49DA6',
+            }}
+          >
+            {t('Zgłoszenia uzupełniają, ale nie zastępują oficjalnego statusu.')}
           </span>
         </section>
       </div>
@@ -456,7 +697,7 @@ export default function ShelterDetail(inputProps) {
                 fontFamily: 'inherit',
               }}
             >
-              WYZNACZ TRASĘ
+              {t('WYZNACZ TRASĘ')}
             </button>
           </>
         )}
@@ -477,7 +718,7 @@ export default function ShelterDetail(inputProps) {
                 fontFamily: 'inherit',
               }}
             >
-              Nie zdążę
+              {t('Nie zdążę')}
             </button>
           </>
         )}

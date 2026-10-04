@@ -3,6 +3,7 @@
  * with coordinates and heading. Used to detect objects approaching the user.
  */
 import { bearing, distanceKm, fetchJson } from './http.js';
+import { labelsFor } from './labels.js';
 
 const NEPTUN_URL = 'https://neptun.in.ua/api/v1/threats';
 
@@ -12,27 +13,13 @@ const MAX_DISTANCE_KM = 250;
 /** A target is "heading towards" the user when its course differs from the bearing by at most this many degrees. */
 const HEADING_TOLERANCE_DEG = 50;
 
-/** Target types in Polish. */
-const TYPE_LABELS = {
-  uav: 'Dron (BSP)',
-  shahed: 'Dron typu Shahed',
-  fpv: 'Dron FPV',
-  missile: 'Pocisk manewrujący',
-  cruise: 'Pocisk manewrujący',
-  ballistic: 'Pocisk balistyczny',
-  kab: 'Bomba kierowana (KAB)',
-  mig31k: 'MiG-31K (nosiciel Kinżała)',
-  recon: 'Dron rozpoznawczy',
-};
-
-const CONFIDENCE_LABELS = { high: 'wysoka', medium: 'średnia', low: 'niska' };
-
 /**
  * Air targets near the user, plus the total number of targets over Ukraine.
- * @param {{ lat: number, lng: number }} context user location
+ * @param {{ lat: number, lng: number, lang?: string }} context user location and interface language
  * @returns {Promise<{ alerts: object[], tracked: number }>}
  */
-export async function collectNeptun({ lat, lng }) {
+export async function collectNeptun({ lat, lng, lang }) {
+  const L = labelsFor(lang);
   const data = await fetchJson(NEPTUN_URL);
   const targets = Array.isArray(data?.threats) ? data.threats : [];
 
@@ -52,13 +39,13 @@ export async function collectNeptun({ lat, lng }) {
         source: 'NEPTUN',
         category: 'air',
         level: towardsUser ? 'red' : 'yellow',
-        title: TYPE_LABELS[String(target.type).toLowerCase()] || 'Obiekt powietrzny',
+        title: L.targetTypes[String(target.type).toLowerCase()] || L.airObject,
         text:
-          `${Math.round(distance)} km od Ciebie` +
+          L.kmFromYou(Math.round(distance)) +
           (place ? ` · ${place}` : '') +
-          (towardsUser ? ' · kurs w Twoją stronę' : '') +
-          ` · wiarygodność ${CONFIDENCE_LABELS[target.confidenceLevel] || 'nieznana'}`,
-        region: target.region || 'Ukraina',
+          (towardsUser ? ` · ${L.towardsYou}` : '') +
+          ` · ${L.confidenceLabel(L.confidence[target.confidenceLevel] || L.unknownConfidence)}`,
+        region: target.region || L.ukraine,
         time: target.updatedAt || data.serverTime || null,
         distanceKm: Math.round(distance),
       };

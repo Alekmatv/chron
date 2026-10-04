@@ -4,8 +4,12 @@
 import { Fragment, useEffect, useRef } from 'react';
 import useMergedState from '@/hooks/useMergedState.js';
 import chronApi from '@/api/chronApi.js';
-
-const ZONE_NAMES = { dom: 'Dom', praca: 'Praca', uczelnia: 'Uczelnia' };
+import { t, tf } from '@/i18n/index.js';
+const ZONE_NAMES = {
+  dom: 'Dom',
+  praca: 'Praca',
+  uczelnia: 'Uczelnia',
+};
 
 /** Builds view data (texts, colors, handlers) from props and local state. */
 function buildViewModel(props, state, setState, soundTimer) {
@@ -14,7 +18,14 @@ function buildViewModel(props, state, setState, soundTimer) {
     a = props.actions || {};
   const set = s.settings || {};
   function sw(on, title, sub, toggle) {
-    return { title, sub, pressed: on ? 'true' : 'false', track: on ? '#3FA57F' : '#3A3540', knob: on ? 23 : 3, toggle };
+    return {
+      title,
+      sub,
+      pressed: on ? 'true' : 'false',
+      track: on ? '#3FA57F' : '#3A3540',
+      knob: on ? 23 : 3,
+      toggle,
+    };
   }
   function flip(key) {
     return function () {
@@ -29,7 +40,11 @@ function buildViewModel(props, state, setState, soundTimer) {
     };
   }
   function seg(on) {
-    return { bg: on ? '#2C2930' : '#1C1A20', border: on ? '#F2EFF3' : '#2A272E', pressed: on ? 'true' : 'false' };
+    return {
+      bg: on ? '#2C2930' : '#1C1A20',
+      border: on ? '#F2EFF3' : '#2A272E',
+      pressed: on ? 'true' : 'false',
+    };
   }
   const zones = api.getZones().map((z, i) => {
     const on = s.zoneNotify ? s.zoneNotify[z.id] : z.notify;
@@ -42,7 +57,7 @@ function buildViewModel(props, state, setState, soundTimer) {
         address: z.address,
         radius: z.radius,
         divider: i ? '1px solid #24212A' : '0',
-        sub: on ? 'Powiadomienia włączone' : 'Powiadomienia wyłączone',
+        sub: on ? t('Powiadomienia włączone') : t('Powiadomienia wyłączone'),
         subColor: on ? '#86CDB2' : '#9C95A0',
       },
     );
@@ -51,18 +66,18 @@ function buildViewModel(props, state, setState, soundTimer) {
     const busy = p.status === 'downloading';
     const ready = p.status === 'ready';
     return {
-      name: 'Strefa „' + ZONE_NAMES[p.zoneId] + '”',
-      contents: p.contents,
+      name: t('Strefa „') + t(ZONE_NAMES[p.zoneId]) + '”',
+      contents: t(p.contents),
       divider: '1px solid #24212A',
       busy,
       progress: p.progress || 0,
       statusText: busy
-        ? 'Pobieranie… ' + (p.progress || 0) + '% z ' + p.size
+        ? tf('Pobieranie… {v0}% z {v1}', { v0: p.progress || 0, v1: p.size })
         : ready
-          ? 'Gotowy · ' + p.date + ' · ' + p.size
-          : 'Nie pobrano · ' + p.size,
+          ? t('Gotowy · ') + p.date + ' · ' + p.size
+          : t('Nie pobrano · ') + p.size,
       statusColor: ready ? '#86CDB2' : busy ? '#7CC4FF' : '#F2B866',
-      btnText: busy ? 'Pobieranie' : ready ? 'Aktualizuj' : 'Pobierz',
+      btnText: busy ? t('Pobieranie') : ready ? t('Aktualizuj') : t('Pobierz'),
       btnBg: ready || busy ? '#24212A' : '#E3203A',
       btnFg: '#FFFFFF',
       btnBorder: ready || busy ? '#3A3540' : '#E3203A',
@@ -96,18 +111,18 @@ function buildViewModel(props, state, setState, soundTimer) {
       a.setSetting('scope', 'all');
     },
     typeToggles: [
-      sw(set.notif.air, 'Zagrożenia z powietrza', 'Drony, rakiety, alarm powietrzny', flipNotif('air')),
-      sw(set.notif.chem, 'Zagrożenia chemiczne', 'Wycieki, skażenie powietrza', flipNotif('chem')),
-      sw(set.notif.flood, 'Żywioły', 'Powódź, wichura, burze', flipNotif('flood')),
+      sw(set.notif.air, t('Zagrożenia z powietrza'), t('Drony, rakiety, alarm powietrzny'), flipNotif('air')),
+      sw(set.notif.chem, t('Zagrożenia chemiczne'), t('Wycieki, skażenie powietrza'), flipNotif('chem')),
+      sw(set.notif.flood, t('Żywioły'), t('Powódź, wichura, burze'), flipNotif('flood')),
     ],
     volume: set.volume,
     setVolume: function (e) {
       a.setSetting('volume', Number(e.target.value));
     },
     volPresets: [
-      ['Cicho', 30],
-      ['Głośno', 70],
-      ['Maksimum', 100],
+      [t('Cicho'), 30],
+      [t('Głośno'), 70],
+      [t('Maksimum'), 100],
     ].map((p) => {
       return Object.assign(seg(set.volume === p[1]), {
         label: p[0],
@@ -118,71 +133,94 @@ function buildViewModel(props, state, setState, soundTimer) {
     }),
     soundPlaying: state.soundPlaying,
     soundIdle: !state.soundPlaying,
-    snd: { bg: state.soundPlaying ? '#2C2930' : '#211F25', border: state.soundPlaying ? '#F2EFF3' : '#3A3540' },
+    snd: {
+      bg: state.soundPlaying ? '#2C2930' : '#211F25',
+      border: state.soundPlaying ? '#F2EFF3' : '#3A3540',
+    },
     testSound: function () {
       a.testSound();
       clearTimeout(soundTimer.current);
-      setState({ soundPlaying: true });
+      setState({
+        soundPlaying: true,
+      });
       soundTimer.current = setTimeout(() => {
-        setState({ soundPlaying: false });
+        setState({
+          soundPlaying: false,
+        });
       }, 1900);
     },
     soundToggles: [
-      sw(set.loudSilent, 'Alarm także w trybie cichym', 'Dźwięk pominie tryb „Nie przeszkadzać”', flip('loudSilent')),
-      sw(set.vibrate, 'Wibracje', 'Silne, powtarzane wibracje przy alarmie', flip('vibrate')),
+      sw(
+        set.loudSilent,
+        t('Alarm także w trybie cichym'),
+        t('Dźwięk pominie tryb „Nie przeszkadzać”'),
+        flip('loudSilent'),
+      ),
+      sw(set.vibrate, t('Wibracje'), t('Silne, powtarzane wibracje przy alarmie'), flip('vibrate')),
     ],
     lightToggles: [
-      sw(set.flashLed, 'Miganie latarki', 'Dioda LED aparatu miga podczas alarmu', flip('flashLed')),
+      sw(set.flashLed, t('Miganie latarki'), t('Dioda LED aparatu miga podczas alarmu'), flip('flashLed')),
       sw(
         set.flashScreen,
-        'Błysk ekranu',
-        'Ekran pulsuje w kolorze zagrożenia: żółtym lub czerwonym',
+        t('Błysk ekranu'),
+        t('Ekran pulsuje w kolorze zagrożenia: żółtym lub czerwonym'),
         flip('flashScreen'),
       ),
     ],
     testLight: function () {
       a.testLight();
     },
-    demoScenarios: types.map((t) => {
-      return Object.assign(seg(t.id === demoTh), {
-        label: t.short,
+    demoScenarios: types.map((entry) => {
+      return Object.assign(seg(entry.id === demoTh), {
+        label: entry.short,
         pick: function () {
-          setState({ demoScenario: t.id });
+          setState({
+            demoScenario: entry.id,
+          });
         },
       });
     }),
     demoLevels: [
-      ['yellow', 'Żółty', '#C9A43A'],
-      ['red', 'Czerwony', '#C8323F'],
+      ['yellow', t('Żółty'), '#C9A43A'],
+      ['red', t('Czerwony'), '#C8323F'],
     ].map((d) => {
       return Object.assign(seg(state.demoLevel === d[0]), {
         label: d[1],
         dot: d[2],
         pick: function () {
-          setState({ demoLevel: d[0] });
+          setState({
+            demoLevel: d[0],
+          });
         },
       });
     }),
     startDemo: function () {
-      a.startDemoAlarm({ scenario: demoTh, level: state.demoLevel });
+      a.startDemoAlarm({
+        scenario: demoTh,
+        level: state.demoLevel,
+      });
     },
     loc: {
       once: loc !== 'zawsze',
-      label: loc === 'zawsze' ? 'Zawsze' : 'Tylko teraz',
+      label: loc === 'zawsze' ? t('Zawsze') : t('Tylko teraz'),
       bg: loc === 'zawsze' ? '#10261E' : '#2A2208',
       fg: loc === 'zawsze' ? '#7FE0BE' : '#E6C65E',
-      sub: loc === 'zawsze' ? 'Alarmy działają także w tle' : 'Alarmy w tle wymagają dostępu „Zawsze”',
+      sub: loc === 'zawsze' ? t('Alarmy działają także w tle') : t('Alarmy w tle wymagają dostępu „Zawsze”'),
     },
     setLocAlways: function () {
       a.setLoc('zawsze');
     },
-    off: { pressed: stOff ? 'true' : 'false', track: stOff ? '#3FA57F' : '#3A3540', knob: stOff ? 23 : 3 },
+    off: {
+      pressed: stOff ? 'true' : 'false',
+      track: stOff ? '#3FA57F' : '#3A3540',
+      knob: stOff ? 23 : 3,
+    },
     toggleOffline: function () {
       a.setSystem(stOff ? 'recovering' : 'offline');
     },
     langs: [
-      ['pl', 'Polski'],
-      ['en', 'English'],
+      ['pl', t('Polski')],
+      ['en', t('English')],
       ['uk', 'Українська'],
     ].map((l) => {
       const on = lang === l[0];
@@ -196,7 +234,6 @@ function buildViewModel(props, state, setState, soundTimer) {
         },
       };
     }),
-    langNote: lang !== 'pl',
     goGuide: function () {
       a.openGuide();
     },
@@ -207,7 +244,7 @@ function buildViewModel(props, state, setState, soundTimer) {
       if (s.loggedIn) a.logout();
       else a.login();
     },
-    logoutText: s.loggedIn ? 'Wyloguj się' : 'Zaloguj się',
+    logoutText: s.loggedIn ? t('Wyloguj się') : t('Zaloguj się'),
   };
 }
 
@@ -223,14 +260,17 @@ export default function ProfileScreen(inputProps) {
   // Timer for the "sound playing" indicator; cleared when leaving the screen.
   const soundTimer = useRef(null);
   useEffect(() => () => clearTimeout(soundTimer.current), []);
-  const [state, setState] = useMergedState({ demoScenario: null, demoLevel: 'red', soundPlaying: false });
+  const [state, setState] = useMergedState({
+    demoScenario: null,
+    demoLevel: 'red',
+    soundPlaying: false,
+  });
   const {
     place,
     demoLevels,
     demoScenarios,
     goGuide,
     guest,
-    langNote,
     langs,
     lightToggles,
     loc,
@@ -271,9 +311,22 @@ export default function ProfileScreen(inputProps) {
         animation: 'chronIn .35s ease both',
       }}
     >
-      <header style={{ display: 'flex', flexDirection: 'column', gap: '2px', padding: '20px 16px 12px' }}>
-        <span style={{ fontFamily: "'Unbounded', 'Arial Black', sans-serif", fontWeight: '500', fontSize: '18px' }}>
-          Konto i ustawienia
+      <header
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '2px',
+          padding: '20px 16px 12px',
+        }}
+      >
+        <span
+          style={{
+            fontFamily: "'Unbounded', 'Arial Black', sans-serif",
+            fontWeight: '500',
+            fontSize: '18px',
+          }}
+        >
+          {t('Konto i ustawienia')}
         </span>
       </header>
       <div
@@ -321,10 +374,39 @@ export default function ProfileScreen(inputProps) {
               >
                 {user.initials}
               </span>
-              <div style={{ flex: '1', display: 'flex', flexDirection: 'column', gap: '3px', minWidth: '0' }}>
-                <span style={{ fontSize: '17px', fontWeight: '800' }}>{user.name}</span>
-                <span style={{ fontSize: '13px', color: '#A49DA6' }}>{user.phone}</span>
-                <span style={{ fontSize: '13px', color: '#A49DA6' }}>{place.label}</span>
+              <div
+                style={{
+                  flex: '1',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '3px',
+                  minWidth: '0',
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: '17px',
+                    fontWeight: '800',
+                  }}
+                >
+                  {user.name}
+                </span>
+                <span
+                  style={{
+                    fontSize: '13px',
+                    color: '#A49DA6',
+                  }}
+                >
+                  {user.phone}
+                </span>
+                <span
+                  style={{
+                    fontSize: '13px',
+                    color: '#A49DA6',
+                  }}
+                >
+                  {place.label}
+                </span>
               </div>
               <button
                 type="button"
@@ -341,7 +423,7 @@ export default function ProfileScreen(inputProps) {
                   fontFamily: 'inherit',
                 }}
               >
-                Edytuj
+                {t('Edytuj')}
               </button>
             </section>
           </>
@@ -359,10 +441,24 @@ export default function ProfileScreen(inputProps) {
                 border: '1px solid #222026',
               }}
             >
-              <span style={{ fontSize: '16px', fontWeight: '800' }}>Korzystasz bez konta</span>
-              <span style={{ fontSize: '13px', lineHeight: '1.5', color: '#A49DA6' }}>
-                Alarmy, schrony i Safety Pack działają bez konta. Konto zapisze Twoje strefy i ustawienia na innych
-                urządzeniach.
+              <span
+                style={{
+                  fontSize: '16px',
+                  fontWeight: '800',
+                }}
+              >
+                {t('Korzystasz bez konta')}
+              </span>
+              <span
+                style={{
+                  fontSize: '13px',
+                  lineHeight: '1.5',
+                  color: '#A49DA6',
+                }}
+              >
+                {t(
+                  'Alarmy, schrony i Safety Pack działają bez konta. Konto zapisze Twoje strefy i ustawienia na innych urządzeniach.',
+                )}
               </span>
               <button
                 type="button"
@@ -379,7 +475,7 @@ export default function ProfileScreen(inputProps) {
                   fontFamily: 'inherit',
                 }}
               >
-                Zaloguj się
+                {t('Zaloguj się')}
               </button>
             </section>
           </>
@@ -430,9 +526,31 @@ export default function ProfileScreen(inputProps) {
               <path d="M4 5.5v16M9 8h7M9 12h5"></path>
             </svg>
           </span>
-          <span style={{ flex: '1', display: 'flex', flexDirection: 'column', gap: '2px', minWidth: '0' }}>
-            <span style={{ fontSize: '16px', fontWeight: '800' }}>Poradnik</span>
-            <span style={{ fontSize: '13px', color: '#9C95A0' }}>Jak zachować się w sytuacji zagrożenia</span>
+          <span
+            style={{
+              flex: '1',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '2px',
+              minWidth: '0',
+            }}
+          >
+            <span
+              style={{
+                fontSize: '16px',
+                fontWeight: '800',
+              }}
+            >
+              {t('Poradnik')}
+            </span>
+            <span
+              style={{
+                fontSize: '13px',
+                color: '#9C95A0',
+              }}
+            >
+              {t('Jak zachować się w sytuacji zagrożenia')}
+            </span>
           </span>
           <svg
             width="20"
@@ -457,7 +575,7 @@ export default function ProfileScreen(inputProps) {
             color: '#9C95A0',
           }}
         >
-          Zapisane strefy
+          {t('Zapisane strefy')}
         </span>
         <section
           style={{
@@ -518,12 +636,41 @@ export default function ProfileScreen(inputProps) {
                     <circle cx="12" cy="10" r="2.6"></circle>
                   </svg>
                 </span>
-                <span style={{ flex: '1', display: 'flex', flexDirection: 'column', gap: '2px', minWidth: '0' }}>
-                  <span style={{ fontSize: '15px', fontWeight: '800' }}>{z.name}</span>
-                  <span style={{ fontSize: '12px', color: '#A49DA6' }}>
-                    {z.address} · promień {z.radius}
+                <span
+                  style={{
+                    flex: '1',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '2px',
+                    minWidth: '0',
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: '15px',
+                      fontWeight: '800',
+                    }}
+                  >
+                    {z.name}
                   </span>
-                  <span style={{ fontSize: '12px', color: z.subColor }}>{z.sub}</span>
+                  <span
+                    style={{
+                      fontSize: '12px',
+                      color: '#A49DA6',
+                    }}
+                  >
+                    {z.address}
+                    {t(' · promień ')}
+                    {z.radius}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: '12px',
+                      color: z.subColor,
+                    }}
+                  >
+                    {z.sub}
+                  </span>
                 </span>
                 <span
                   style={{
@@ -564,7 +711,7 @@ export default function ProfileScreen(inputProps) {
             color: '#9C95A0',
           }}
         >
-          Safety Pack · offline
+          {t('Safety Pack · offline')}
         </span>
         <section
           style={{
@@ -575,8 +722,16 @@ export default function ProfileScreen(inputProps) {
             flexDirection: 'column',
           }}
         >
-          <p style={{ margin: '0', padding: '14px 18px 4px', fontSize: '13px', lineHeight: '1.5', color: '#C9C1CB' }}>
-            Pakiet działa bez internetu: mapa, schrony, trasy piesze i instrukcje dla wybranej strefy.
+          <p
+            style={{
+              margin: '0',
+              padding: '14px 18px 4px',
+              fontSize: '13px',
+              lineHeight: '1.5',
+              color: '#C9C1CB',
+            }}
+          >
+            {t('Pakiet działa bez internetu: mapa, schrony, trasy piesze i instrukcje dla wybranej strefy.')}
           </p>
           {(packs || []).map((p, pIndex) => (
             <Fragment key={pIndex}>
@@ -589,11 +744,46 @@ export default function ProfileScreen(inputProps) {
                   borderTop: p.divider,
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
-                  <span style={{ display: 'flex', flexDirection: 'column', gap: '2px', minWidth: '0' }}>
-                    <span style={{ fontSize: '15px', fontWeight: '800' }}>{p.name}</span>
-                    <span style={{ fontSize: '12px', color: p.statusColor }}>{p.statusText}</span>
-                    <span style={{ fontSize: '12px', color: '#A49DA6' }}>{p.contents}</span>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '12px',
+                  }}
+                >
+                  <span
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '2px',
+                      minWidth: '0',
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: '15px',
+                        fontWeight: '800',
+                      }}
+                    >
+                      {p.name}
+                    </span>
+                    <span
+                      style={{
+                        fontSize: '12px',
+                        color: p.statusColor,
+                      }}
+                    >
+                      {p.statusText}
+                    </span>
+                    <span
+                      style={{
+                        fontSize: '12px',
+                        color: '#A49DA6',
+                      }}
+                    >
+                      {p.contents}
+                    </span>
                   </span>
                   <button
                     type="button"
@@ -652,7 +842,7 @@ export default function ProfileScreen(inputProps) {
             color: '#A49DA6',
           }}
         >
-          Powiadomienia
+          {t('Powiadomienia')}
         </span>
         <section
           style={{
@@ -691,7 +881,7 @@ export default function ProfileScreen(inputProps) {
                 fontFamily: 'inherit',
               }}
             >
-              Moje strefy
+              {t('Moje strefy')}
             </button>
             <button
               type="button"
@@ -709,7 +899,7 @@ export default function ProfileScreen(inputProps) {
                 fontFamily: 'inherit',
               }}
             >
-              Cała Polska
+              {t('Cała Polska')}
             </button>
           </div>
           {(typeToggles || []).map((tg, tgIndex) => (
@@ -734,9 +924,29 @@ export default function ProfileScreen(inputProps) {
                   fontFamily: 'inherit',
                 }}
               >
-                <span style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                  <span style={{ fontSize: '15px', fontWeight: '700' }}>{tg.title}</span>
-                  <span style={{ fontSize: '12px', color: '#A49DA6' }}>{tg.sub}</span>
+                <span
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '2px',
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: '15px',
+                      fontWeight: '700',
+                    }}
+                  >
+                    {tg.title}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: '12px',
+                      color: '#A49DA6',
+                    }}
+                  >
+                    {tg.sub}
+                  </span>
                 </span>
                 <span
                   style={{
@@ -777,7 +987,7 @@ export default function ProfileScreen(inputProps) {
             color: '#9C95A0',
           }}
         >
-          Dźwięk alarmu
+          {t('Dźwięk alarmu')}
         </span>
         <section
           style={{
@@ -790,9 +1000,22 @@ export default function ProfileScreen(inputProps) {
             gap: '16px',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
-            <label htmlFor="alarm-volume" style={{ fontSize: '16px', fontWeight: '800' }}>
-              Głośność alarmu
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '12px',
+            }}
+          >
+            <label
+              htmlFor="alarm-volume"
+              style={{
+                fontSize: '16px',
+                fontWeight: '800',
+              }}
+            >
+              {t('Głośność alarmu')}
             </label>
             <span
               style={{
@@ -805,7 +1028,13 @@ export default function ProfileScreen(inputProps) {
               {volume}%
             </span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+            }}
+          >
             <svg
               width="22"
               height="22"
@@ -827,7 +1056,12 @@ export default function ProfileScreen(inputProps) {
               step="5"
               value={volume}
               onChange={setVolume}
-              style={{ flex: '1', height: '44px', accentColor: '#E3203A', cursor: 'pointer' }}
+              style={{
+                flex: '1',
+                height: '44px',
+                accentColor: '#E3203A',
+                cursor: 'pointer',
+              }}
             />
             <svg
               width="22"
@@ -844,7 +1078,13 @@ export default function ProfileScreen(inputProps) {
               <path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11"></path>
             </svg>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '6px' }}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+              gap: '6px',
+            }}
+          >
             {(volPresets || []).map((vp, vpIndex) => (
               <Fragment key={vpIndex}>
                 <button
@@ -892,7 +1132,12 @@ export default function ProfileScreen(inputProps) {
               <>
                 <span
                   aria-hidden="true"
-                  style={{ display: 'flex', alignItems: 'flex-end', gap: '3px', height: '18px' }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'flex-end',
+                    gap: '3px',
+                    height: '18px',
+                  }}
                 >
                   <span
                     style={{
@@ -943,7 +1188,7 @@ export default function ProfileScreen(inputProps) {
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                   <path d="M7 5l12 7-12 7z"></path>
                 </svg>
-                Odtwórz testowy alarm
+                {t('Odtwórz testowy alarm')}
               </>
             )}
           </button>
@@ -969,9 +1214,29 @@ export default function ProfileScreen(inputProps) {
                   fontFamily: 'inherit',
                 }}
               >
-                <span style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                  <span style={{ fontSize: '15px', fontWeight: '700' }}>{tg.title}</span>
-                  <span style={{ fontSize: '12px', color: '#A49DA6' }}>{tg.sub}</span>
+                <span
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '2px',
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: '15px',
+                      fontWeight: '700',
+                    }}
+                  >
+                    {tg.title}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: '12px',
+                      color: '#A49DA6',
+                    }}
+                  >
+                    {tg.sub}
+                  </span>
                 </span>
                 <span
                   style={{
@@ -1012,7 +1277,7 @@ export default function ProfileScreen(inputProps) {
             color: '#A49DA6',
           }}
         >
-          Sygnał świetlny
+          {t('Sygnał świetlny')}
         </span>
         <section
           style={{
@@ -1047,9 +1312,29 @@ export default function ProfileScreen(inputProps) {
                   fontFamily: 'inherit',
                 }}
               >
-                <span style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                  <span style={{ fontSize: '15px', fontWeight: '700' }}>{tg.title}</span>
-                  <span style={{ fontSize: '12px', color: '#A49DA6' }}>{tg.sub}</span>
+                <span
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '2px',
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: '15px',
+                      fontWeight: '700',
+                    }}
+                  >
+                    {tg.title}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: '12px',
+                      color: '#A49DA6',
+                    }}
+                  >
+                    {tg.sub}
+                  </span>
                 </span>
                 <span
                   style={{
@@ -1095,7 +1380,7 @@ export default function ProfileScreen(inputProps) {
               fontFamily: 'inherit',
             }}
           >
-            Podgląd sygnału świetlnego
+            {t('Podgląd sygnału świetlnego')}
           </button>
         </section>
         <span
@@ -1107,7 +1392,7 @@ export default function ProfileScreen(inputProps) {
             color: '#9C95A0',
           }}
         >
-          Demo alarmu
+          {t('Demo alarmu')}
         </span>
         <section
           style={{
@@ -1120,11 +1405,32 @@ export default function ProfileScreen(inputProps) {
             gap: '14px',
           }}
         >
-          <p style={{ margin: '0', fontSize: '14px', lineHeight: '1.45', color: '#C9C1CB' }}>
-            Zobacz i usłysz, jak będzie wyglądał alarm — z Twoim dźwiękiem, wibracjami i sygnałem świetlnym.
+          <p
+            style={{
+              margin: '0',
+              fontSize: '14px',
+              lineHeight: '1.45',
+              color: '#C9C1CB',
+            }}
+          >
+            {t('Zobacz i usłysz, jak będzie wyglądał alarm — z Twoim dźwiękiem, wibracjami i sygnałem świetlnym.')}
           </p>
-          <span style={{ fontSize: '13px', fontWeight: '700', color: '#A49DA6' }}>Scenariusz</span>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '6px' }}>
+          <span
+            style={{
+              fontSize: '13px',
+              fontWeight: '700',
+              color: '#A49DA6',
+            }}
+          >
+            {t('Scenariusz')}
+          </span>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+              gap: '6px',
+            }}
+          >
             {(demoScenarios || []).map((ds, dsIndex) => (
               <Fragment key={dsIndex}>
                 <button
@@ -1148,8 +1454,22 @@ export default function ProfileScreen(inputProps) {
               </Fragment>
             ))}
           </div>
-          <span style={{ fontSize: '13px', fontWeight: '700', color: '#A49DA6' }}>Poziom zagrożenia</span>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '6px' }}>
+          <span
+            style={{
+              fontSize: '13px',
+              fontWeight: '700',
+              color: '#A49DA6',
+            }}
+          >
+            {t('Poziom zagrożenia')}
+          </span>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+              gap: '6px',
+            }}
+          >
             {(demoLevels || []).map((dl, dlIndex) => (
               <Fragment key={dlIndex}>
                 <button
@@ -1172,7 +1492,14 @@ export default function ProfileScreen(inputProps) {
                     fontFamily: 'inherit',
                   }}
                 >
-                  <span style={{ width: '10px', height: '10px', borderRadius: '5px', background: dl.dot }}></span>
+                  <span
+                    style={{
+                      width: '10px',
+                      height: '10px',
+                      borderRadius: '5px',
+                      background: dl.dot,
+                    }}
+                  ></span>
                   {dl.label}
                 </button>
               </Fragment>
@@ -1200,7 +1527,7 @@ export default function ProfileScreen(inputProps) {
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
               <path d="M7 5l12 7-12 7z"></path>
             </svg>
-            Uruchom demo alarmu
+            {t('Uruchom demo alarmu')}
           </button>
         </section>
         <section
@@ -1222,9 +1549,29 @@ export default function ProfileScreen(inputProps) {
               borderBottom: '1px solid #24212A',
             }}
           >
-            <span style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-              <span style={{ fontSize: '15px', fontWeight: '700' }}>Lokalizacja</span>
-              <span style={{ fontSize: '12px', color: '#A49DA6' }}>{loc.sub}</span>
+            <span
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '2px',
+              }}
+            >
+              <span
+                style={{
+                  fontSize: '15px',
+                  fontWeight: '700',
+                }}
+              >
+                {t('Lokalizacja')}
+              </span>
+              <span
+                style={{
+                  fontSize: '12px',
+                  color: '#A49DA6',
+                }}
+              >
+                {loc.sub}
+              </span>
             </span>
             {loc.once && (
               <>
@@ -1244,7 +1591,7 @@ export default function ProfileScreen(inputProps) {
                     fontFamily: 'inherit',
                   }}
                 >
-                  Zmień na „Zawsze”
+                  {t('Zmień na „Zawsze”')}
                 </button>
               </>
             )}
@@ -1261,7 +1608,12 @@ export default function ProfileScreen(inputProps) {
               {loc.label}
             </span>
           </div>
-          <div style={{ padding: '8px 18px', borderBottom: '1px solid #24212A' }}>
+          <div
+            style={{
+              padding: '8px 18px',
+              borderBottom: '1px solid #24212A',
+            }}
+          >
             <button
               type="button"
               onClick={toggleOffline}
@@ -1282,9 +1634,29 @@ export default function ProfileScreen(inputProps) {
                 fontFamily: 'inherit',
               }}
             >
-              <span style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                <span style={{ fontSize: '15px', fontWeight: '700' }}>Tryb offline</span>
-                <span style={{ fontSize: '12px', color: '#A49DA6' }}>Korzystaj z Safety Pack bez internetu</span>
+              <span
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '2px',
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: '15px',
+                    fontWeight: '700',
+                  }}
+                >
+                  {t('Tryb offline')}
+                </span>
+                <span
+                  style={{
+                    fontSize: '12px',
+                    color: '#A49DA6',
+                  }}
+                >
+                  {t('Korzystaj z Safety Pack bez internetu')}
+                </span>
               </span>
               <span
                 style={{
@@ -1314,8 +1686,22 @@ export default function ProfileScreen(inputProps) {
               </span>
             </button>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', padding: '16px 18px' }}>
-            <span style={{ fontSize: '15px', fontWeight: '700' }}>Język</span>
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '10px',
+              padding: '16px 18px',
+            }}
+          >
+            <span
+              style={{
+                fontSize: '15px',
+                fontWeight: '700',
+              }}
+            >
+              {t('Język')}
+            </span>
             <div
               style={{
                 display: 'grid',
@@ -1349,13 +1735,6 @@ export default function ProfileScreen(inputProps) {
                 </Fragment>
               ))}
             </div>
-            {langNote && (
-              <>
-                <span style={{ fontSize: '12px', color: '#A49DA6' }}>
-                  Tłumaczenie interfejsu w przygotowaniu. Instrukcje bezpieczeństwa pozostają po polsku.
-                </span>
-              </>
-            )}
           </div>
         </section>
         <button

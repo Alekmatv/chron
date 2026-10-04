@@ -6,7 +6,7 @@ import useMergedState from '@/hooks/useMergedState.js';
 import ShelterRow from '@/components/ShelterRow.jsx';
 import StreetMap from '@/components/StreetMap.jsx';
 import chronApi from '@/api/chronApi.js';
-
+import { t } from '@/i18n/index.js';
 const FILTERS = [
   [
     'all',
@@ -61,20 +61,24 @@ function buildViewModel(props, state, setState) {
     .getShelters(s)
     .filter(test)
     .map((x) => {
-      return Object.assign({}, x, { isRec: x.id === recId });
+      return Object.assign({}, x, {
+        isRec: x.id === recId,
+      });
     });
   return {
-    sub: chronApi.getPlace(s).city + ' · najbliższe schronienia',
+    sub: chronApi.getPlace(s).city + t(' · najbliższe schronienia'),
     filters: FILTERS.map((f) => {
       const on = f[0] === state.filter;
       return {
-        label: f[1],
+        label: t(f[1]),
         pressed: on ? 'true' : 'false',
         bg: on ? '#2C2930' : 'transparent',
         border: on ? '#F2EFF3' : '#3A3540',
         fg: on ? '#FFFFFF' : '#9C95A0',
         pick: function () {
-          setState({ filter: f[0] });
+          setState({
+            filter: f[0],
+          });
         },
       };
     }),
@@ -83,10 +87,10 @@ function buildViewModel(props, state, setState) {
     recId,
     level: s.level,
     zone: threat ? threat.zone : '',
-    count: list.length + ' obiektów',
-    note: stale ? 'statusy z ' + api.getOfflineSince(s) : 'posortowane wg odległości',
+    count: list.length + t(' obiektów'),
+    note: stale ? t('statusy z ') + api.getOfflineSince(s) : t('posortowane wg odległości'),
     stale,
-    offlineLabel: stale ? 'Mapa offline · Safety Pack' : '',
+    offlineLabel: stale ? t('Mapa offline · Safety Pack') : '',
     showReach: s.level !== 'green',
     showSuit: s.level !== 'green',
     open: function (id) {
@@ -104,7 +108,9 @@ function buildViewModel(props, state, setState) {
  */
 export default function SheltersScreen(inputProps) {
   const props = inputProps;
-  const [state, setState] = useMergedState({ filter: 'all' });
+  const [state, setState] = useMergedState({
+    filter: 'all',
+  });
   const {
     count,
     filters,
@@ -133,11 +139,31 @@ export default function SheltersScreen(inputProps) {
         animation: 'chronIn .35s ease both',
       }}
     >
-      <header style={{ display: 'flex', flexDirection: 'column', gap: '2px', padding: '20px 16px 12px' }}>
-        <span style={{ fontFamily: "'Unbounded', 'Arial Black', sans-serif", fontWeight: '500', fontSize: '18px' }}>
-          Schrony
+      <header
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '2px',
+          padding: '20px 16px 12px',
+        }}
+      >
+        <span
+          style={{
+            fontFamily: "'Unbounded', 'Arial Black', sans-serif",
+            fontWeight: '500',
+            fontSize: '18px',
+          }}
+        >
+          {t('Schrony')}
         </span>
-        <span style={{ fontSize: '12px', color: '#A49DA6' }}>{sub}</span>
+        <span
+          style={{
+            fontSize: '12px',
+            color: '#A49DA6',
+          }}
+        >
+          {sub}
+        </span>
       </header>
       <div
         style={{
@@ -152,7 +178,13 @@ export default function SheltersScreen(inputProps) {
           gap: '12px',
         }}
       >
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+        <div
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '6px',
+          }}
+        >
           {(filters || []).map((f, fIndex) => (
             <Fragment key={fIndex}>
               <button
@@ -187,21 +219,95 @@ export default function SheltersScreen(inputProps) {
           stale={stale}
           onPin={open}
         />
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 14px' }}>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#B9B1BB' }}>
-            <span style={{ width: '12px', height: '12px', borderRadius: '4px', background: '#4FD1A5' }}></span>OTWARTE
+        <div
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '6px 14px',
+          }}
+        >
+          <span
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              fontSize: '12px',
+              color: '#B9B1BB',
+            }}
+          >
+            <span
+              style={{
+                width: '12px',
+                height: '12px',
+                borderRadius: '4px',
+                background: '#4FD1A5',
+              }}
+            ></span>
+            {t('OTWARTE')}
           </span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#B9B1BB' }}>
-            <span style={{ width: '12px', height: '12px', borderRadius: '4px', background: '#F2A33A' }}></span>BRAK
-            POTWIERDZENIA
+          <span
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              fontSize: '12px',
+              color: '#B9B1BB',
+            }}
+          >
+            <span
+              style={{
+                width: '12px',
+                height: '12px',
+                borderRadius: '4px',
+                background: '#F2A33A',
+              }}
+            ></span>
+            {t('BRAK POTWIERDZENIA')}
           </span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#B9B1BB' }}>
-            <span style={{ width: '12px', height: '12px', borderRadius: '4px', background: '#4A4550' }}></span>ZAMKNIĘTE
+          <span
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              fontSize: '12px',
+              color: '#B9B1BB',
+            }}
+          >
+            <span
+              style={{
+                width: '12px',
+                height: '12px',
+                borderRadius: '4px',
+                background: '#4A4550',
+              }}
+            ></span>
+            {t('ZAMKNIĘTE')}
           </span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
-          <span style={{ fontSize: '16px', fontWeight: '800' }}>{count}</span>
-          <span style={{ fontSize: '12px', color: '#A49DA6' }}>{note}</span>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '12px',
+          }}
+        >
+          <span
+            style={{
+              fontSize: '16px',
+              fontWeight: '800',
+            }}
+          >
+            {count}
+          </span>
+          <span
+            style={{
+              fontSize: '12px',
+              color: '#A49DA6',
+            }}
+          >
+            {note}
+          </span>
         </div>
         {(list || []).map((s, sIndex) => (
           <Fragment key={sIndex}>
@@ -227,7 +333,7 @@ export default function SheltersScreen(inputProps) {
                 color: '#C9C1CB',
               }}
             >
-              Brak obiektów dla wybranego filtra.
+              {t('Brak obiektów dla wybranego filtra.')}
             </p>
           </>
         )}

@@ -1,6 +1,7 @@
 /**
  * Loads the live threat feed for the user's location from the backend.
  */
+import { getLanguage } from '@/i18n/index.js';
 
 /**
  * Current alerts and source health.
@@ -10,6 +11,7 @@
  */
 export async function fetchLiveThreats(location, voivodeship) {
   const params = new URLSearchParams({
+    lang: getLanguage(),
     lat: location.lat.toFixed(3),
     lng: location.lng.toFixed(3),
     voivodeship: voivodeship || '',

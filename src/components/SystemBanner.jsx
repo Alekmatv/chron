@@ -1,18 +1,45 @@
+import { t } from '@/i18n/index.js';
 /**
  * Connectivity banner (DEGRADED, OFFLINE, RECOVERING) with sync progress.
  */
 const COLORS = {
-  offline: { bg: '#211F25', border: '#2C2830', fg: '#C9C1CB', iconBg: '#2C2830' },
-  degraded: { bg: '#1E1810', border: '#4A3A1C', fg: '#F2B866', iconBg: '#2E2412' },
-  recovering: { bg: '#121A24', border: '#1F3550', fg: '#7CC4FF', iconBg: '#1A2A3D' },
-  online: { bg: '#10211B', border: '#1F3B31', fg: '#86CDB2', iconBg: '#173229' },
+  offline: {
+    bg: '#211F25',
+    border: '#2C2830',
+    fg: '#C9C1CB',
+    iconBg: '#2C2830',
+  },
+  degraded: {
+    bg: '#1E1810',
+    border: '#4A3A1C',
+    fg: '#F2B866',
+    iconBg: '#2E2412',
+  },
+  recovering: {
+    bg: '#121A24',
+    border: '#1F3550',
+    fg: '#7CC4FF',
+    iconBg: '#1A2A3D',
+  },
+  online: {
+    bg: '#10211B',
+    border: '#1F3B31',
+    fg: '#86CDB2',
+    iconBg: '#173229',
+  },
 };
-
-const DEFAULT_PROPS = { visible: true };
+const DEFAULT_PROPS = {
+  visible: true,
+};
 
 /** Builds view data (texts, colors, handlers) from props. */
 function buildViewModel(props) {
-  const info = props.info || { key: 'online', label: '', title: '', text: '' };
+  const info = props.info || {
+    key: 'online',
+    label: '',
+    title: '',
+    text: '',
+  };
   return {
     info,
     c: COLORS[info.key] || COLORS.online,
@@ -33,7 +60,10 @@ function buildViewModel(props) {
  * @param {boolean} props.visible
  */
 export default function SystemBanner(inputProps) {
-  const props = { ...DEFAULT_PROPS, ...inputProps };
+  const props = {
+    ...DEFAULT_PROPS,
+    ...inputProps,
+  };
   const { c, info, isDegraded, isOffline, isOnline, isRecovering, progress, rows } = buildViewModel(props);
   return (
     <div
@@ -46,7 +76,12 @@ export default function SystemBanner(inputProps) {
         fontFamily: "'Manrope', system-ui, sans-serif",
       }}
     >
-      <div style={{ overflow: 'hidden', minHeight: '0' }}>
+      <div
+        style={{
+          overflow: 'hidden',
+          minHeight: '0',
+        }}
+      >
         <div
           style={{
             margin: '8px 12px 0',
@@ -60,7 +95,13 @@ export default function SystemBanner(inputProps) {
             transition: 'background .4s, border-color .4s',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+            }}
+          >
             <span
               aria-hidden="true"
               style={{
@@ -102,7 +143,9 @@ export default function SystemBanner(inputProps) {
                     strokeWidth="2.2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    style={{ animation: 'chronSpin 1s linear infinite' }}
+                    style={{
+                      animation: 'chronSpin 1s linear infinite',
+                    }}
                   >
                     <path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v4h-4"></path>
                   </svg>
@@ -142,14 +185,51 @@ export default function SystemBanner(inputProps) {
                 </>
               )}
             </span>
-            <span style={{ flex: '1', minWidth: '0', display: 'flex', flexDirection: 'column', gap: '2px' }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '11px', fontWeight: '800', letterSpacing: '0.08em', color: c.fg }}>
+            <span
+              style={{
+                flex: '1',
+                minWidth: '0',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '2px',
+              }}
+            >
+              <span
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: '11px',
+                    fontWeight: '800',
+                    letterSpacing: '0.08em',
+                    color: c.fg,
+                  }}
+                >
                   {info.label}
                 </span>
-                <span style={{ fontSize: '14px', fontWeight: '800', color: '#F4F1F2' }}>{info.title}</span>
+                <span
+                  style={{
+                    fontSize: '14px',
+                    fontWeight: '800',
+                    color: '#F4F1F2',
+                  }}
+                >
+                  {info.title}
+                </span>
               </span>
-              <span style={{ fontSize: '12px', lineHeight: '1.4', color: '#B9B1BB' }}>{info.text}</span>
+              <span
+                style={{
+                  fontSize: '12px',
+                  lineHeight: '1.4',
+                  color: '#B9B1BB',
+                }}
+              >
+                {info.text}
+              </span>
             </span>
           </div>
           {isRecovering && (

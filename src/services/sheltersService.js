@@ -1,6 +1,9 @@
 /**
  * Loads real shelters near the user from the backend and converts them
  * into the shape used by the data layer (src/api/chronApi.js).
+ *
+ * Texts are stored in Polish and translated when displayed, so a stored list
+ * follows language changes.
  */
 import { bearingDegrees, distanceMeters } from '@/services/geolocation.js';
 
@@ -29,7 +32,11 @@ const DIRECTIONS = [
 ];
 
 /** Availability codes from the backend mapped to the opening modes used by the UI. */
-const HOURS_MODE = { '24h': '24/7', hours: 'hours', on_request: 'alarm' };
+const HOURS_MODE = {
+  '24h': '24/7',
+  hours: 'hours',
+  on_request: 'alarm',
+};
 
 /** Short, stable shelter number derived from its identifier (used in labels like "Schron nr 42"). */
 function shelterNumber(id) {
@@ -38,7 +45,10 @@ function shelterNumber(id) {
 
 /** Formats an ISO timestamp as HH:MM in local time. */
 function formatTime(iso) {
-  return new Date(iso).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
+  return new Date(iso).toLocaleTimeString('pl-PL', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 }
 
 /** Building description shown under the shelter name. */
@@ -84,7 +94,11 @@ export function toAppShelter(shelter, origin) {
       shelter.availability === '24h'
         ? 'Obiekt dostępny całodobowo'
         : `Godziny potwierdzone przez operatora o ${updated}`,
-    community: { count: 0, time: '', text: 'potwierdziło otwarte wejście' },
+    community: {
+      count: 0,
+      time: '',
+      text: 'potwierdziło otwarte wejście',
+    },
   };
 }
 
@@ -104,7 +118,10 @@ export async function fetchNearbyShelters(location, { radiusKm = SEARCH_RADIUS_K
   const response = await fetch(`/api/shelters?${params}`);
   if (!response.ok) throw new Error(`Shelters request failed: ${response.status}`);
   const data = await response.json();
-  return { build: data.build, shelters: data.shelters.map((shelter) => toAppShelter(shelter, location)) };
+  return {
+    build: data.build,
+    shelters: data.shelters.map((shelter) => toAppShelter(shelter, location)),
+  };
 }
 
 /**

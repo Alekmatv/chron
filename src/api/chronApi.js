@@ -15,15 +15,20 @@
  */
 import * as D from '@/data/chronData.js';
 import { POLAND_MAP } from '@/data/polandMap.js';
+import { t, translateDeep } from '@/i18n/index.js';
 
 /** Numeric threat level used to compare levels. */
-const LEVEL_NUM = { green: 0, yellow: 1, red: 2 };
+const LEVEL_NUM = {
+  green: 0,
+  yellow: 1,
+  red: 2,
+};
 
 /** Threat definition by id; falls back to the first threat for unknown ids. */
 function threatDef(id) {
   return (
-    D.THREATS.find((t) => {
-      return t.id === id;
+    D.THREATS.find((entry) => {
+      return entry.id === id;
     }) || D.THREATS[0]
   );
 }
@@ -40,11 +45,28 @@ function offlineSince(ctx) {
 /** Data freshness label for the current connectivity state. */
 function freshness(ctx) {
   if (ctx.system === 'offline')
-    return { key: 'stale', label: 'NIEAKTUALNE · dane z ' + offlineSince(ctx), live: false };
+    return {
+      key: 'stale',
+      label: t('NIEAKTUALNE · dane z ') + offlineSince(ctx),
+      live: false,
+    };
   if (ctx.system === 'recovering')
-    return { key: 'stale', label: 'SYNCHRONIZACJA · dane z ' + offlineSince(ctx), live: false };
-  if (ctx.system === 'degraded') return { key: 'delayed', label: 'OPÓŹNIONE · część źródeł niedostępna', live: false };
-  return { key: 'live', label: 'AKTUALNE · na żywo', live: true };
+    return {
+      key: 'stale',
+      label: t('SYNCHRONIZACJA · dane z ') + offlineSince(ctx),
+      live: false,
+    };
+  if (ctx.system === 'degraded')
+    return {
+      key: 'delayed',
+      label: t('OPÓŹNIONE · część źródeł niedostępna'),
+      live: false,
+    };
+  return {
+    key: 'live',
+    label: t('AKTUALNE · na żywo'),
+    live: true,
+  };
 }
 
 /** Overall status for the home screen: level, title, reason, source and time. */
@@ -54,23 +76,23 @@ function getStatus(ctx) {
   if (lvl === 'green') {
     return {
       level: 'green',
-      title: 'Brak aktywnych zagrożeń w Twojej okolicy',
-      reason: 'Żadne oficjalne źródło nie zgłasza zagrożenia dla Twojej strefy.',
-      source: 'RCB · RSO · IMGW',
+      title: t('Brak aktywnych zagrożeń w Twojej okolicy'),
+      reason: t('Żadne oficjalne źródło nie zgłasza zagrożenia dla Twojej strefy.'),
+      source: t('RCB · RSO · IMGW'),
       time: D.TIMES.green.source,
       updated: D.TIMES.green.updated,
       freshness: f,
     };
   }
-  const t = threatDef(ctx.threatId),
-    L = t[lvl];
+  const entry = threatDef(ctx.threatId),
+    L = entry[lvl];
   return {
     level: lvl,
     title: L.headline,
-    kind: t.kind,
-    threatTitle: t.title,
+    kind: entry.kind,
+    threatTitle: entry.title,
     reason: L.reason,
-    source: t.source,
+    source: entry.source,
     time: D.TIMES[lvl].source,
     updated: D.TIMES[lvl].updated,
     ttr: L.ttr,
@@ -84,14 +106,17 @@ function getStatus(ctx) {
  */
 function getThreat(id, ctx, levelOverride) {
   const lvl = levelOverride || (ctx.level === 'green' ? 'yellow' : ctx.level);
-  const t = threatDef(id),
-    L = t[lvl];
+  const entry = threatDef(id),
+    L = entry[lvl];
   const regions = D.REGIONS.filter((r) => {
-    return r[t.id] > 0;
+    return r[entry.id] > 0;
   }).map((r) => {
-    return { name: r.name, level: r[t.id] === 2 ? 'red' : 'yellow' };
+    return {
+      name: r.name,
+      level: r[entry.id] === 2 ? 'red' : 'yellow',
+    };
   });
-  return Object.assign({}, t, {
+  return Object.assign({}, entry, {
     level: lvl,
     headline: L.headline,
     reason: L.reason,
@@ -118,20 +143,46 @@ function getActiveThreats(ctx) {
 function suitability(s, threatId) {
   if (threatId === 'air')
     return s.underground
-      ? { ok: true, note: 'Obiekt podziemny — chroni przed odłamkami' }
-      : { ok: false, note: 'Obiekt naziemny — nie chroni przed atakiem z powietrza' };
+      ? {
+          ok: true,
+          note: t('Obiekt podziemny — chroni przed odłamkami'),
+        }
+      : {
+          ok: false,
+          note: t('Obiekt naziemny — nie chroni przed atakiem z powietrza'),
+        };
   if (threatId === 'chem') {
-    if (s.filtered) return { ok: true, note: 'Filtrowentylacja — chroni przed skażeniem' };
-    if (!s.underground && s.floors >= 3) return { ok: true, note: 'Wyższe piętra — chlor gromadzi się nisko' };
+    if (s.filtered)
+      return {
+        ok: true,
+        note: t('Filtrowentylacja — chroni przed skażeniem'),
+      };
+    if (!s.underground && s.floors >= 3)
+      return {
+        ok: true,
+        note: t('Wyższe piętra — chlor gromadzi się nisko'),
+      };
     return {
       ok: false,
-      note: s.underground ? 'Obiekt podziemny — chlor gromadzi się nisko' : 'Za nisko — wybierz 3. piętro lub wyżej',
+      note: s.underground
+        ? t('Obiekt podziemny — chlor gromadzi się nisko')
+        : t('Za nisko — wybierz 3. piętro lub wyżej'),
     };
   }
-  if (s.underground) return { ok: false, note: 'Obiekt podziemny — przy powodzi niezalecany, ryzyko zalania' };
+  if (s.underground)
+    return {
+      ok: false,
+      note: t('Obiekt podziemny — przy powodzi niezalecany, ryzyko zalania'),
+    };
   return s.elevated
-    ? { ok: true, note: 'Teren wyniesiony — poza zasięgiem wody' }
-    : { ok: false, note: 'Teren nisko położony' };
+    ? {
+        ok: true,
+        note: t('Teren wyniesiony — poza zasięgiem wody'),
+      }
+    : {
+        ok: false,
+        note: t('Teren nisko położony'),
+      };
 }
 
 /**
@@ -142,36 +193,58 @@ function shelterStatus(s, ctx) {
   if ((ctx.closedIds || []).indexOf(s.id) >= 0)
     return {
       status: 'closed',
-      label: 'ZAMKNIĘTE',
-      reason: 'Zgłoszenie administratora: wejście zablokowane (' + D.TIMES.closure + ')',
+      label: t('ZAMKNIĘTE'),
+      reason: t('Zgłoszenie administratora: wejście zablokowane (') + D.TIMES.closure + ')',
     };
-  if (s.forcedClosed) return { status: 'closed', label: 'ZAMKNIĘTE', reason: s.forcedClosed };
-  if (s.hours === '24/7') return { status: 'open', label: 'OTWARTE', reason: s.openedBy };
+  if (s.forcedClosed)
+    return {
+      status: 'closed',
+      label: t('ZAMKNIĘTE'),
+      reason: s.forcedClosed,
+    };
+  if (s.hours === '24/7')
+    return {
+      status: 'open',
+      label: t('OTWARTE'),
+      reason: s.openedBy,
+    };
   if (s.hours === 'hours' && isWithinOpeningHours(s.openingHours)) {
-    return { status: 'open', label: 'OTWARTE', reason: 'Otwarte w godzinach ' + s.openingHours };
+    return {
+      status: 'open',
+      label: t('OTWARTE'),
+      reason: t('Otwarte w godzinach ') + s.openingHours,
+    };
   }
   if (ctx.level !== 'red')
-    return { status: 'closed', label: 'ZAMKNIĘTE', reason: 'Otwierany dopiero po ogłoszeniu alarmu' };
+    return {
+      status: 'closed',
+      label: t('ZAMKNIĘTE'),
+      reason: t('Otwierany dopiero po ogłoszeniu alarmu'),
+    };
   if (!s.alarmConfirmed)
     return {
       status: 'unconfirmed',
-      label: 'BRAK POTWIERDZENIA',
-      reason: 'Nikt nie potwierdził otwarcia po ogłoszeniu alarmu',
+      label: t('BRAK POTWIERDZENIA'),
+      reason: t('Nikt nie potwierdził otwarcia po ogłoszeniu alarmu'),
     };
-  return { status: 'open', label: 'OTWARTE', reason: s.openedBy };
+  return {
+    status: 'open',
+    label: t('OTWARTE'),
+    reason: s.openedBy,
+  };
 }
 
 /** Opening mode label shown on shelter cards. */
 function hoursLabel(s) {
-  if (s.hours === '24/7') return 'Otwarte 24/7';
-  if (s.hours === 'hours') return 'Godziny ' + s.openingHours;
-  return 'Otwierany przy alarmie';
+  if (s.hours === '24/7') return t('Otwarte 24/7');
+  if (s.hours === 'hours') return t('Godziny ') + s.openingHours;
+  return t('Otwierany przy alarmie');
 }
 
 /** Adds computed fields to a shelter: status, suitability and whether the user can reach it in time. */
 function decorate(s, ctx) {
-  const t = threatDef(ctx.threatId);
-  const ttrMin = ctx.level === 'green' ? null : t[ctx.level].ttrMin;
+  const entry = threatDef(ctx.threatId);
+  const ttrMin = ctx.level === 'green' ? null : entry[ctx.level].ttrMin;
   const st = shelterStatus(s, ctx);
   const suit = suitability(s, ctx.threatId);
   const canReach = ttrMin == null ? null : s.walk <= ttrMin;
@@ -179,8 +252,8 @@ function decorate(s, ctx) {
     status: st.status,
     statusLabel: st.label,
     statusReason: st.reason,
-    statusNote: isStale(ctx) ? 'status z ' + offlineSince(ctx) : 'aktualizacja ' + s.updated,
-    typeLabel: s.category === 'schron' ? s.kind : 'Miejsce przystosowane · ' + s.kind,
+    statusNote: isStale(ctx) ? t('status z ') + offlineSince(ctx) : 'aktualizacja ' + s.updated,
+    typeLabel: s.category === 'schron' ? t(s.kind) : t('Miejsce przystosowane · ') + t(s.kind),
     hoursLabel: hoursLabel(s),
     // Real addresses already include the city; demo addresses do not.
     fullAddress: s.address.indexOf(',') >= 0 ? s.address : s.address + ', ' + D.USER.city,
@@ -188,8 +261,8 @@ function decorate(s, ctx) {
     suitable: suit.ok,
     suitNote: suit.note,
     canReach,
-    ttr: ttrMin == null ? '' : t[ctx.level].ttr,
-    reachText: canReach == null ? '' : canReach ? 'Zdążysz' : 'Nie zdążysz',
+    ttr: ttrMin == null ? '' : entry[ctx.level].ttr,
+    reachText: canReach == null ? '' : canReach ? t('Zdążysz') : t('Nie zdążysz'),
   });
 }
 
@@ -244,20 +317,24 @@ function candidates(ctx) {
  */
 function getRecommendation(ctx) {
   const list = candidates(ctx);
-  const t = threatDef(ctx.threatId);
+  const entry = threatDef(ctx.threatId);
   if (!list.length) {
     return {
       none: true,
       options: [],
       primary: null,
       reason:
-        'Brak potwierdzonego, otwartego schronienia w pobliżu. Postępuj według instrukcji: ' +
-        t.rule.toLowerCase() +
+        t('Brak potwierdzonego, otwartego schronienia w pobliżu. Postępuj według instrukcji: ') +
+        t(entry.rule).toLowerCase() +
         '.',
     };
   }
   const primary = list[0];
-  const base = candidates(Object.assign({}, ctx, { closedIds: [] }))[0];
+  const base = candidates(
+    Object.assign({}, ctx, {
+      closedIds: [],
+    }),
+  )[0];
   let reassessment = null;
   let reason;
   if (base && base.id !== primary.id) {
@@ -266,34 +343,44 @@ function getRecommendation(ctx) {
       closedName: base.name,
       newId: primary.id,
       newName: primary.name,
-      title: base.name + ' zamknięty — proponujemy ' + primary.name,
+      title: t(base.name) + t(' zamknięty — proponujemy ') + t(primary.name),
       text:
-        base.name +
+        t(base.name) +
         ': ' +
         shelterStatus(base, ctx).reason.toLowerCase() +
         '. ' +
-        primary.name +
-        ' jest otwarty (' +
+        t(primary.name) +
+        t(' jest otwarty (') +
         primary.hoursLabel.toLowerCase() +
         '), ' +
         primary.walk +
-        ' min pieszo' +
-        (primary.canReach ? ', zdążysz przed zagrożeniem.' : '.'),
+        t(' min pieszo') +
+        (primary.canReach ? t(', zdążysz przed zagrożeniem.') : '.'),
     };
     reason = reassessment.title + '.';
   } else if (ctx.threatId === 'flood') {
-    reason =
-      'Schrony podziemne nie są zalecane przy powodzi — wybraliśmy najbliższy otwarty obiekt na wyższym terenie.';
+    reason = t(
+      'Schrony podziemne nie są zalecane przy powodzi — wybraliśmy najbliższy otwarty obiekt na wyższym terenie.',
+    );
   } else if (ctx.threatId === 'chem') {
-    reason =
-      'Piwnice i przejścia podziemne są niezalecane — chlor gromadzi się nisko. Wybraliśmy najbliższy otwarty budynek z wyższymi piętrami.';
+    reason = t(
+      'Piwnice i przejścia podziemne są niezalecane — chlor gromadzi się nisko. Wybraliśmy najbliższy otwarty budynek z wyższymi piętrami.',
+    );
   } else {
-    reason = 'Najbliższy otwarty obiekt podziemny' + (primary.canReach ? ' — zdążysz przed zagrożeniem.' : '.');
+    reason = t('Najbliższy otwarty obiekt podziemny') + (primary.canReach ? t(' — zdążysz przed zagrożeniem.') : '.');
   }
   const options = list.slice(0, 3).map((s, i) => {
-    return Object.assign({}, s, { isRec: i === 0 });
+    return Object.assign({}, s, {
+      isRec: i === 0,
+    });
   });
-  return { none: false, primary: options[0], options, reason, reassessment };
+  return {
+    none: false,
+    primary: options[0],
+    options,
+    reason,
+    reassessment,
+  };
 }
 
 /** Walking route to a shelter: SVG path, distance, time and offline label. */
@@ -317,7 +404,7 @@ function getRoute(shelterId, ctx) {
     canReach: s.canReach,
     ttr: s.ttr,
     offline: isStale(ctx),
-    cachedLabel: 'Trasa zapisana offline · Safety Pack „Dom”, ' + D.SAFETY_PACKS[0].date,
+    cachedLabel: t('Trasa zapisana offline · Safety Pack „Dom”, ') + D.SAFETY_PACKS[0].date,
   };
 }
 
@@ -331,34 +418,41 @@ function getSystemInfo(system, progress, failedSources, lostAt) {
     case 'degraded':
       return {
         key: 'degraded',
-        label: 'DEGRADED',
-        title: 'Ograniczona łączność',
+        label: t('DEGRADED'),
+        title: t('Ograniczona łączność'),
         text:
-          'Część źródeł niedostępna (' +
-          (failedSources && failedSources.length ? failedSources.join(', ') : 'IMGW') +
-          '). Dane mogą być opóźnione.',
+          t('Część źródeł niedostępna (') +
+          (failedSources && failedSources.length ? failedSources.join(', ') : t('IMGW')) +
+          t('). Dane mogą być opóźnione.'),
       };
     case 'offline':
       return {
         key: 'offline',
-        label: 'OFFLINE',
-        title: 'Brak internetu',
+        label: t('OFFLINE'),
+        title: t('Brak internetu'),
         text:
-          'Dane o zagrożeniu z ' + (lostAt || D.TIMES.offlineSince) + '. Schrony, instrukcje i trasa działają offline.',
+          t('Dane o zagrożeniu z ') +
+          (lostAt || D.TIMES.offlineSince) +
+          t('. Schrony, instrukcje i trasa działają offline.'),
       };
     case 'recovering':
       return {
         key: 'recovering',
-        label: 'RECOVERING',
+        label: t('RECOVERING'),
         title: 'Synchronizacja…',
         text:
           progress < 50
-            ? 'Pobieramy zagrożenia z RSO / RCB, NEPTUN, PAŻP'
-            : 'Sprawdzamy statusy schronów i przeliczamy trasę',
+            ? t('Pobieramy zagrożenia z RSO / RCB, NEPTUN, PAŻP')
+            : t('Sprawdzamy statusy schronów i przeliczamy trasę'),
         progress,
       };
     default:
-      return { key: 'online', label: 'ONLINE', title: 'Połączono', text: 'Dane aktualne · ' + D.TIMES.synced };
+      return {
+        key: 'online',
+        label: t('ONLINE'),
+        title: t('Połączono'),
+        text: t('Dane aktualne · ') + D.TIMES.synced,
+      };
   }
 }
 
@@ -383,7 +477,7 @@ function getUser(ctx) {
   const nearest = ctx.shelters && ctx.shelters[0];
   return Object.assign({}, D.USER, {
     location: Object.assign({}, D.USER.location, {
-      label: nearest ? nearest.gmina : 'Twoja lokalizacja',
+      label: nearest ? nearest.gmina : t('Twoja lokalizacja'),
       address: location.lat.toFixed(4) + ', ' + location.lng.toFixed(4),
       accuracy: '±' + location.accuracy + ' m',
       lat: location.lat,
@@ -399,11 +493,25 @@ function getUser(ctx) {
  */
 function getPlace(ctx) {
   const shelters = ctx && ctx.shelters;
-  if (!shelters) return { city: D.USER.city, region: D.USER.region, label: D.USER.city + ' · ' + D.USER.region };
+  if (!shelters)
+    return {
+      city: D.USER.city,
+      region: D.USER.region,
+      label: D.USER.city + ' · ' + t(D.USER.region),
+    };
   const nearest = shelters[0];
-  if (!nearest) return { city: 'Twoja okolica', region: 'Polska', label: 'Twoja okolica · Polska' };
+  if (!nearest)
+    return {
+      city: t('Twoja okolica'),
+      region: t('Polska'),
+      label: t('Twoja okolica · Polska'),
+    };
   const region = nearest.voivodeship.charAt(0).toUpperCase() + nearest.voivodeship.slice(1);
-  return { city: nearest.gmina, region, label: nearest.gmina + ' · ' + region };
+  return {
+    city: nearest.gmina,
+    region,
+    label: nearest.gmina + ' · ' + t(region),
+  };
 }
 
 /** Public interface of the data layer used by screens. */
@@ -421,8 +529,12 @@ const chronApi = {
   getActiveThreats,
   getThreat,
   getThreatTypes: function () {
-    return D.THREATS.map((t) => {
-      return { id: t.id, short: t.short, title: t.title };
+    return D.THREATS.map((entry) => {
+      return {
+        id: entry.id,
+        short: entry.short,
+        title: entry.title,
+      };
     });
   },
   getShelters,
@@ -447,5 +559,18 @@ const chronApi = {
     return D.TIMES;
   },
 };
+/** Methods returning geometry or raw times: nothing to translate, and the map data is large. */
+const UNTRANSLATED_METHODS = new Set(['getPolandMap', 'getTimes']);
 
-export default chronApi;
+/**
+ * The data layer with every text in its results translated into the current language.
+ * Data in src/data is written in Polish; translation happens here, at the boundary.
+ */
+const translatedApi = Object.fromEntries(
+  Object.entries(chronApi).map(([name, method]) => [
+    name,
+    UNTRANSLATED_METHODS.has(name) ? method : (...args) => translateDeep(method(...args)),
+  ]),
+);
+
+export default translatedApi;

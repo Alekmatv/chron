@@ -3,20 +3,26 @@
  */
 import useMergedState from '@/hooks/useMergedState.js';
 import { requestLocationPermission, requestNotificationPermission } from '@/services/notifications.js';
-
+import { t } from '@/i18n/index.js';
 const STEPS = ['splash', 'value', 'location', 'notifications', 'login'];
-
-const DEFAULT_PROPS = { startStep: 'splash' };
+const DEFAULT_PROPS = {
+  startStep: 'splash',
+};
 
 /** Builds view data (texts, colors, handlers) from props and local state. */
 function buildViewModel(props, state, setState) {
   const st = state,
     a = props.actions || {};
   const next = function () {
-    setState({ step: STEPS[Math.min(STEPS.length - 1, STEPS.indexOf(state.step) + 1)] });
+    setState({
+      step: STEPS[Math.min(STEPS.length - 1, STEPS.indexOf(state.step) + 1)],
+    });
   };
   const finish = function (loggedIn) {
-    a.finishOnboarding({ loggedIn, loc: state.loc });
+    a.finishOnboarding({
+      loggedIn,
+      loc: state.loc,
+    });
   };
   return {
     isSplash: st.step === 'splash',
@@ -30,11 +36,17 @@ function buildViewModel(props, state, setState) {
     next,
     allowAlways: function () {
       requestLocationPermission();
-      setState({ loc: 'zawsze', step: 'notifications' });
+      setState({
+        loc: 'zawsze',
+        step: 'notifications',
+      });
     },
     allowOnce: function () {
       requestLocationPermission();
-      setState({ loc: 'tylko teraz', step: 'notifications' });
+      setState({
+        loc: t('tylko teraz'),
+        step: 'notifications',
+      });
     },
     allowNotifications: function () {
       requestNotificationPermission().finally(next);
@@ -60,8 +72,14 @@ function buildViewModel(props, state, setState) {
  * @param {string} props.startStep
  */
 export default function Onboarding(inputProps) {
-  const props = { ...DEFAULT_PROPS, ...inputProps };
-  const [state, setState] = useMergedState(() => ({ step: props.startStep || 'splash', loc: 'zawsze' }));
+  const props = {
+    ...DEFAULT_PROPS,
+    ...inputProps,
+  };
+  const [state, setState] = useMergedState(() => ({
+    step: props.startStep || 'splash',
+    loc: 'zawsze',
+  }));
   const {
     allowNotifications,
     allowAlways,
@@ -95,7 +113,7 @@ export default function Onboarding(inputProps) {
           <button
             type="button"
             onClick={next}
-            aria-label="Otwórz aplikację"
+            aria-label={t('Otwórz aplikację')}
             style={{
               width: '100%',
               height: '100%',
@@ -112,8 +130,19 @@ export default function Onboarding(inputProps) {
               fontFamily: 'inherit',
             }}
           >
-            <span style={{ height: '24px' }}></span>
-            <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '28px' }}>
+            <span
+              style={{
+                height: '24px',
+              }}
+            ></span>
+            <span
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '28px',
+              }}
+            >
               <svg
                 width="128"
                 height="114"
@@ -155,10 +184,16 @@ export default function Onboarding(inputProps) {
                     textShadow: '0 0 12px rgba(255,45,61,.7), 0 0 32px rgba(255,45,61,.35)',
                   }}
                 >
-                  CHROŃ
+                  {t('CHROŃ')}
                 </span>
-                <span style={{ fontSize: '15px', letterSpacing: '0.04em', color: '#B9B1BB' }}>
-                  Wiedz. Zdąż. Chroń się.
+                <span
+                  style={{
+                    fontSize: '15px',
+                    letterSpacing: '0.04em',
+                    color: '#B9B1BB',
+                  }}
+                >
+                  {t('Wiedz. Zdąż. Chroń się.')}
                 </span>
               </span>
             </span>
@@ -171,7 +206,7 @@ export default function Onboarding(inputProps) {
                 animation: 'schronBlink 2s ease-in-out infinite',
               }}
             >
-              Dotknij, aby kontynuować
+              {t('Dotknij, aby kontynuować')}
             </span>
           </button>
         </>
@@ -193,8 +228,20 @@ export default function Onboarding(inputProps) {
               animation: 'chronIn .4s ease both',
             }}
           >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '28px',
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}
+              >
                 <span
                   style={{
                     fontFamily: "'Unbounded', 'Arial Black', sans-serif",
@@ -204,11 +251,25 @@ export default function Onboarding(inputProps) {
                     color: '#FF2D3D',
                   }}
                 >
-                  CHROŃ
+                  {t('CHROŃ')}
                 </span>
-                <span style={{ fontSize: '13px', fontWeight: '700', color: '#A49DA6' }}>Krok 1 z 4</span>
+                <span
+                  style={{
+                    fontSize: '13px',
+                    fontWeight: '700',
+                    color: '#A49DA6',
+                  }}
+                >
+                  {t('Krok 1 z 4')}
+                </span>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '10px',
+                }}
+              >
                 <h1
                   style={{
                     margin: '0',
@@ -218,13 +279,26 @@ export default function Onboarding(inputProps) {
                     lineHeight: '1.2',
                   }}
                 >
-                  Od zagrożenia do działania
+                  {t('Od zagrożenia do działania')}
                 </h1>
-                <p style={{ margin: '0', fontSize: '15px', lineHeight: '1.5', color: '#B9B1BB' }}>
-                  CHROŃ mówi, co się dzieje, co zrobić i gdzie się schronić — w kilka sekund.
+                <p
+                  style={{
+                    margin: '0',
+                    fontSize: '15px',
+                    lineHeight: '1.5',
+                    color: '#B9B1BB',
+                  }}
+                >
+                  {t('CHROŃ mówi, co się dzieje, co zrobić i gdzie się schronić — w kilka sekund.')}
                 </p>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '10px',
+                }}
+              >
                 <div
                   style={{
                     display: 'flex',
@@ -265,10 +339,29 @@ export default function Onboarding(inputProps) {
                       <path d="M12 10v4.5M12 17.2v.1"></path>
                     </svg>
                   </span>
-                  <span style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                    <span style={{ fontSize: '15px', fontWeight: '800' }}>Wiesz, co się dzieje</span>
-                    <span style={{ fontSize: '13px', lineHeight: '1.45', color: '#A49DA6' }}>
-                      Status GREEN / YELLOW / RED z oficjalnych źródeł: RCB, RSO, IMGW.
+                  <span
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '3px',
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: '15px',
+                        fontWeight: '800',
+                      }}
+                    >
+                      {t('Wiesz, co się dzieje')}
+                    </span>
+                    <span
+                      style={{
+                        fontSize: '13px',
+                        lineHeight: '1.45',
+                        color: '#A49DA6',
+                      }}
+                    >
+                      {t('Status GREEN / YELLOW / RED z oficjalnych źródeł: RCB, RSO, IMGW.')}
                     </span>
                   </span>
                 </div>
@@ -313,10 +406,29 @@ export default function Onboarding(inputProps) {
                       ></path>
                     </svg>
                   </span>
-                  <span style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                    <span style={{ fontSize: '15px', fontWeight: '800' }}>Wiesz, gdzie iść</span>
-                    <span style={{ fontSize: '13px', lineHeight: '1.45', color: '#A49DA6' }}>
-                      Najbliższe otwarte schronienie dopasowane do zagrożenia i trasa piesza.
+                  <span
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '3px',
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: '15px',
+                        fontWeight: '800',
+                      }}
+                    >
+                      {t('Wiesz, gdzie iść')}
+                    </span>
+                    <span
+                      style={{
+                        fontSize: '13px',
+                        lineHeight: '1.45',
+                        color: '#A49DA6',
+                      }}
+                    >
+                      {t('Najbliższe otwarte schronienie dopasowane do zagrożenia i trasa piesza.')}
                     </span>
                   </span>
                 </div>
@@ -359,16 +471,41 @@ export default function Onboarding(inputProps) {
                       <path d="M12 3v12M7 10l5 5 5-5M5 21h14"></path>
                     </svg>
                   </span>
-                  <span style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                    <span style={{ fontSize: '15px', fontWeight: '800' }}>Działa bez internetu</span>
-                    <span style={{ fontSize: '13px', lineHeight: '1.45', color: '#A49DA6' }}>
-                      Safety Pack: mapa, schrony, trasy i instrukcje zapisane w telefonie.
+                  <span
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '3px',
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: '15px',
+                        fontWeight: '800',
+                      }}
+                    >
+                      {t('Działa bez internetu')}
+                    </span>
+                    <span
+                      style={{
+                        fontSize: '13px',
+                        lineHeight: '1.45',
+                        color: '#A49DA6',
+                      }}
+                    >
+                      {t('Safety Pack: mapa, schrony, trasy i instrukcje zapisane w telefonie.')}
                     </span>
                   </span>
                 </div>
               </div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '14px',
+              }}
+            >
               <div
                 role="note"
                 style={{
@@ -391,14 +528,29 @@ export default function Onboarding(inputProps) {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   aria-hidden="true"
-                  style={{ flex: 'none', marginTop: '1px' }}
+                  style={{
+                    flex: 'none',
+                    marginTop: '1px',
+                  }}
                 >
                   <circle cx="12" cy="12" r="9"></circle>
                   <path d="M12 8v5M12 16.5v.1"></path>
                 </svg>
-                <span style={{ fontSize: '13px', lineHeight: '1.5', color: '#F4E4E6' }}>
-                  <b style={{ color: '#FFFFFF' }}>CHROŃ nie zastępuje RCB, RSO ani numeru 112.</b> W sytuacji zagrożenia
-                  życia dzwoń pod 112 i stosuj się do poleceń służb.
+                <span
+                  style={{
+                    fontSize: '13px',
+                    lineHeight: '1.5',
+                    color: '#F4E4E6',
+                  }}
+                >
+                  <b
+                    style={{
+                      color: '#FFFFFF',
+                    }}
+                  >
+                    {t('CHROŃ nie zastępuje RCB, RSO ani numeru 112.')}
+                  </b>
+                  {t(' W sytuacji zagrożenia życia dzwoń pod 112 i stosuj się do poleceń służb.')}
                 </span>
               </div>
               <button
@@ -418,7 +570,7 @@ export default function Onboarding(inputProps) {
                   fontFamily: 'inherit',
                 }}
               >
-                Rozumiem, dalej
+                {t('Rozumiem, dalej')}
               </button>
             </div>
           </div>
@@ -438,7 +590,12 @@ export default function Onboarding(inputProps) {
             }}
           >
             <div
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '24px 24px 0' }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '24px 24px 0',
+              }}
             >
               <span
                 style={{
@@ -449,9 +606,18 @@ export default function Onboarding(inputProps) {
                   color: '#FF2D3D',
                 }}
               >
-                CHROŃ
+                {t('CHROŃ')}
               </span>
-              <span style={{ fontSize: '13px', fontWeight: '700', color: '#A49DA6' }}>Krok {stepNo} z 4</span>
+              <span
+                style={{
+                  fontSize: '13px',
+                  fontWeight: '700',
+                  color: '#A49DA6',
+                }}
+              >
+                {t('Krok ')}
+                {stepNo} z 4
+              </span>
             </div>
             <div
               style={{
@@ -559,11 +725,19 @@ export default function Onboarding(inputProps) {
                         lineHeight: '1.25',
                       }}
                     >
-                      Dostęp do lokalizacji
+                      {t('Dostęp do lokalizacji')}
                     </h1>
-                    <p style={{ margin: '0', fontSize: '15px', lineHeight: '1.5', color: '#C9C1CB' }}>
-                      Lokalizacja jest potrzebna, aby wskazać najbliższy schron i trasę do niego. Nie przechowujemy
-                      historii Twoich przemieszczeń.
+                    <p
+                      style={{
+                        margin: '0',
+                        fontSize: '15px',
+                        lineHeight: '1.5',
+                        color: '#C9C1CB',
+                      }}
+                    >
+                      {t(
+                        'Lokalizacja jest potrzebna, aby wskazać najbliższy schron i trasę do niego. Nie przechowujemy historii Twoich przemieszczeń.',
+                      )}
                     </p>
                   </div>
                 </>
@@ -588,10 +762,19 @@ export default function Onboarding(inputProps) {
                         lineHeight: '1.25',
                       }}
                     >
-                      Powiadomienia o zagrożeniach
+                      {t('Powiadomienia o zagrożeniach')}
                     </h1>
-                    <p style={{ margin: '0', fontSize: '15px', lineHeight: '1.5', color: '#C9C1CB' }}>
-                      Wyślemy alarm, gdy w Twoim regionie pojawi się zagrożenie — także przy wyciszonym telefonie.
+                    <p
+                      style={{
+                        margin: '0',
+                        fontSize: '15px',
+                        lineHeight: '1.5',
+                        color: '#C9C1CB',
+                      }}
+                    >
+                      {t(
+                        'Wyślemy alarm, gdy w Twoim regionie pojawi się zagrożenie — także przy wyciszonym telefonie.',
+                      )}
                     </p>
                     <span
                       style={{
@@ -640,9 +823,22 @@ export default function Onboarding(inputProps) {
             >
               {isLoc && (
                 <>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    <span style={{ fontSize: '15px', fontWeight: '800', textAlign: 'center', lineHeight: '1.4' }}>
-                      Zezwolić aplikacji „Chroń” na dostęp do lokalizacji?
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '10px',
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: '15px',
+                        fontWeight: '800',
+                        textAlign: 'center',
+                        lineHeight: '1.4',
+                      }}
+                    >
+                      {t('Zezwolić aplikacji „Chroń” na dostęp do lokalizacji?')}
                     </span>
                     <button
                       type="button"
@@ -664,9 +860,15 @@ export default function Onboarding(inputProps) {
                         fontFamily: 'inherit',
                       }}
                     >
-                      Zawsze zezwalaj
-                      <span style={{ fontSize: '12px', fontWeight: '600', opacity: '.85' }}>
-                        zalecane — alarmy działają w tle
+                      {t('Zawsze zezwalaj')}
+                      <span
+                        style={{
+                          fontSize: '12px',
+                          fontWeight: '600',
+                          opacity: '.85',
+                        }}
+                      >
+                        {t('zalecane — alarmy działają w tle')}
                       </span>
                     </button>
                     <button
@@ -684,19 +886,39 @@ export default function Onboarding(inputProps) {
                         fontFamily: 'inherit',
                       }}
                     >
-                      Zezwól tylko teraz
+                      {t('Zezwól tylko teraz')}
                     </button>
-                    <span style={{ fontSize: '12px', lineHeight: '1.5', color: '#A49DA6', textAlign: 'center' }}>
-                      Bez lokalizacji aplikacja nie wskaże schronu, dlatego jest wymagana.
+                    <span
+                      style={{
+                        fontSize: '12px',
+                        lineHeight: '1.5',
+                        color: '#A49DA6',
+                        textAlign: 'center',
+                      }}
+                    >
+                      {t('Bez lokalizacji aplikacja nie wskaże schronu, dlatego jest wymagana.')}
                     </span>
                   </div>
                 </>
               )}
               {isNotif && (
                 <>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    <span style={{ fontSize: '15px', fontWeight: '800', textAlign: 'center', lineHeight: '1.4' }}>
-                      Zezwolić aplikacji „Chroń” na wysyłanie powiadomień?
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '10px',
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: '15px',
+                        fontWeight: '800',
+                        textAlign: 'center',
+                        lineHeight: '1.4',
+                      }}
+                    >
+                      {t('Zezwolić aplikacji „Chroń” na wysyłanie powiadomień?')}
                     </span>
                     <button
                       type="button"
@@ -713,7 +935,7 @@ export default function Onboarding(inputProps) {
                         fontFamily: 'inherit',
                       }}
                     >
-                      Zezwól
+                      {t('Zezwól')}
                     </button>
                     <button
                       type="button"
@@ -730,7 +952,7 @@ export default function Onboarding(inputProps) {
                         fontFamily: 'inherit',
                       }}
                     >
-                      Nie teraz
+                      {t('Nie teraz')}
                     </button>
                   </div>
                 </>
@@ -756,16 +978,37 @@ export default function Onboarding(inputProps) {
               animation: 'chronIn .4s ease both',
             }}
           >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '36px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '36px',
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                  }}
+                >
                   <svg
                     width="40"
                     height="36"
                     viewBox="0 0 72 64"
                     fill="none"
                     aria-hidden="true"
-                    style={{ filter: 'drop-shadow(0 0 6px rgba(255,45,61,.8))', overflow: 'visible' }}
+                    style={{
+                      filter: 'drop-shadow(0 0 6px rgba(255,45,61,.8))',
+                      overflow: 'visible',
+                    }}
                   >
                     <path
                       d="M10 56V28L36 8L62 28V56"
@@ -792,12 +1035,26 @@ export default function Onboarding(inputProps) {
                       textShadow: '0 0 10px rgba(255,45,61,.55)',
                     }}
                   >
-                    CHROŃ
+                    {t('CHROŃ')}
                   </span>
                 </div>
-                <span style={{ fontSize: '13px', fontWeight: '700', color: '#A49DA6' }}>Krok 4 z 4</span>
+                <span
+                  style={{
+                    fontSize: '13px',
+                    fontWeight: '700',
+                    color: '#A49DA6',
+                  }}
+                >
+                  {t('Krok 4 z 4')}
+                </span>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '10px',
+                }}
+              >
                 <h1
                   style={{
                     margin: '0',
@@ -807,19 +1064,46 @@ export default function Onboarding(inputProps) {
                     lineHeight: '1.2',
                   }}
                 >
-                  Logowanie
+                  {t('Logowanie')}
                 </h1>
-                <p style={{ margin: '0', fontSize: '15px', lineHeight: '1.5', color: '#B9B1BB' }}>
-                  Opcjonalnie. Konto zapisze Twoje strefy i ustawienia alarmu. Bez konta aplikacja działa w pełni.
+                <p
+                  style={{
+                    margin: '0',
+                    fontSize: '15px',
+                    lineHeight: '1.5',
+                    color: '#B9B1BB',
+                  }}
+                >
+                  {t(
+                    'Opcjonalnie. Konto zapisze Twoje strefy i ustawienia alarmu. Bez konta aplikacja działa w pełni.',
+                  )}
                 </p>
               </div>
               <form
                 onSubmit={loginSubmit}
-                style={{ display: 'flex', flexDirection: 'column', gap: '18px', margin: '0' }}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '18px',
+                  margin: '0',
+                }}
               >
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <label htmlFor="login-id" style={{ fontSize: '13px', fontWeight: '600', color: '#B9B1BB' }}>
-                    Telefon lub e-mail
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                  }}
+                >
+                  <label
+                    htmlFor="login-id"
+                    style={{
+                      fontSize: '13px',
+                      fontWeight: '600',
+                      color: '#B9B1BB',
+                    }}
+                  >
+                    {t('Telefon lub e-mail')}
                   </label>
                   <input
                     id="login-id"
@@ -839,9 +1123,22 @@ export default function Onboarding(inputProps) {
                     }}
                   />
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <label htmlFor="login-pass" style={{ fontSize: '13px', fontWeight: '600', color: '#B9B1BB' }}>
-                    Hasło
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                  }}
+                >
+                  <label
+                    htmlFor="login-pass"
+                    style={{
+                      fontSize: '13px',
+                      fontWeight: '600',
+                      color: '#B9B1BB',
+                    }}
+                  >
+                    {t('Hasło')}
                   </label>
                   <input
                     id="login-pass"
@@ -861,12 +1158,26 @@ export default function Onboarding(inputProps) {
                     }}
                   />
                 </div>
-                <a href="#" style={{ alignSelf: 'flex-end', fontSize: '14px', fontWeight: '600', minHeight: '24px' }}>
-                  Nie pamiętasz hasła?
+                <a
+                  href="#"
+                  style={{
+                    alignSelf: 'flex-end',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    minHeight: '24px',
+                  }}
+                >
+                  {t('Nie pamiętasz hasła?')}
                 </a>
               </form>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '14px',
+              }}
+            >
               <button
                 type="button"
                 onClick={login}
@@ -884,7 +1195,7 @@ export default function Onboarding(inputProps) {
                   fontFamily: 'inherit',
                 }}
               >
-                Zaloguj się
+                {t('Zaloguj się')}
               </button>
               <button
                 type="button"
@@ -901,7 +1212,7 @@ export default function Onboarding(inputProps) {
                   fontFamily: 'inherit',
                 }}
               >
-                Kontynuuj bez konta
+                {t('Kontynuuj bez konta')}
               </button>
               <p
                 style={{
@@ -912,8 +1223,9 @@ export default function Onboarding(inputProps) {
                   textAlign: 'center',
                 }}
               >
-                Lokalizacja jest potrzebna, aby wskazać najbliższy schron. Nie przechowujemy historii Twoich
-                przemieszczeń.
+                {t(
+                  'Lokalizacja jest potrzebna, aby wskazać najbliższy schron. Nie przechowujemy historii Twoich przemieszczeń.',
+                )}
               </p>
             </div>
           </div>

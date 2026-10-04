@@ -3,6 +3,7 @@
  */
 import { Fragment } from 'react';
 import chronApi from '@/api/chronApi.js';
+import { t } from '@/i18n/index.js';
 
 /** Builds view data (texts, colors, handlers) from props. */
 function buildViewModel(props) {
@@ -10,11 +11,15 @@ function buildViewModel(props) {
   const s = props.store || {},
     a = props.actions || {},
     params = props.params || {};
-  const t = api.getThreat(params.threatId || s.threatId, s, 'red');
+  const entry = api.getThreat(params.threatId || s.threatId, s, 'red');
   return {
-    t,
-    steps: t.steps.map((x, i) => {
-      return { n: i + 1, title: x[0], text: x[1] };
+    t: entry,
+    steps: entry.steps.map((x, i) => {
+      return {
+        n: i + 1,
+        title: x[0],
+        text: x[1],
+      };
     }),
     back: function () {
       a.back();
@@ -32,7 +37,7 @@ function buildViewModel(props) {
  */
 export default function ShelterInPlace(inputProps) {
   const props = inputProps;
-  const { back, steps, t } = buildViewModel(props);
+  const { back, steps, t: entry } = buildViewModel(props);
   return (
     <div
       style={{
@@ -45,11 +50,18 @@ export default function ShelterInPlace(inputProps) {
         animation: 'chronIn .35s ease both',
       }}
     >
-      <header style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '20px 16px 12px' }}>
+      <header
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          padding: '20px 16px 12px',
+        }}
+      >
         <button
           type="button"
           onClick={back}
-          aria-label="Wstecz"
+          aria-label={t('Wstecz')}
           style={{
             width: '44px',
             height: '44px',
@@ -78,11 +90,31 @@ export default function ShelterInPlace(inputProps) {
             <path d="M15 5l-7 7 7 7"></path>
           </svg>
         </button>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-          <span style={{ fontFamily: "'Unbounded', 'Arial Black', sans-serif", fontWeight: '500', fontSize: '18px' }}>
-            Nie zdążysz? Zrób to teraz
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '2px',
+          }}
+        >
+          <span
+            style={{
+              fontFamily: "'Unbounded', 'Arial Black', sans-serif",
+              fontWeight: '500',
+              fontSize: '18px',
+            }}
+          >
+            {t('Nie zdążysz? Zrób to teraz')}
           </span>
-          <span style={{ fontSize: '12px', color: '#A49DA6' }}>{t.title} · porady na miejscu</span>
+          <span
+            style={{
+              fontSize: '12px',
+              color: '#A49DA6',
+            }}
+          >
+            {entry.title}
+            {t(' · porady na miejscu')}
+          </span>
         </div>
       </header>
       <div
@@ -117,7 +149,7 @@ export default function ShelterInPlace(inputProps) {
               color: '#FF7A85',
             }}
           >
-            {t.lateTitle}
+            {entry.lateTitle}
           </span>
           <span
             style={{
@@ -127,9 +159,18 @@ export default function ShelterInPlace(inputProps) {
               color: '#FFFFFF',
             }}
           >
-            {t.rule}
+            {entry.rule}
           </span>
-          <p style={{ margin: '0', fontSize: '15px', lineHeight: '1.45', color: '#F4E4E6' }}>{t.ruleText}</p>
+          <p
+            style={{
+              margin: '0',
+              fontSize: '15px',
+              lineHeight: '1.45',
+              color: '#F4E4E6',
+            }}
+          >
+            {entry.ruleText}
+          </p>
         </section>
         {(steps || []).map((st, stIndex) => (
           <Fragment key={stIndex}>
@@ -159,15 +200,43 @@ export default function ShelterInPlace(inputProps) {
               >
                 {st.n}
               </span>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <span style={{ fontSize: '15px', fontWeight: '800' }}>{st.title}</span>
-                <span style={{ fontSize: '14px', lineHeight: '1.45', color: '#C9C1CB' }}>{st.text}</span>
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '4px',
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: '15px',
+                    fontWeight: '800',
+                  }}
+                >
+                  {st.title}
+                </span>
+                <span
+                  style={{
+                    fontSize: '14px',
+                    lineHeight: '1.45',
+                    color: '#C9C1CB',
+                  }}
+                >
+                  {st.text}
+                </span>
               </div>
             </div>
           </Fragment>
         ))}
-        <p style={{ margin: '0 4px', fontSize: '12px', lineHeight: '1.5', color: '#9C95A0' }}>
-          Instrukcje działają offline. W sytuacji zagrożenia życia dzwoń pod 112.
+        <p
+          style={{
+            margin: '0 4px',
+            fontSize: '12px',
+            lineHeight: '1.5',
+            color: '#9C95A0',
+          }}
+        >
+          {t('Instrukcje działają offline. W sytuacji zagrożenia życia dzwoń pod 112.')}
         </p>
       </div>
       <div
@@ -209,7 +278,7 @@ export default function ShelterInPlace(inputProps) {
           >
             <path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"></path>
           </svg>
-          Zadzwoń 112
+          {t('Zadzwoń 112')}
         </a>
       </div>
     </div>

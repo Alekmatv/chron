@@ -5,6 +5,7 @@ import { Fragment } from 'react';
 import StatusBadge from '@/components/StatusBadge.jsx';
 import StreetMap from '@/components/StreetMap.jsx';
 import chronApi from '@/api/chronApi.js';
+import { t } from '@/i18n/index.js';
 
 /** Builds view data (texts, colors, handlers) from props. */
 function buildViewModel(props) {
@@ -25,7 +26,12 @@ function buildViewModel(props) {
     rec.options.find((o) => {
       return o.id === selId;
     }) || {};
-  const route = selId ? api.getRoute(selId, s) : { pathD: '', nav: '' };
+  const route = selId
+    ? api.getRoute(selId, s)
+    : {
+        pathD: '',
+        nav: '',
+      };
   const options = rec.options.map((o) => {
     const on = o.id === selId;
     return Object.assign({}, o, {
@@ -51,7 +57,7 @@ function buildViewModel(props) {
     noOptions: rec.none,
     hasReassess: !!rec.reassessment,
     reassess: rec.reassessment || {},
-    offlineLabel: stale ? 'Trasa zapisana offline' : '',
+    offlineLabel: stale ? t('Trasa zapisana offline') : '',
     pickPin: function (id) {
       a.selectShelter(id);
     },
@@ -117,14 +123,23 @@ export default function EmergencyScreen(inputProps) {
           padding: '18px 16px 10px',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+          }}
+        >
           <svg
             width="30"
             height="27"
             viewBox="0 0 72 64"
             fill="none"
             aria-hidden="true"
-            style={{ animation: 'schronGlow 2.8s ease-in-out infinite', overflow: 'visible' }}
+            style={{
+              animation: 'schronGlow 2.8s ease-in-out infinite',
+              overflow: 'visible',
+            }}
           >
             <path
               d="M10 56V28L36 8L62 28V56"
@@ -136,7 +151,7 @@ export default function EmergencyScreen(inputProps) {
             <path d="M24 56V42a12 12 0 0 1 24 0V56" stroke="#FF2D3D" strokeWidth="5" strokeLinecap="round"></path>
             <circle cx="36" cy="27" r="3.4" fill="#FF2D3D"></circle>
           </svg>
-          <StatusBadge kind="red" label="RED · ALARM" size="md" />
+          <StatusBadge kind="red" label={t('RED · ALARM')} size="md" />
         </div>
         <button
           type="button"
@@ -154,7 +169,7 @@ export default function EmergencyScreen(inputProps) {
             fontFamily: 'inherit',
           }}
         >
-          Mapa i ustawienia
+          {t('Mapa i ustawienia')}
         </button>
       </header>
       <div
@@ -190,8 +205,16 @@ export default function EmergencyScreen(inputProps) {
               gap: '8px',
             }}
           >
-            <span id="q1" style={{ fontSize: '12px', fontWeight: '800', letterSpacing: '0.1em', color: '#FF7A85' }}>
-              1 · CO SIĘ DZIEJE?
+            <span
+              id="q1"
+              style={{
+                fontSize: '12px',
+                fontWeight: '800',
+                letterSpacing: '0.1em',
+                color: '#FF7A85',
+              }}
+            >
+              {t('1 · CO SIĘ DZIEJE?')}
             </span>
             <span
               style={{
@@ -214,12 +237,38 @@ export default function EmergencyScreen(inputProps) {
                 letterSpacing: '0.03em',
               }}
             >
-              Zagrożenie: {threat.kind}
+              {t('Zagrożenie: ')}
+              {threat.kind}
             </span>
-            <span style={{ fontSize: '15px', lineHeight: '1.45', color: '#F4E4E6' }}>Powód: {threat.reason}</span>
-            <span style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '13px', fontWeight: '700', color: '#C9C1CB' }}>
-                Źródło: {threat.source} · {threat.sourceTime} · aktualizacja {threat.updated}
+            <span
+              style={{
+                fontSize: '15px',
+                lineHeight: '1.45',
+                color: '#F4E4E6',
+              }}
+            >
+              {t('Powód: ')}
+              {threat.reason}
+            </span>
+            <span
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                alignItems: 'center',
+                gap: '8px',
+              }}
+            >
+              <span
+                style={{
+                  fontSize: '13px',
+                  fontWeight: '700',
+                  color: '#C9C1CB',
+                }}
+              >
+                {t('Źródło: ')}
+                {threat.source} · {threat.sourceTime}
+                {t(' · aktualizacja ')}
+                {threat.updated}
               </span>
               <StatusBadge kind={threat.freshness.key} label={freshLabel} size="sm" />
             </span>
@@ -233,7 +282,15 @@ export default function EmergencyScreen(inputProps) {
               gap: '12px',
             }}
           >
-            <span style={{ fontSize: '14px', fontWeight: '700', color: '#9C95A0' }}>Do zagrożenia (szacunek)</span>
+            <span
+              style={{
+                fontSize: '14px',
+                fontWeight: '700',
+                color: '#9C95A0',
+              }}
+            >
+              {t('Do zagrożenia (szacunek)')}
+            </span>
             <span
               style={{
                 fontFamily: "'Unbounded', 'Arial Black', sans-serif",
@@ -289,9 +346,31 @@ export default function EmergencyScreen(inputProps) {
                   <path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v4h-4"></path>
                 </svg>
               </span>
-              <span style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <span style={{ fontSize: '15px', fontWeight: '800', lineHeight: '1.35' }}>{reassess.title}</span>
-                <span style={{ fontSize: '13px', lineHeight: '1.45', color: '#DCD5DD' }}>{reassess.text}</span>
+              <span
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '4px',
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: '15px',
+                    fontWeight: '800',
+                    lineHeight: '1.35',
+                  }}
+                >
+                  {reassess.title}
+                </span>
+                <span
+                  style={{
+                    fontSize: '13px',
+                    lineHeight: '1.45',
+                    color: '#DCD5DD',
+                  }}
+                >
+                  {reassess.text}
+                </span>
               </span>
             </section>
           </>
@@ -308,8 +387,16 @@ export default function EmergencyScreen(inputProps) {
             gap: '8px',
           }}
         >
-          <span id="q2" style={{ fontSize: '12px', fontWeight: '800', letterSpacing: '0.1em', color: '#9C95A0' }}>
-            2 · CO MAM ZROBIĆ?
+          <span
+            id="q2"
+            style={{
+              fontSize: '12px',
+              fontWeight: '800',
+              letterSpacing: '0.1em',
+              color: '#9C95A0',
+            }}
+          >
+            {t('2 · CO MAM ZROBIĆ?')}
           </span>
           <span
             style={{
@@ -322,14 +409,36 @@ export default function EmergencyScreen(inputProps) {
           >
             {threat.action}
           </span>
-          <span style={{ fontSize: '15px', lineHeight: '1.5', color: '#D9D4DB' }}>{threat.actionText}</span>
+          <span
+            style={{
+              fontSize: '15px',
+              lineHeight: '1.5',
+              color: '#D9D4DB',
+            }}
+          >
+            {threat.actionText}
+          </span>
         </section>
-        <section aria-labelledby="q3" style={{ flex: 'none', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <section
+          aria-labelledby="q3"
+          style={{
+            flex: 'none',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '10px',
+          }}
+        >
           <span
             id="q3"
-            style={{ fontSize: '12px', fontWeight: '800', letterSpacing: '0.1em', color: '#9C95A0', padding: '0 2px' }}
+            style={{
+              fontSize: '12px',
+              fontWeight: '800',
+              letterSpacing: '0.1em',
+              color: '#9C95A0',
+              padding: '0 2px',
+            }}
           >
-            3 · GDZIE MAM IŚĆ?
+            {t('3 · GDZIE MAM IŚĆ?')}
           </span>
           {hasOptions && (
             <>
@@ -374,11 +483,31 @@ export default function EmergencyScreen(inputProps) {
                     >
                       {o.num}
                     </span>
-                    <span style={{ flex: '1', minWidth: '0', display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                    <span
+                      style={{
+                        flex: '1',
+                        minWidth: '0',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '5px',
+                      }}
+                    >
                       <span
-                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: '8px',
+                        }}
                       >
-                        <span style={{ fontSize: '16px', fontWeight: '800' }}>{o.name}</span>
+                        <span
+                          style={{
+                            fontSize: '16px',
+                            fontWeight: '800',
+                          }}
+                        >
+                          {o.name}
+                        </span>
                         {o.isRec && (
                           <>
                             <span
@@ -392,18 +521,38 @@ export default function EmergencyScreen(inputProps) {
                                 whiteSpace: 'nowrap',
                               }}
                             >
-                              Polecamy
+                              {t('Polecamy')}
                             </span>
                           </>
                         )}
                       </span>
-                      <span style={{ fontSize: '13px', color: '#A49DA6' }}>
+                      <span
+                        style={{
+                          fontSize: '13px',
+                          color: '#A49DA6',
+                        }}
+                      >
                         {o.kind} · {o.address}
                       </span>
-                      <span style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '6px' }}>
+                      <span
+                        style={{
+                          display: 'flex',
+                          flexWrap: 'wrap',
+                          alignItems: 'center',
+                          gap: '6px',
+                        }}
+                      >
                         <StatusBadge kind={o.status} size="sm" />
-                        <span style={{ fontSize: '13px', fontWeight: '800', color: '#F4F1F2' }}>
-                          {o.walk} min · {o.dist} m
+                        <span
+                          style={{
+                            fontSize: '13px',
+                            fontWeight: '800',
+                            color: '#F4F1F2',
+                          }}
+                        >
+                          {o.walk}
+                          {t(' min · ')}
+                          {o.dist} m
                         </span>
                         <span
                           style={{
@@ -422,7 +571,15 @@ export default function EmergencyScreen(inputProps) {
                   </button>
                 </Fragment>
               ))}
-              <p style={{ margin: '0', padding: '0 2px', fontSize: '13px', lineHeight: '1.5', color: '#B9B1BB' }}>
+              <p
+                style={{
+                  margin: '0',
+                  padding: '0 2px',
+                  fontSize: '13px',
+                  lineHeight: '1.5',
+                  color: '#B9B1BB',
+                }}
+              >
                 {rec.reason}
               </p>
             </>
@@ -439,8 +596,23 @@ export default function EmergencyScreen(inputProps) {
                   gap: '6px',
                 }}
               >
-                <span style={{ fontSize: '15px', fontWeight: '800' }}>Brak potwierdzonego schronienia</span>
-                <span style={{ fontSize: '14px', lineHeight: '1.5', color: '#C9C1CB' }}>{rec.reason}</span>
+                <span
+                  style={{
+                    fontSize: '15px',
+                    fontWeight: '800',
+                  }}
+                >
+                  {t('Brak potwierdzonego schronienia')}
+                </span>
+                <span
+                  style={{
+                    fontSize: '14px',
+                    lineHeight: '1.5',
+                    color: '#C9C1CB',
+                  }}
+                >
+                  {rec.reason}
+                </span>
               </div>
             </>
           )}
@@ -449,7 +621,12 @@ export default function EmergencyScreen(inputProps) {
           <>
             <section
               aria-labelledby="q4"
-              style={{ flex: 'none', display: 'flex', flexDirection: 'column', gap: '10px' }}
+              style={{
+                flex: 'none',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '10px',
+              }}
             >
               <span
                 id="q4"
@@ -461,7 +638,7 @@ export default function EmergencyScreen(inputProps) {
                   padding: '0 2px',
                 }}
               >
-                4 · JAK TAM DOTRZEĆ?
+                {t('4 · JAK TAM DOTRZEĆ?')}
               </span>
               <StreetMap
                 pins={options}
@@ -497,11 +674,31 @@ export default function EmergencyScreen(inputProps) {
                 >
                   <path d="M12 20V6M6 12l6-6 6 6"></path>
                 </svg>
-                <span style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                  <span style={{ fontSize: '15px', fontWeight: '800' }}>
-                    {sel.walk} min pieszo · {sel.dist} m do: {sel.name}
+                <span
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '2px',
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: '15px',
+                      fontWeight: '800',
+                    }}
+                  >
+                    {sel.walk}
+                    {t(' min pieszo · ')}
+                    {sel.dist} m do: {sel.name}
                   </span>
-                  <span style={{ fontSize: '13px', color: '#A49DA6' }}>{route.nav}</span>
+                  <span
+                    style={{
+                      fontSize: '13px',
+                      color: '#A49DA6',
+                    }}
+                  >
+                    {route.nav}
+                  </span>
                 </span>
               </div>
             </section>
@@ -535,7 +732,7 @@ export default function EmergencyScreen(inputProps) {
             boxShadow: '0 0 24px rgba(255,45,61,.35)',
           }}
         >
-          WYZNACZ TRASĘ
+          {t('WYZNACZ TRASĘ')}
         </button>
         <button
           type="button"
@@ -552,11 +749,11 @@ export default function EmergencyScreen(inputProps) {
             fontFamily: 'inherit',
           }}
         >
-          Nie zdążę
+          {t('Nie zdążę')}
         </button>
         <a
           href="tel:112"
-          aria-label="Zadzwoń pod numer alarmowy 112"
+          aria-label={t('Zadzwoń pod numer alarmowy 112')}
           style={{
             minHeight: '56px',
             borderRadius: '16px',

@@ -19,11 +19,23 @@ import chronApi from '@/api/chronApi.js';
 import useChronController from '@/app/useChronController.js';
 import { LocationContext } from '@/app/LocationContext.js';
 import ErrorBoundary from '@/components/ErrorBoundary.jsx';
-
+import { t } from '@/i18n/index.js';
 const LEVEL_UI = {
-  green: { label: 'GREEN', color: '#86CDB2', dot: '#4FD1A5' },
-  yellow: { label: 'YELLOW', color: '#E6C65E', dot: '#C9A43A' },
-  red: { label: 'RED', color: '#FF7A85', dot: '#FF2D3D' },
+  green: {
+    label: 'GREEN',
+    color: '#86CDB2',
+    dot: '#4FD1A5',
+  },
+  yellow: {
+    label: 'YELLOW',
+    color: '#E6C65E',
+    dot: '#C9A43A',
+  },
+  red: {
+    label: 'RED',
+    color: '#FF7A85',
+    dot: '#FF2D3D',
+  },
 };
 const STEP_COLORS = ['#86CDB2', '#E6C65E', '#FF7A85', '#C9C1CB', '#C9C1CB', '#7CC4FF'];
 
@@ -44,10 +56,13 @@ function buildViewModel(controller) {
     scr[k] = screen === k;
   });
   scr.home = scr.map;
-
-  const pushData = s.push || { level: 'yellow', tag: '', title: '', text: '' };
+  const pushData = s.push || {
+    level: 'yellow',
+    tag: '',
+    title: '',
+    text: '',
+  };
   const pushRed = pushData.level === 'red';
-
   let al = {};
   if (s.alarm) {
     const red = s.alarm.level === 'red';
@@ -58,7 +73,7 @@ function buildViewModel(controller) {
     const set = s.settings;
     al = {
       isDemo: s.alarm.mode === 'demo',
-      tag: s.alarm.mode === 'demo' ? 'TRYB DEMO' : 'ALARM · SYMULACJA PEŁNOEKRANOWA',
+      tag: s.alarm.mode === 'demo' ? t('TRYB DEMO') : t('ALARM · SYMULACJA PEŁNOEKRANOWA'),
       bg: red ? '#1A0306' : '#1C1705',
       color: red ? '#FF2D3D' : '#F2CC3D',
       fg: red ? '#FFFFFF' : '#1A1405',
@@ -67,27 +82,38 @@ function buildViewModel(controller) {
       flash: set.flashScreen,
       flashSpeed: red ? '0.45s' : '0.9s',
       led: set.flashLed,
-      levelLabel: red ? 'Czerwony · Wysokie zagrożenie' : 'Żółty · Podwyższone zagrożenie',
+      levelLabel: red ? t('Czerwony · Wysokie zagrożenie') : t('Żółty · Podwyższone zagrożenie'),
       title: red ? th.title : th.headline,
       kind: th.kind,
       source: th.source,
       time: th.sourceTime,
       text2: th.text,
       todo: th.todo.map((x, i) => {
-        return { n: i + 1, text: x };
+        return {
+          n: i + 1,
+          text: x,
+        };
       }),
       chips: [
         {
-          label: 'Dźwięk ' + set.volume + '%' + (set.loudSilent ? ' · także w trybie cichym' : ''),
+          label: t('Dźwięk ') + set.volume + '%' + (set.loudSilent ? t(' · także w trybie cichym') : ''),
           color: onOff(set.volume > 0),
         },
-        { label: 'Wibracje ' + (set.vibrate ? 'wł.' : 'wył.'), color: onOff(set.vibrate) },
-        { label: 'Latarka ' + (set.flashLed ? 'wł.' : 'wył.'), color: onOff(set.flashLed) },
-        { label: 'Błysk ekranu ' + (set.flashScreen ? 'wł.' : 'wył.'), color: onOff(set.flashScreen) },
+        {
+          label: t('Wibracje ') + (set.vibrate ? t('wł.') : t('wył.')),
+          color: onOff(set.vibrate),
+        },
+        {
+          label: t('Latarka ') + (set.flashLed ? t('wł.') : t('wył.')),
+          color: onOff(set.flashLed),
+        },
+        {
+          label: t('Błysk ekranu ') + (set.flashScreen ? t('wł.') : t('wył.')),
+          color: onOff(set.flashScreen),
+        },
       ],
     };
   }
-
   const steps = api.getDemoSteps().map((st, i) => {
     const cur = s.demoStep === st.n,
       done = s.demoStep > st.n;
@@ -104,9 +130,12 @@ function buildViewModel(controller) {
     });
   });
   function seg(on) {
-    return { pressed: on ? 'true' : 'false', bg: on ? '#2C2930' : '#17151A', border: on ? '#F2EFF3' : '#2A272E' };
+    return {
+      pressed: on ? 'true' : 'false',
+      bg: on ? '#2C2930' : '#17151A',
+      border: on ? '#F2EFF3' : '#2A272E',
+    };
   }
-
   return {
     screenKey: screen,
     placeLabel: api.getPlace(s).label,
@@ -129,7 +158,9 @@ function buildViewModel(controller) {
       s.offlineSince,
     ),
     bannerVisible: s.system !== 'online' || s.justSynced,
-    page: { padding: mobile ? '0' : '24px' },
+    page: {
+      padding: mobile ? '0' : '24px',
+    },
     frame: mobile
       ? {
           w: '100vw',
@@ -171,7 +202,9 @@ function buildViewModel(controller) {
     },
     tapPush: function () {
       if (!s.push) return;
-      controller.setState({ pushVisible: false });
+      controller.setState({
+        pushVisible: false,
+      });
       if (s.push.action === 'threat') a.openThreat(s.threatId);
     },
     flashing: s.flashing,
@@ -211,25 +244,43 @@ function buildViewModel(controller) {
           maxHeight: appH + 20 + 'px',
           radius: '24px',
         },
-    panelPill: mobile ? { right: '12px', bottom: '100px' } : { right: '24px', bottom: '24px' },
+    panelPill: mobile
+      ? {
+          right: '12px',
+          bottom: '100px',
+        }
+      : {
+          right: '24px',
+          bottom: '24px',
+        },
     togglePanel: function () {
-      controller.setState({ panelOpen: !controller.getState().panelOpen });
+      controller.setState({
+        panelOpen: !controller.getState().panelOpen,
+      });
     },
     demoStepLabel: s.demoStep ? s.demoStep + '/6' : '—',
-    threatOpts: api.getThreatTypes().map((t) => {
-      return Object.assign(seg(t.id === s.threatId), {
-        label: t.short,
+    threatOpts: api.getThreatTypes().map((entry) => {
+      return Object.assign(seg(entry.id === s.threatId), {
+        label: entry.short,
         pick: function () {
-          controller.setState({ threatId: t.id, selectedShelterId: null });
+          controller.setState({
+            threatId: entry.id,
+            selectedShelterId: null,
+          });
           if (controller.getState().demoStep >= 4)
             controller.setState({
-              closedIds: controller.closedFor(Object.assign({}, controller.getState(), { threatId: t.id })),
+              closedIds: controller.closedFor(
+                Object.assign({}, controller.getState(), {
+                  threatId: entry.id,
+                }),
+              ),
             });
         },
       });
     }),
     steps,
-    nextText: s.demoStep === 0 ? 'Rozpocznij scenariusz →' : s.demoStep >= 6 ? 'Od początku ↺' : 'Następny krok →',
+    nextText:
+      s.demoStep === 0 ? t('Rozpocznij scenariusz →') : s.demoStep >= 6 ? t('Od początku ↺') : t('Następny krok →'),
     nextStep: function () {
       controller.demoGo(s.demoStep >= 6 ? 1 : s.demoStep + 1);
     },
@@ -262,7 +313,6 @@ function buildViewModel(controller) {
     resetAll: controller.resetAll,
   };
 }
-
 export default function App() {
   const controller = useChronController();
   const {
@@ -355,8 +405,17 @@ export default function App() {
           >
             {showOnboarding && (
               <>
-                <div style={{ flex: '1', minHeight: '0' }}>
-                  <div style={{ height: '100%' }}>
+                <div
+                  style={{
+                    flex: '1',
+                    minHeight: '0',
+                  }}
+                >
+                  <div
+                    style={{
+                      height: '100%',
+                    }}
+                  >
                     <Onboarding actions={actions} />
                   </div>
                 </div>
@@ -399,7 +458,13 @@ export default function App() {
                           animation: 'schronLive 1.2s infinite',
                         }}
                       ></span>
-                      <span style={{ flex: '1' }}>ALARM AKTYWNY · wróć do planu działania</span>
+                      <span
+                        style={{
+                          flex: '1',
+                        }}
+                      >
+                        {t('ALARM AKTYWNY · wróć do planu działania')}
+                      </span>
                       <svg
                         width="16"
                         height="16"
@@ -416,74 +481,120 @@ export default function App() {
                     </button>
                   </>
                 )}
-                <div style={{ flex: '1', minHeight: '0', position: 'relative' }}>
+                <div
+                  style={{
+                    flex: '1',
+                    minHeight: '0',
+                    position: 'relative',
+                  }}
+                >
                   <ErrorBoundary resetKey={screenKey}>
                     {scr.home && (
                       <>
-                        <div style={{ height: '100%' }}>
+                        <div
+                          style={{
+                            height: '100%',
+                          }}
+                        >
                           <HomeScreen store={store} actions={actions} />
                         </div>
                       </>
                     )}
                     {scr.threats && (
                       <>
-                        <div style={{ height: '100%' }}>
+                        <div
+                          style={{
+                            height: '100%',
+                          }}
+                        >
                           <ThreatsScreen store={store} actions={actions} />
                         </div>
                       </>
                     )}
                     {scr.shelters && (
                       <>
-                        <div style={{ height: '100%' }}>
+                        <div
+                          style={{
+                            height: '100%',
+                          }}
+                        >
                           <SheltersScreen store={store} actions={actions} />
                         </div>
                       </>
                     )}
                     {scr.profile && (
                       <>
-                        <div style={{ height: '100%' }}>
+                        <div
+                          style={{
+                            height: '100%',
+                          }}
+                        >
                           <ProfileScreen store={store} actions={actions} />
                         </div>
                       </>
                     )}
                     {scr.emergency && (
                       <>
-                        <div style={{ height: '100%' }}>
+                        <div
+                          style={{
+                            height: '100%',
+                          }}
+                        >
                           <EmergencyScreen store={store} actions={actions} />
                         </div>
                       </>
                     )}
                     {scr.threat && (
                       <>
-                        <div style={{ height: '100%' }}>
+                        <div
+                          style={{
+                            height: '100%',
+                          }}
+                        >
                           <ThreatCard store={store} actions={actions} params={params} />
                         </div>
                       </>
                     )}
                     {scr.shelter && (
                       <>
-                        <div style={{ height: '100%' }}>
+                        <div
+                          style={{
+                            height: '100%',
+                          }}
+                        >
                           <ShelterDetail store={store} actions={actions} params={params} />
                         </div>
                       </>
                     )}
                     {scr.route && (
                       <>
-                        <div style={{ height: '100%' }}>
+                        <div
+                          style={{
+                            height: '100%',
+                          }}
+                        >
                           <RouteScreen store={store} actions={actions} params={params} />
                         </div>
                       </>
                     )}
                     {scr.late && (
                       <>
-                        <div style={{ height: '100%' }}>
+                        <div
+                          style={{
+                            height: '100%',
+                          }}
+                        >
                           <ShelterInPlace store={store} actions={actions} params={params} />
                         </div>
                       </>
                     )}
                     {scr.guide && (
                       <>
-                        <div style={{ height: '100%' }}>
+                        <div
+                          style={{
+                            height: '100%',
+                          }}
+                        >
                           <GuideScreen actions={actions} params={params} />
                         </div>
                       </>
@@ -549,7 +660,15 @@ export default function App() {
                   <path d="M24 56V42a12 12 0 0 1 24 0V56" stroke="#FF2D3D" strokeWidth="6" strokeLinecap="round"></path>
                 </svg>
               </span>
-              <span style={{ flex: '1', minWidth: '0', display: 'flex', flexDirection: 'column', gap: '3px' }}>
+              <span
+                style={{
+                  flex: '1',
+                  minWidth: '0',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '3px',
+                }}
+              >
                 <span
                   style={{
                     display: 'flex',
@@ -561,11 +680,38 @@ export default function App() {
                     color: push.color,
                   }}
                 >
-                  <span>CHROŃ · {push.tag}</span>
-                  <span style={{ color: '#A49DA6', fontWeight: '700', letterSpacing: '0' }}>teraz</span>
+                  <span>
+                    {t('CHROŃ · ')}
+                    {push.tag}
+                  </span>
+                  <span
+                    style={{
+                      color: '#A49DA6',
+                      fontWeight: '700',
+                      letterSpacing: '0',
+                    }}
+                  >
+                    teraz
+                  </span>
                 </span>
-                <span style={{ fontSize: '15px', fontWeight: '800', lineHeight: '1.3' }}>{push.title}</span>
-                <span style={{ fontSize: '13px', lineHeight: '1.4', color: '#C9C1CB' }}>{push.text}</span>
+                <span
+                  style={{
+                    fontSize: '15px',
+                    fontWeight: '800',
+                    lineHeight: '1.3',
+                  }}
+                >
+                  {push.title}
+                </span>
+                <span
+                  style={{
+                    fontSize: '13px',
+                    lineHeight: '1.4',
+                    color: '#C9C1CB',
+                  }}
+                >
+                  {push.text}
+                </span>
               </span>
             </button>
             {flashing && (
@@ -590,7 +736,7 @@ export default function App() {
               <>
                 <div
                   role="alertdialog"
-                  aria-label="Alarm"
+                  aria-label={t('Alarm')}
                   style={{
                     position: 'absolute',
                     left: '0',
@@ -631,7 +777,14 @@ export default function App() {
                       overflowY: 'auto',
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: '8px',
+                      }}
+                    >
                       <span
                         style={{
                           padding: '5px 10px',
@@ -671,12 +824,19 @@ export default function App() {
                                 animation: 'chronFlash 0.35s steps(1) infinite alternate',
                               }}
                             ></span>
-                            Latarka miga
+                            {t('Latarka miga')}
                           </span>
                         </>
                       )}
                     </div>
-                    <div style={{ flex: '1', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                    <div
+                      style={{
+                        flex: '1',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'center',
+                      }}
+                    >
                       <section
                         style={{
                           borderRadius: '24px',
@@ -690,7 +850,13 @@ export default function App() {
                           animation: 'chronShake .12s 8',
                         }}
                       >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '10px',
+                          }}
+                        >
                           <svg width="26" height="23" viewBox="0 0 72 64" fill="none" aria-hidden="true">
                             <path
                               d="M10 56V28L36 8L62 28V56"
@@ -708,9 +874,14 @@ export default function App() {
                             <circle cx="36" cy="27" r="3.4" fill={al.color}></circle>
                           </svg>
                           <span
-                            style={{ fontSize: '13px', fontWeight: '800', letterSpacing: '0.1em', color: '#DCD5DD' }}
+                            style={{
+                              fontSize: '13px',
+                              fontWeight: '800',
+                              letterSpacing: '0.1em',
+                              color: '#DCD5DD',
+                            }}
                           >
-                            CHROŃ · TERAZ
+                            {t('CHROŃ · TERAZ')}
                           </span>
                         </div>
                         <span
@@ -749,12 +920,25 @@ export default function App() {
                             letterSpacing: '0.03em',
                           }}
                         >
-                          Zagrożenie: {al.kind}
+                          {t('Zagrożenie: ')}
+                          {al.kind}
                         </span>
-                        <span style={{ fontSize: '14px', color: '#A49DA6' }}>
+                        <span
+                          style={{
+                            fontSize: '14px',
+                            color: '#A49DA6',
+                          }}
+                        >
                           {placeLabel} · {al.source} {al.time}
                         </span>
-                        <p style={{ margin: '0', fontSize: '15px', lineHeight: '1.45', color: '#F4F1F2' }}>
+                        <p
+                          style={{
+                            margin: '0',
+                            fontSize: '15px',
+                            lineHeight: '1.45',
+                            color: '#F4F1F2',
+                          }}
+                        >
                           {al.text2}
                         </p>
                         <div
@@ -776,11 +960,17 @@ export default function App() {
                               color: '#C9C1CB',
                             }}
                           >
-                            Co robić teraz
+                            {t('Co robić teraz')}
                           </span>
                           {(al.todo || []).map((dt, dtIndex) => (
                             <Fragment key={dtIndex}>
-                              <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  gap: '10px',
+                                  alignItems: 'flex-start',
+                                }}
+                              >
                                 <span
                                   style={{
                                     minWidth: '22px',
@@ -798,7 +988,12 @@ export default function App() {
                                   {dt.n}
                                 </span>
                                 <span
-                                  style={{ fontSize: '15px', fontWeight: '700', lineHeight: '1.4', color: '#FFFFFF' }}
+                                  style={{
+                                    fontSize: '15px',
+                                    fontWeight: '700',
+                                    lineHeight: '1.4',
+                                    color: '#FFFFFF',
+                                  }}
                                 >
                                   {dt.text}
                                 </span>
@@ -808,7 +1003,13 @@ export default function App() {
                         </div>
                       </section>
                     </div>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        gap: '8px',
+                      }}
+                    >
                       {(al.chips || []).map((dc, dcIndex) => (
                         <Fragment key={dcIndex}>
                           <span
@@ -827,7 +1028,13 @@ export default function App() {
                         </Fragment>
                       ))}
                     </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
+                    <div
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                        gap: '10px',
+                      }}
+                    >
                       <button
                         type="button"
                         onClick={alarmPlan}
@@ -842,7 +1049,7 @@ export default function App() {
                           cursor: 'pointer',
                         }}
                       >
-                        Plan działania
+                        {t('Plan działania')}
                       </button>
                       <button
                         type="button"
@@ -858,7 +1065,7 @@ export default function App() {
                           cursor: 'pointer',
                         }}
                       >
-                        Szczegóły
+                        {t('Szczegóły')}
                       </button>
                     </div>
                     {al.isDemo && (
@@ -879,7 +1086,7 @@ export default function App() {
                             cursor: 'pointer',
                           }}
                         >
-                          Zakończ demo
+                          {t('Zakończ demo')}
                         </button>
                       </>
                     )}
@@ -893,7 +1100,7 @@ export default function App() {
           <>
             <aside
               data-screen-label="Panel demo"
-              aria-label="Panel sterowania demo"
+              aria-label={t('Panel sterowania demo')}
               style={{
                 position: panel.position,
                 inset: panel.inset,
@@ -917,8 +1124,21 @@ export default function App() {
                 animation: 'chronIn .3s ease both',
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
-                <span style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '10px',
+                }}
+              >
+                <span
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '2px',
+                  }}
+                >
                   <span
                     style={{
                       fontFamily: "'Unbounded', 'Arial Black', sans-serif",
@@ -926,14 +1146,21 @@ export default function App() {
                       fontSize: '15px',
                     }}
                   >
-                    Scenariusz demo
+                    {t('Scenariusz demo')}
                   </span>
-                  <span style={{ fontSize: '12px', color: '#A49DA6' }}>Od zagrożenia do działania · ← → klawisze</span>
+                  <span
+                    style={{
+                      fontSize: '12px',
+                      color: '#A49DA6',
+                    }}
+                  >
+                    {t('Od zagrożenia do działania · ← → klawisze')}
+                  </span>
                 </span>
                 <button
                   type="button"
                   onClick={togglePanel}
-                  aria-label="Ukryj panel"
+                  aria-label={t('Ukryj panel')}
                   style={{
                     width: '40px',
                     height: '40px',
@@ -962,33 +1189,59 @@ export default function App() {
                   </svg>
                 </button>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <span style={{ fontSize: '12px', fontWeight: '700', color: '#9C95A0' }}>Typ zagrożenia</span>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '6px' }}>
-                  {(threatOpts || []).map((t, tIndex) => (
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '6px',
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: '12px',
+                    fontWeight: '700',
+                    color: '#9C95A0',
+                  }}
+                >
+                  {t('Typ zagrożenia')}
+                </span>
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                    gap: '6px',
+                  }}
+                >
+                  {(threatOpts || []).map((entry, tIndex) => (
                     <Fragment key={tIndex}>
                       <button
                         type="button"
-                        onClick={t.pick}
-                        aria-pressed={t.pressed}
+                        onClick={entry.pick}
+                        aria-pressed={entry.pressed}
                         style={{
                           minHeight: '40px',
                           borderRadius: '10px',
-                          border: `1px solid ${t.border}`,
-                          background: t.bg,
+                          border: `1px solid ${entry.border}`,
+                          background: entry.bg,
                           color: '#F4F1F2',
                           fontSize: '12px',
                           fontWeight: '700',
                           cursor: 'pointer',
                         }}
                       >
-                        {t.label}
+                        {entry.label}
                       </button>
                     </Fragment>
                   ))}
                 </div>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '6px',
+                }}
+              >
                 {(steps || []).map((st, stIndex) => (
                   <Fragment key={stIndex}>
                     <button
@@ -1027,17 +1280,52 @@ export default function App() {
                       >
                         {st.n}
                       </span>
-                      <span style={{ flex: '1', minWidth: '0', display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                        <span style={{ fontSize: '13px', fontWeight: '800' }}>
-                          <span style={{ color: st.color, letterSpacing: '0.04em' }}>{st.title}</span> · {st.label}
+                      <span
+                        style={{
+                          flex: '1',
+                          minWidth: '0',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '2px',
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontSize: '13px',
+                            fontWeight: '800',
+                          }}
+                        >
+                          <span
+                            style={{
+                              color: st.color,
+                              letterSpacing: '0.04em',
+                            }}
+                          >
+                            {st.title}
+                          </span>{' '}
+                          · {st.label}
                         </span>
-                        <span style={{ fontSize: '12px', lineHeight: '1.4', color: '#A49DA6' }}>{st.desc}</span>
+                        <span
+                          style={{
+                            fontSize: '12px',
+                            lineHeight: '1.4',
+                            color: '#A49DA6',
+                          }}
+                        >
+                          {st.desc}
+                        </span>
                       </span>
                     </button>
                   </Fragment>
                 ))}
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.6fr', gap: '8px' }}>
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1.6fr',
+                  gap: '8px',
+                }}
+              >
                 <button
                   type="button"
                   onClick={prevStep}
@@ -1052,7 +1340,7 @@ export default function App() {
                     cursor: 'pointer',
                   }}
                 >
-                  ← Wstecz
+                  {t('← Wstecz')}
                 </button>
                 <button
                   type="button"
@@ -1071,7 +1359,12 @@ export default function App() {
                   {nextText}
                 </button>
               </div>
-              <div style={{ height: '1px', background: '#222026' }}></div>
+              <div
+                style={{
+                  height: '1px',
+                  background: '#222026',
+                }}
+              ></div>
               <span
                 style={{
                   fontSize: '12px',
@@ -1081,11 +1374,31 @@ export default function App() {
                   color: '#9C95A0',
                 }}
               >
-                Sterowanie ręczne
+                {t('Sterowanie ręczne')}
               </span>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <span style={{ fontSize: '12px', fontWeight: '700', color: '#9C95A0' }}>Status zagrożenia</span>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '6px' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '6px',
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: '12px',
+                    fontWeight: '700',
+                    color: '#9C95A0',
+                  }}
+                >
+                  {t('Status zagrożenia')}
+                </span>
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                    gap: '6px',
+                  }}
+                >
                   {(levelOpts || []).map((l, lIndex) => (
                     <Fragment key={lIndex}>
                       <button
@@ -1107,16 +1420,43 @@ export default function App() {
                           cursor: 'pointer',
                         }}
                       >
-                        <span style={{ width: '8px', height: '8px', borderRadius: '4px', background: l.dot }}></span>
+                        <span
+                          style={{
+                            width: '8px',
+                            height: '8px',
+                            borderRadius: '4px',
+                            background: l.dot,
+                          }}
+                        ></span>
                         {l.label}
                       </button>
                     </Fragment>
                   ))}
                 </div>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <span style={{ fontSize: '12px', fontWeight: '700', color: '#9C95A0' }}>Stan systemu</span>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '6px' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '6px',
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: '12px',
+                    fontWeight: '700',
+                    color: '#9C95A0',
+                  }}
+                >
+                  {t('Stan systemu')}
+                </span>
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                    gap: '6px',
+                  }}
+                >
                   {(systemOpts || []).map((o, oIndex) => (
                     <Fragment key={oIndex}>
                       <button
@@ -1141,7 +1481,13 @@ export default function App() {
                   ))}
                 </div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '8px' }}>
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                  gap: '8px',
+                }}
+              >
                 <button
                   type="button"
                   onClick={restartOnboarding}
@@ -1156,7 +1502,7 @@ export default function App() {
                     cursor: 'pointer',
                   }}
                 >
-                  Onboarding
+                  {t('Onboarding')}
                 </button>
                 <button
                   type="button"
@@ -1172,7 +1518,7 @@ export default function App() {
                     cursor: 'pointer',
                   }}
                 >
-                  Reset
+                  {t('Reset')}
                 </button>
               </div>
             </aside>
@@ -1203,8 +1549,16 @@ export default function App() {
                 boxShadow: '0 8px 30px rgba(0,0,0,.5)',
               }}
             >
-              <span style={{ width: '8px', height: '8px', borderRadius: '4px', background: '#FF2D3D' }}></span>Panel
-              demo · krok {demoStepLabel}
+              <span
+                style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '4px',
+                  background: '#FF2D3D',
+                }}
+              ></span>
+              {t('Panel demo · krok ')}
+              {demoStepLabel}
             </button>
           </>
         )}
